@@ -444,7 +444,6 @@ function closeModal(){document.getElementById('modal').classList.remove('open')}
 document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeModal()})
 
 // ── ASISTENTE IA ─────────────────────────────────────────────────────────────
-const GROQ_KEY=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;
 const GROQ_URL='https://api.groq.com/openai/v1/chat/completions';
 let iaChatHistory=[];
 
@@ -458,6 +457,9 @@ const IA_SUGERENCIAS=[
   'Traduce al inglés: Cuajada de Castañas con Aceite de Pino',
   'Sugiere un maridaje para el pase de Huerta',
 ];
+
+function getGroqKey(){return localStorage.getItem('oba_groq_key')||''}
+function setGroqKey(k){localStorage.setItem('oba_groq_key',k)}
 
 function renderIAsugerencias(){
   document.getElementById('ia-sugerencias').innerHTML=IA_SUGERENCIAS.map(s=>
@@ -473,61 +475,79 @@ function iaPregunta(texto){
 function iaContexto(){
   const recetas=D.recipes.map(r=>`- ${r.nombre} (${r.seccion}, ${r.temporada}): ${r.descripcion}`).join('\n');
   const ingredientes=D.ingredientes.slice(0,30).map(i=>`- ${i.ing} [${i.cat}]${i.prov?' · Proveedor: '+i.prov:''}`).join('\n');
-  return `Eres el asistente de cocina del restaurante OBA, un restaurante de cocina de autor en España con estilo brutalista y minimalista. Conoces todo el menú y el recetario del restaurante.
-
-RECETARIO ACTUAL:
-${recetas}
-
-INGREDIENTES PRINCIPALES:
-${ingredientes}
-
-Responde siempre en español, de forma concisa y útil para el equipo de cocina. Cuando generes fichas de platos usa el formato: Nombre, Sección, Temporada, Descripción, Ingredientes (lista), Elaboración (pasos numerados), Notas.`;
+  return `Eres el asistente de cocina del restaurante OBA, un restaurante de cocina de autor en España con estilo brutalista y minimalista. Conoces todo el menú y el recetario del restaurante.\n\nRECETARIO ACTUAL:\n${recetas}\n\nINGREDIENTES PRINCIPALES:\n${ingredientes}\n\nResponde siempre en español, de forma concisa y útil para el equipo de cocina. Cuando generes fichas de platos usa el formato: Nombre, Sección, Temporada, Descripción, Ingredientes (lista), Elaboración (pasos numerados), Notas.`;
 }
 
 async function iaEnviar(){
+  const key=getGroqKey();
+  if(!key){pedirApiKey();return;}
   const input=document.getElementById('ia-input');
   const texto=input.value.trim();
   if(!texto)return;
   input.value='';
-
   const chat=document.getElementById('ia-chat');
   chat.innerHTML+=`<div class="ia-msg user">${texto}</div>`;
-  chat.innerHTML+=`<div class="ia-msg loading" id="ia-loading">Pensando...</div>`;
+  const loadId='ial'+Date.now();
+  chat.innerHTML+=`<div class="ia-msg loading" id="${loadId}">Pensando...</div>`;
   chat.scrollTop=chat.scrollHeight;
-
   iaChatHistory.push({role:'user',content:texto});
-
   try{
     const res=await fetch(GROQ_URL,{
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
       body:JSON.stringify({
         model:'llama-3.3-70b-versatile',
-        messages:[
-          {role:'system',content:iaContexto()},
-          ...iaChatHistory.slice(-10)
-        ],
+        messages:[{role:'system',content:iaContexto()},...iaChatHistory.slice(-10)],
         max_tokens:1024,
         temperature:0.7
       })
     });
     const data=await res.json();
-    const respuesta=data.choices?.[0]?.message?.content||'No he podido obtener respuesta. Revisa tu API key.';
-    iaChatHistory.push({role:'assistant',content:respuesta});
-    document.getElementById('ia-loading')?.remove();
-    chat.innerHTML+=`<div class="ia-msg bot">${respuesta.replace(/\n/g,'<br>')}</div>`;
+    document.getElementById(loadId)?.remove();
+    if(data.error){
+      chat.innerHTML+=`<div class="ia-msg bot" style="border-color:#c0392b">Error: ${data.error.message||'API key incorrecta'}. <button class="btn btn-sm" onclick="pedirApiKey()">Cambiar API key</button></div>`;
+    } else {
+      const respuesta=data.choices?.[0]?.message?.content||'Sin respuesta.';
+      iaChatHistory.push({role:'assistant',content:respuesta});
+      chat.innerHTML+=`<div class="ia-msg bot">${respuesta.replace(/\n/g,'<br>')}</div>`;
+    }
     chat.scrollTop=chat.scrollHeight;
   }catch(e){
-    document.getElementById('ia-loading')?.remove();
-    chat.innerHTML+=`<div class="ia-msg bot" style="border-color:#c0392b">Error de conexión. Comprueba tu API key de Groq.</div>`;
+    document.getElementById(loadId)?.remove();
+    chat.innerHTML+=`<div class="ia-msg bot" style="border-color:#c0392b">Error de conexión. <button class="btn btn-sm" onclick="pedirApiKey()">Revisar API key</button></div>`;
     chat.scrollTop=chat.scrollHeight;
   }
+}
+
+function pedirApiKey(){
+  openModal(`<h3>Activar Asistente IA</h3>
+    <p style="font-size:13px;color:var(--gray-dark);margin-bottom:1rem">Introduce tu API key de Groq. Se guardará solo en este navegador y no aparecerá en el código.</p>
+    <div class="form-row"><label>API Key de Groq</label><input id="m-apikey" type="password" placeholder="gsk_..."></div>
+    <p style="font-size:11px;color:var(--gray-dark);margin-top:.5rem">Consíguela gratis en <strong>console.groq.com</strong> → API Keys → Create API Key</p>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-green" onclick="guardarApiKey()">Activar</button>
+    </div>`);
+  setTimeout(()=>document.getElementById('m-apikey')?.focus(),100);
+}
+
+function guardarApiKey(){
+  const k=document.getElementById('m-apikey').value.trim();
+  if(!k)return alert('Introduce tu API key');
+  setGroqKey(k);
+  closeModal();
+  const chat=document.getElementById('ia-chat');
+  chat.innerHTML=`<div class="ia-msg bot">API key guardada. Ya puedes usar el asistente de OBA. ¿En qué te ayudo?</div>`;
 }
 
 function initIA(){
   renderIAsugerencias();
   const chat=document.getElementById('ia-chat');
-  chat.innerHTML=`<div class="ia-msg bot">Hola equipo 👋 Soy el asistente de OBA. Puedo ayudarte con recetas, pedidos, ideas de platos, traducciones y mucho más. ¿En qué te ayudo hoy?</div>`;
+  if(getGroqKey()){
+    chat.innerHTML=`<div class="ia-msg bot">Hola equipo — Soy el asistente de OBA. ¿En qué te ayudo hoy?</div>`;
+  } else {
+    chat.innerHTML=`<div class="ia-msg bot">Para activar el asistente necesitas tu API key de Groq (gratis). <button class="btn btn-sm btn-green" onclick="pedirApiKey()">Configurar ahora</button></div>`;
+  }
 }
 </script>
 </body>
