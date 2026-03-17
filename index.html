@@ -127,6 +127,13 @@ td input:focus,td select:focus{border-bottom-color:var(--green)}
 .status-testeo{border-color:#c07020;color:#c07020}
 .status-pausado{border-color:var(--gray-dark);color:var(--gray-dark)}
 .status-listo{border-color:#2a7a5a;color:#2a7a5a}
+.ia-msg{padding:.6rem .9rem;border-radius:2px;font-size:13px;line-height:1.6;max-width:85%}
+.ia-msg.user{background:var(--black);color:var(--white);align-self:flex-end;border-radius:2px}
+.ia-msg.bot{background:var(--green-pale);border-left:3px solid var(--green);align-self:flex-start}
+.ia-msg.loading{color:var(--gray-dark);font-style:italic;align-self:flex-start}
+.ia-sug{background:transparent;border:var(--border);font-family:'Space Mono',monospace;font-size:11px;padding:.5rem .6rem;cursor:pointer;text-align:left;line-height:1.4;transition:background .15s}
+.ia-sug:hover{background:var(--green-pale)}
+#nav-ia{color:var(--green-light)}
 @media(min-width:640px){.header-date{display:block}main{padding:1.5rem 2rem}}
 @media(max-width:420px){.cards{grid-template-columns:1fr}.cal-day{min-height:36px;padding:.2rem}.cal-event{display:none}}
 </style>
@@ -159,6 +166,7 @@ td input:focus,td select:focus{border-bottom-color:var(--green)}
     <button class="nav-btn" onclick="showPanel('calendario')">Calendario</button>
     <button class="nav-btn" onclick="showPanel('proyectos')">Proyectos</button>
     <button class="nav-btn" onclick="showPanel('avisos')">Avisos</button>
+    <button class="nav-btn" id="nav-ia" onclick="showPanel('ia')">★ Asistente IA</button>
   </nav>
   <main>
     <div class="panel active" id="panel-inicio">
@@ -222,6 +230,15 @@ td input:focus,td select:focus{border-bottom-color:var(--green)}
       <div class="page-header"><h1>Avisos del equipo</h1><p>Comunicados internos</p></div>
       <div class="toolbar"><button class="btn btn-green" onclick="openAvisoModal()">+ Aviso</button></div>
       <div id="avisos-body"></div>
+    </div>
+    <div class="panel" id="panel-ia">
+      <div class="page-header"><h1>Asistente IA</h1><p>Tu chef digital — recetas, pedidos, ideas y más</p></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.5rem;margin-bottom:1.25rem" id="ia-sugerencias"></div>
+      <div id="ia-chat" style="border:var(--border);min-height:300px;max-height:50vh;overflow-y:auto;padding:1rem;margin-bottom:1rem;display:flex;flex-direction:column;gap:.75rem"></div>
+      <div style="display:flex;gap:.5rem">
+        <input class="search-box" type="text" id="ia-input" placeholder="Pregunta algo al asistente..." style="flex:1" onkeydown="if(event.key==='Enter')iaEnviar()">
+        <button class="btn btn-green" onclick="iaEnviar()">Enviar</button>
+      </div>
     </div>
   </main>
 </div>
@@ -302,7 +319,7 @@ function initApp(){
   const ds=`${dias[now.getDay()]}, ${now.getDate()} de ${meses[now.getMonth()]} ${now.getFullYear()}`;
   document.getElementById('hdate').textContent=ds;
   document.getElementById('inicio-fecha').textContent=ds;
-  renderInicio();renderRecetario();renderPedidoLista();renderMenu();renderProyectos();renderAvisos();calRender();
+  renderInicio();renderRecetario();renderPedidoLista();renderMenu();renderProyectos();renderAvisos();calRender();initIA();
 }
 
 function showPanel(id){
@@ -425,6 +442,93 @@ function delAviso(id){if(!confirm('¿Eliminar aviso?'))return;D.avisos=D.avisos.
 function openModal(html){document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal').classList.add('open');setTimeout(()=>{const f=document.querySelector('#modal-inner input,#modal-inner textarea');if(f)f.focus()},60)}
 function closeModal(){document.getElementById('modal').classList.remove('open')}
 document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeModal()})
+
+// ── ASISTENTE IA ─────────────────────────────────────────────────────────────
+const GROQ_KEY=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;
+const GROQ_URL='https://api.groq.com/openai/v1/chat/completions';
+let iaChatHistory=[];
+
+const IA_SUGERENCIAS=[
+  '¿Qué platos tenemos en la sección Bosque?',
+  'Genera la ficha de un plato nuevo con trucha y acederas',
+  'Calcula el pedido para 40 cubiertos esta semana',
+  '¿Qué ingredientes necesito para la Torcaz en Nabos?',
+  'Dame ideas para un plato de temporada con setas',
+  'Redacta un aviso para el equipo sobre el cambio de menú',
+  'Traduce al inglés: Cuajada de Castañas con Aceite de Pino',
+  'Sugiere un maridaje para el pase de Huerta',
+];
+
+function renderIAsugerencias(){
+  document.getElementById('ia-sugerencias').innerHTML=IA_SUGERENCIAS.map(s=>
+    `<button class="ia-sug" onclick="iaPregunta('${s.replace(/'/g,"\\'")}'">${s}</button>`
+  ).join('');
+}
+
+function iaPregunta(texto){
+  document.getElementById('ia-input').value=texto;
+  iaEnviar();
+}
+
+function iaContexto(){
+  const recetas=D.recipes.map(r=>`- ${r.nombre} (${r.seccion}, ${r.temporada}): ${r.descripcion}`).join('\n');
+  const ingredientes=D.ingredientes.slice(0,30).map(i=>`- ${i.ing} [${i.cat}]${i.prov?' · Proveedor: '+i.prov:''}`).join('\n');
+  return `Eres el asistente de cocina del restaurante OBA, un restaurante de cocina de autor en España con estilo brutalista y minimalista. Conoces todo el menú y el recetario del restaurante.
+
+RECETARIO ACTUAL:
+${recetas}
+
+INGREDIENTES PRINCIPALES:
+${ingredientes}
+
+Responde siempre en español, de forma concisa y útil para el equipo de cocina. Cuando generes fichas de platos usa el formato: Nombre, Sección, Temporada, Descripción, Ingredientes (lista), Elaboración (pasos numerados), Notas.`;
+}
+
+async function iaEnviar(){
+  const input=document.getElementById('ia-input');
+  const texto=input.value.trim();
+  if(!texto)return;
+  input.value='';
+
+  const chat=document.getElementById('ia-chat');
+  chat.innerHTML+=`<div class="ia-msg user">${texto}</div>`;
+  chat.innerHTML+=`<div class="ia-msg loading" id="ia-loading">Pensando...</div>`;
+  chat.scrollTop=chat.scrollHeight;
+
+  iaChatHistory.push({role:'user',content:texto});
+
+  try{
+    const res=await fetch(GROQ_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
+      body:JSON.stringify({
+        model:'llama-3.3-70b-versatile',
+        messages:[
+          {role:'system',content:iaContexto()},
+          ...iaChatHistory.slice(-10)
+        ],
+        max_tokens:1024,
+        temperature:0.7
+      })
+    });
+    const data=await res.json();
+    const respuesta=data.choices?.[0]?.message?.content||'No he podido obtener respuesta. Revisa tu API key.';
+    iaChatHistory.push({role:'assistant',content:respuesta});
+    document.getElementById('ia-loading')?.remove();
+    chat.innerHTML+=`<div class="ia-msg bot">${respuesta.replace(/\n/g,'<br>')}</div>`;
+    chat.scrollTop=chat.scrollHeight;
+  }catch(e){
+    document.getElementById('ia-loading')?.remove();
+    chat.innerHTML+=`<div class="ia-msg bot" style="border-color:#c0392b">Error de conexión. Comprueba tu API key de Groq.</div>`;
+    chat.scrollTop=chat.scrollHeight;
+  }
+}
+
+function initIA(){
+  renderIAsugerencias();
+  const chat=document.getElementById('ia-chat');
+  chat.innerHTML=`<div class="ia-msg bot">Hola equipo 👋 Soy el asistente de OBA. Puedo ayudarte con recetas, pedidos, ideas de platos, traducciones y mucho más. ¿En qué te ayudo hoy?</div>`;
+}
 </script>
 </body>
 </html>
