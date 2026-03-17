@@ -8,7 +8,438 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@300;400;700;900&display=swap" rel="stylesheet">
 <style>
 :root{--green:#5a7a4a;--green-dark:#3d5433;--green-light:#7a9e68;--green-pale:#e8efe4;--black:#0a0a0a;--white:#f5f5f0;--gray:#c8c8c0;--gray-dark:#444440;--border:2px solid #0a0a0a}
+*{box-sizing:border-box;margin:0;padding:0}<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OBA — Intranet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--green:#5a7a4a;--green-dark:#3d5433;--green-light:#7a9e68;--green-pale:#e8efe4;--black:#0a0a0a;--white:#f5f5f0;--gray:#c8c8c0;--gray-dark:#444440;--border:2px solid #0a0a0a}
 *{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--white);color:var(--black);font-family:'Space Mono',monospace;font-size:13px;line-height:1.6;min-height:100vh}
+#login-screen{position:fixed;inset:0;background:var(--black);display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:2rem}
+.login-logo{font-family:'Unbounded',sans-serif;font-size:clamp(3rem,12vw,6rem);font-weight:900;color:var(--white);letter-spacing:-.02em;line-height:1}
+.login-logo span{color:var(--green-light)}
+.login-sub{color:var(--gray);font-size:11px;letter-spacing:.2em;text-transform:uppercase}
+.login-form{display:flex;flex-direction:column;gap:.75rem;width:min(280px,90vw)}
+.login-input{background:transparent;border:none;border-bottom:2px solid var(--gray-dark);color:var(--white);font-family:'Space Mono',monospace;font-size:14px;padding:.6rem 0;outline:none;transition:border-color .2s}
+.login-input::placeholder{color:var(--gray-dark)}
+.login-input:focus{border-color:var(--green-light)}
+.login-btn{background:var(--green);color:var(--white);border:none;padding:.8rem;font-family:'Space Mono',monospace;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .15s}
+.login-btn:hover{background:var(--green-light)}
+.login-error{color:#e87878;font-size:12px;text-align:center;min-height:16px}
+#app{display:none;min-height:100vh;flex-direction:column}
+#app.visible{display:flex}
+header{background:var(--black);color:var(--white);display:flex;align-items:center;justify-content:space-between;padding:.75rem 1.25rem;border-bottom:3px solid var(--green);position:sticky;top:0;z-index:100}
+.header-logo{font-family:'Unbounded',sans-serif;font-size:1.4rem;font-weight:900;letter-spacing:-.02em}
+.header-logo span{color:var(--green-light)}
+.header-right{display:flex;align-items:center;gap:1rem}
+.header-date{font-size:11px;color:var(--gray);letter-spacing:.05em;display:none}
+.logout-btn{background:none;border:1px solid var(--gray-dark);color:var(--gray);font-family:'Space Mono',monospace;font-size:11px;padding:4px 10px;cursor:pointer;letter-spacing:.05em;text-transform:uppercase}
+.logout-btn:hover{border-color:var(--white);color:var(--white)}
+nav{background:var(--black);display:flex;overflow-x:auto;border-bottom:2px solid var(--green-dark);scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+.nav-btn{background:none;border:none;color:var(--gray);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:.65rem 1.1rem;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:all .15s;flex-shrink:0}
+.nav-btn:hover{color:var(--white)}
+.nav-btn.active{color:var(--green-light);border-bottom-color:var(--green-light)}
+main{flex:1;padding:1.25rem}
+.panel{display:none}
+.panel.active{display:block}
+.page-header{border-left:4px solid var(--green);padding:.25rem 0 .25rem .75rem;margin-bottom:1.5rem}
+.page-header h1{font-family:'Unbounded',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:-.01em}
+.page-header p{font-size:11px;color:var(--gray-dark);margin-top:.2rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem}
+.card{border:var(--border);padding:1rem;position:relative;transition:transform .1s;background:var(--white)}
+.card:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--black)}
+.card-tag{font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:var(--green);color:var(--white);display:inline-block;padding:2px 8px;margin-bottom:.6rem}
+.card h3{font-family:'Unbounded',sans-serif;font-size:.85rem;font-weight:700;margin-bottom:.4rem}
+.card p{font-size:12px;color:var(--gray-dark);line-height:1.5}
+.card-meta{font-size:11px;color:var(--gray);margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--gray)}
+.card-actions{display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap}
+.btn{background:var(--black);color:var(--white);border:none;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:.5rem .9rem;cursor:pointer;transition:background .15s}
+.btn:hover{background:var(--green-dark)}
+.btn-outline{background:transparent;color:var(--black);border:var(--border)}
+.btn-outline:hover{background:var(--black);color:var(--white)}
+.btn-green{background:var(--green);color:var(--white)}
+.btn-green:hover{background:var(--green-dark)}
+.btn-sm{padding:.3rem .65rem;font-size:10px}
+.btn-danger{background:#c0392b;color:var(--white)}
+.btn-danger:hover{background:#96281b}
+.toolbar{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem}
+.search-box{flex:1;min-width:180px;border:var(--border);background:transparent;font-family:'Space Mono',monospace;font-size:12px;padding:.45rem .7rem;color:var(--black);outline:none}
+.search-box:focus{border-color:var(--green)}
+select.filter-sel{border:var(--border);background:var(--white);font-family:'Space Mono',monospace;font-size:11px;padding:.4rem .6rem;cursor:pointer;color:var(--black);outline:none}
+.tbl-wrap{overflow-x:auto;border:var(--border)}
+table{width:100%;border-collapse:collapse;table-layout:fixed;min-width:500px}
+thead th{background:var(--black);color:var(--white);font-size:10px;letter-spacing:.1em;text-transform:uppercase;text-align:left;padding:.5rem .7rem;font-weight:700}
+tbody tr{border-bottom:1px solid var(--gray)}
+tbody tr:hover{background:var(--green-pale)}
+td{padding:.5rem .7rem;font-size:12px;vertical-align:top;word-break:break-word}
+td input,td select{width:100%;background:transparent;border:none;border-bottom:1px solid var(--gray);font-family:'Space Mono',monospace;font-size:12px;padding:2px 4px;color:var(--black);outline:none}
+td input:focus,td select:focus{border-bottom-color:var(--green)}
+.badge{display:inline-block;padding:1px 7px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;border:1px solid}
+.badge-bosque{border-color:var(--green-dark);color:var(--green-dark)}
+.badge-fluvial{border-color:#2a5a7a;color:#2a5a7a}
+.badge-corral{border-color:#7a5a2a;color:#7a5a2a}
+.badge-caza{border-color:#7a2a2a;color:#7a2a2a}
+.badge-postre{border-color:#7a2a5a;color:#7a2a5a}
+.badge-huerta{border-color:var(--green);color:var(--green)}
+.badge-base{border-color:var(--gray-dark);color:var(--gray-dark)}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--white);border:3px solid var(--black);padding:1.5rem;width:min(480px,92vw);max-height:85vh;overflow-y:auto}
+.modal h3{font-family:'Unbounded',sans-serif;font-size:1rem;font-weight:700;margin-bottom:1.25rem;padding-bottom:.6rem;border-bottom:2px solid var(--black)}
+.form-row{margin-bottom:.9rem}
+.form-row label{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray-dark);margin-bottom:.3rem}
+.form-row input,.form-row select,.form-row textarea{width:100%;border:var(--border);background:transparent;font-family:'Space Mono',monospace;font-size:13px;padding:.5rem .7rem;color:var(--black);outline:none}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--green)}
+.form-row textarea{resize:vertical;min-height:80px}
+.modal-footer{display:flex;justify-content:flex-end;gap:.6rem;margin-top:1.25rem;padding-top:.75rem;border-top:1px solid var(--gray)}
+.recipe-detail{display:none;position:fixed;inset:0;background:var(--white);z-index:150;overflow-y:auto}
+.recipe-detail.open{display:block}
+.recipe-header{background:var(--black);color:var(--white);padding:1.25rem;display:flex;justify-content:space-between;align-items:flex-start;position:sticky;top:0}
+.recipe-header h2{font-family:'Unbounded',sans-serif;font-size:1.1rem;font-weight:700;max-width:calc(100% - 80px)}
+.recipe-body{padding:1.25rem;max-width:700px;margin:0 auto}
+.recipe-section{margin-bottom:1.5rem}
+.recipe-section h4{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--gray-dark);margin-bottom:.6rem;padding-bottom:.3rem;border-bottom:1px solid var(--gray)}
+.step-list{list-style:none}
+.step-list li{display:flex;gap:.75rem;margin-bottom:.5rem;padding:.5rem;border-left:3px solid var(--green);background:var(--green-pale)}
+.step-num{font-family:'Unbounded',sans-serif;font-size:.7rem;font-weight:900;color:var(--green-dark);min-width:20px}
+.ing-grid{display:grid;grid-template-columns:1fr auto auto;gap:.25rem .75rem;font-size:12px}
+.ing-grid .ih{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-dark);border-bottom:1px solid var(--gray);padding-bottom:.3rem;margin-bottom:.2rem}
+.notice{border-left:4px solid var(--green);padding:.6rem .9rem;background:var(--green-pale);margin-bottom:.75rem;font-size:12px}
+.notice-date{font-size:10px;color:var(--gray-dark);margin-top:.2rem}
+.notice.urgent{border-color:#c0392b;background:#fdf0ee}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:.5rem}
+.cal-head{text-align:center;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-dark);padding:.3rem 0}
+.cal-day{border:1px solid var(--gray);padding:.4rem;min-height:56px;font-size:11px;cursor:pointer;transition:background .1s;background:var(--white)}
+.cal-day:hover{background:var(--green-pale)}
+.cal-day.today{border-color:var(--green);border-width:2px}
+.cal-day.other-month{opacity:.3}
+.cal-day-num{font-weight:700;font-size:12px;margin-bottom:.2rem}
+.cal-event{background:var(--green);color:var(--white);font-size:10px;padding:1px 4px;margin-bottom:1px;line-height:1.4}
+.cal-event.urgent{background:#c0392b}
+.prov-block{border:var(--border);margin-bottom:1rem}
+.prov-block-head{background:var(--black);color:var(--white);padding:.6rem .9rem;display:flex;justify-content:space-between;align-items:center}
+.prov-block-head span{font-family:'Unbounded',sans-serif;font-size:.8rem;font-weight:700}
+.prov-block-head small{font-size:11px;color:var(--gray);font-family:'Space Mono',monospace}
+.prov-inner{padding:.5rem}
+.prov-row{display:grid;grid-template-columns:1fr auto auto;gap:.5rem;align-items:center;padding:.3rem .5rem;font-size:12px;border-bottom:1px solid var(--gray)}
+.prov-row:last-child{border-bottom:none}
+.project-card{border:var(--border);padding:1rem;margin-bottom:.75rem;background:var(--white)}
+.project-title{font-family:'Unbounded',sans-serif;font-size:.9rem;font-weight:700;margin-bottom:.4rem}
+.project-status{display:inline-block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border:1px solid;margin-bottom:.5rem;white-space:nowrap}
+.status-activo{border-color:var(--green);color:var(--green)}
+.status-testeo{border-color:#c07020;color:#c07020}
+.status-pausado{border-color:var(--gray-dark);color:var(--gray-dark)}
+.status-listo{border-color:#2a7a5a;color:#2a7a5a}
+@media(min-width:640px){.header-date{display:block}main{padding:1.5rem 2rem}}
+@media(max-width:420px){.cards{grid-template-columns:1fr}.cal-day{min-height:36px;padding:.2rem}.cal-event{display:none}}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-logo">OB<span>A</span></div>
+  <div class="login-sub">Intranet del equipo</div>
+  <div class="login-form">
+    <input class="login-input" type="password" id="pwd-input" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-error" id="login-err"></div>
+  </div>
+</div>
+
+<div id="app">
+  <header>
+    <div class="header-logo">OB<span>A</span></div>
+    <div class="header-right">
+      <div class="header-date" id="hdate"></div>
+      <button class="logout-btn" onclick="doLogout()">Salir</button>
+    </div>
+  </header>
+  <nav>
+    <button class="nav-btn active" onclick="showPanel('inicio')">Inicio</button>
+    <button class="nav-btn" onclick="showPanel('recetario')">Recetario</button>
+    <button class="nav-btn" onclick="showPanel('pedidos')">Pedidos</button>
+    <button class="nav-btn" onclick="showPanel('menu')">Menú semanal</button>
+    <button class="nav-btn" onclick="showPanel('calendario')">Calendario</button>
+    <button class="nav-btn" onclick="showPanel('proyectos')">Proyectos</button>
+    <button class="nav-btn" onclick="showPanel('avisos')">Avisos</button>
+  </nav>
+  <main>
+    <div class="panel active" id="panel-inicio">
+      <div class="page-header"><h1>Buenos días, equipo</h1><p id="inicio-fecha"></p></div>
+      <div id="avisos-urgentes"></div>
+      <div class="cards" id="inicio-cards"></div>
+    </div>
+    <div class="panel" id="panel-recetario">
+      <div class="page-header"><h1>Recetario</h1><p>Fichas de platos, elaboraciones e ingredientes</p></div>
+      <div class="toolbar">
+        <input class="search-box" type="text" placeholder="Buscar plato..." id="rec-search" oninput="renderRecetario()">
+        <select class="filter-sel" id="rec-cat" onchange="renderRecetario()">
+          <option value="">Todas las secciones</option>
+          <option>Pase de Huerta</option><option>Bosque/Setas</option><option>Fluvial/Río</option>
+          <option>Corral</option><option>Acantilado</option><option>Monte Bajo</option><option>Postres</option>
+        </select>
+        <button class="btn btn-green" onclick="openRecipeModal()">+ Plato</button>
+      </div>
+      <div class="cards" id="recipe-cards"></div>
+    </div>
+    <div class="panel" id="panel-pedidos">
+      <div class="page-header"><h1>Gestión de pedidos</h1><p>Ingredientes agrupados por proveedor</p></div>
+      <div style="display:flex;gap:.5rem;margin-bottom:1.25rem;flex-wrap:wrap">
+        <button class="btn" id="ped-tab-lista" onclick="pedTab('lista')">Lista</button>
+        <button class="btn btn-outline" id="ped-tab-resumen" onclick="pedTab('resumen')">Por proveedor</button>
+        <button class="btn btn-outline" id="ped-tab-prov" onclick="pedTab('prov')">Proveedores</button>
+        <button class="btn btn-green" style="margin-left:auto" onclick="openPedidoModal('ing')">+ Ingrediente</button>
+      </div>
+      <div id="ped-panel-lista"></div>
+      <div id="ped-panel-resumen" style="display:none"></div>
+      <div id="ped-panel-prov" style="display:none"></div>
+    </div>
+    <div class="panel" id="panel-menu">
+      <div class="page-header"><h1>Menú semanal</h1><p>Pase de huerta y cambios de platos</p></div>
+      <div class="toolbar"><button class="btn btn-green" onclick="openMenuModal()">+ Cambio de plato</button></div>
+      <div id="menu-body"></div>
+    </div>
+    <div class="panel" id="panel-calendario">
+      <div class="page-header"><h1>Calendario</h1><p>Turnos, eventos y fechas importantes</p></div>
+      <div class="toolbar">
+        <button class="btn btn-outline btn-sm" onclick="calNav(-1)">← Anterior</button>
+        <span id="cal-title" style="font-family:'Unbounded',sans-serif;font-size:.85rem;font-weight:700;flex:1;text-align:center"></span>
+        <button class="btn btn-outline btn-sm" onclick="calNav(1)">Siguiente →</button>
+        <button class="btn btn-green btn-sm" onclick="openCalModal()">+ Evento</button>
+      </div>
+      <div class="cal-grid" id="cal-heads"></div>
+      <div class="cal-grid" id="cal-body"></div>
+      <div id="cal-list" style="margin-top:1rem"></div>
+    </div>
+    <div class="panel" id="panel-proyectos">
+      <div class="page-header"><h1>Proyectos & I+D</h1><p>Nuevos platos, ideas y desarrollo</p></div>
+      <div class="toolbar">
+        <select class="filter-sel" id="proj-filter" onchange="renderProyectos()">
+          <option value="">Todos</option><option value="activo">Activos</option>
+          <option value="testeo">En testeo</option><option value="listo">Listos</option><option value="pausado">Pausados</option>
+        </select>
+        <button class="btn btn-green" onclick="openProjModal()">+ Proyecto</button>
+      </div>
+      <div id="proj-body"></div>
+    </div>
+    <div class="panel" id="panel-avisos">
+      <div class="page-header"><h1>Avisos del equipo</h1><p>Comunicados internos</p></div>
+      <div class="toolbar"><button class="btn btn-green" onclick="openAvisoModal()">+ Aviso</button></div>
+      <div id="avisos-body"></div>
+    </div>
+  </main>
+</div>
+
+<div class="recipe-detail" id="recipe-detail">
+  <div class="recipe-header">
+    <h2 id="rd-title"></h2>
+    <button class="btn btn-sm" onclick="closeRecipeDetail()">Cerrar</button>
+  </div>
+  <div class="recipe-body" id="rd-body"></div>
+</div>
+
+<div class="modal-bg" id="modal">
+  <div class="modal" id="modal-inner"></div>
+</div>
+
+<script>
+const PWD='oba2025';
+function ld(k,d){try{const v=localStorage.getItem('oba_'+k);return v?JSON.parse(v):d}catch(e){return d}}
+function sd(k,v){try{localStorage.setItem('oba_'+k,JSON.stringify(v))}catch(e){}}
+
+const DR=[
+  {id:1,nombre:'Espárrago con Salsa de Acederas',seccion:'Pase de Huerta',temporada:'Primavera',descripcion:'Espárrago de temporada con salsa de acederas.',ingredientes:[{i:'Espárragos frescos',c:'',u:'kg'},{i:'Acederas',c:'',u:'manojo'}],pasos:['Limpiar y pelar los espárragos.','Elaborar salsa de acederas.','Emplatar al pase.'],notas:'Cambia semanalmente.'},
+  {id:2,nombre:'Cuajada de Castañas con Aceite de Pino',seccion:'Bosque/Setas',temporada:'Otoño',descripcion:'Cuajada de castañas con aceite de pino al final.',ingredientes:[{i:'Castañas',c:'',u:'kg'},{i:'Agua de setas',c:'',u:'ml'},{i:'Aceite de pino',c:'',u:'ml'},{i:'Garum de setas',c:'',u:'ml'},{i:'Mantequilla noisette',c:'',u:'g'}],pasos:['Elaborar base de cuajada con castañas.','Añadir agua de setas y garum.','Servir con aceite de pino al final.'],notas:'Plato [1] del apartado de setas.'},
+  {id:3,nombre:'Truchas en Manteca',seccion:'Fluvial/Río',temporada:'Todo el año',descripcion:'Trucha confitada en manteca de cerdo.',ingredientes:[{i:'Trucha de río',c:'',u:'ud'},{i:'Manteca de cerdo',c:'',u:'g'},{i:'Ajo',c:'',u:'diente'}],pasos:['Limpiar y filetear la trucha.','Confitar en manteca a baja temperatura.','Servir con jugo de manteca.'],notas:''},
+  {id:4,nombre:'Gallina Dorada en Pebre',seccion:'Corral',temporada:'Todo el año',descripcion:'Pechuga de gallina, albóndiga con azafrán, andrajos.',ingredientes:[{i:'Gallina entera',c:'',u:'ud'},{i:'Azafrán',c:'',u:'g'},{i:'Perejil',c:'',u:'manojo'},{i:'Harina de trigo',c:'',u:'g'}],pasos:['Dorar la gallina entera.','Preparar albóndigas con azafrán y perejil.','Elaborar andrajos (pasta fresca rústica).','Emplatar con beurre blanc.'],notas:'Tonkotsu de puchero de base.'},
+  {id:5,nombre:'Torcaz en Nabos',seccion:'Acantilado',temporada:'Otoño-Invierno',descripcion:'Paloma torcaz en shio koji con nabo.',ingredientes:[{i:'Paloma torcaz',c:'',u:'ud'},{i:'Nabos',c:'',u:'kg'},{i:'Shio koji',c:'',u:'g'},{i:'Demi-glace de frutos rojos',c:'',u:'ml'}],pasos:['Marinar la paloma en shio koji 24-48h.','Asar a la brasa.','Cocinar nabos en manteca.','Elaborar demi-glace de frutos rojos.'],notas:''},
+  {id:6,nombre:'Oveja a la Etelvina',seccion:'Monte Bajo',temporada:'Todo el año',descripcion:'Royal de oveja, lengua en roner, seso frito.',ingredientes:[{i:'Oveja (varios cortes)',c:'',u:'kg'},{i:'Suero de calostro',c:'',u:'ml'},{i:'Lengua de oveja',c:'',u:'ud'},{i:'Seso de oveja',c:'',u:'ud'}],pasos:['Preparar royal de oveja.','Cocer lengua en roner 72h.','Cortar la lengua perfecta.','Freír el seso.','Emplatar con suero de calostro.'],notas:''},
+  {id:7,nombre:'Pâté de Fruit',seccion:'Postres',temporada:'Todo el año',descripcion:'Pâté de fruit con tomillo y melisa.',ingredientes:[{i:'Agua',c:'500',u:'ml'},{i:'Azúcar',c:'360',u:'g'},{i:'Pectina',c:'14',u:'g'},{i:'Glucosa líquida',c:'100',u:'g'},{i:'Ácido cítrico',c:'5',u:'g'},{i:'Melisa',c:'4',u:'g'}],pasos:['Infusionar tomillo y melisa en agua.','Mezclar 50g azúcar con pectina.','Calentar e incorporar mezcla.','Añadir resto de azúcar y glucosa.','Cocer hasta 106°C.','Añadir ácido cítrico disuelto.','Verter en moldes.'],notas:'Temperatura final: 106°C.'},
+];
+const DI=[
+  {id:1,ing:'Trucha de río',platos:'Truchas en manteca · Trucha al sarmiento',cat:'Fluvial/Río',prov:'',cant:''},
+  {id:2,ing:'Cangrejos de río',platos:'Crema de cangrejos · Chili crab',cat:'Fluvial/Río',prov:'',cant:''},
+  {id:3,ing:'Paloma torcaz',platos:'Torcaz en nabos',cat:'Caza',prov:'',cant:''},
+  {id:4,ing:'Paloma bravía',platos:'Paloma bravía frita',cat:'Caza',prov:'',cant:''},
+  {id:5,ing:'Jabalí (cabeza, papada, lomo)',platos:'Fiambre de jabalí · Mortadela',cat:'Caza',prov:'',cant:''},
+  {id:6,ing:'Gallina entera',platos:'Gallina dorada en pebre · Tonkotsu',cat:'Corral',prov:'',cant:''},
+  {id:7,ing:'Espárragos frescos',platos:'Pase huerta: espárrago',cat:'Huerta',prov:'',cant:''},
+  {id:8,ing:'Acederas',platos:'Salsa de acederas · Guiso perdiz',cat:'Huerta',prov:'',cant:''},
+  {id:9,ing:'Colmenillas',platos:'Escabeche de colmenillas',cat:'Bosque/Setas',prov:'',cant:''},
+  {id:10,ing:'Boletus / Melena de León',platos:'Setas a la brasa',cat:'Bosque/Setas',prov:'',cant:''},
+  {id:11,ing:'Castañas',platos:'Cuajada de castañas',cat:'Bosque/Setas',prov:'',cant:''},
+  {id:12,ing:'Flores comestibles variadas',platos:'Ensalada de flores',cat:'Huerta',prov:'',cant:''},
+  {id:13,ing:'Flores de sauco',platos:'Fizz de sauco · Crema de sauco',cat:'Huerta',prov:'',cant:''},
+  {id:14,ing:'Koji (arroz)',platos:'Cake de koji · Aceite de koji',cat:'Base/Fermentos',prov:'',cant:''},
+  {id:15,ing:'Shio koji',platos:'Paloma torcaz · Entresijos gallo',cat:'Base/Fermentos',prov:'',cant:''},
+  {id:16,ing:'Mantequilla',platos:'Beurre blanc · Holandesa · Tuiles',cat:'Base/Fermentos',prov:'',cant:''},
+  {id:17,ing:'Huevas de trucha',platos:'Sopa de primavera',cat:'Fluvial/Río',prov:'',cant:''},
+  {id:18,ing:'Nabos',platos:'Torcaz en nabos',cat:'Huerta',prov:'',cant:''},
+  {id:19,ing:'Remolacha',platos:'Torta de gazpacho · Ketchup',cat:'Huerta',prov:'',cant:''},
+  {id:20,ing:'Pectina',platos:'Pâté de fruit',cat:'Base/Fermentos',prov:'',cant:''},
+];
+const DM=[{id:1,plato:'Espárrago con Salsa de Acederas',seccion:'Pase de Huerta',estado:'activo',fecha:'2025-01-13',nota:'Cambio semanal según cosecha'}];
+const DAV=[{id:1,titulo:'Bienvenida a la intranet OBA',texto:'Ya tenemos intranet. Aquí encontraréis todas las recetas, pedidos y novedades del restaurante.',urgente:false,fecha:'2025-01-13',autor:'Dirección'}];
+const DPR=[{id:1,nombre:'Alita de pollo rellena',descripcion:'Receta por testear. Deshuesar, rellenar, bridar y lacar.',estado:'testeo',responsable:'Cocina',fecha:'2025-01-13',notas:''},{id:2,nombre:'Menú maridaje NATURA',descripcion:'Desarrollar los 8 maridajes por sección del menú.',estado:'activo',responsable:'Sala + Cocina',fecha:'2025-01-13',notas:'Ver hoja de maridajes'}];
+const DEV=[{id:1,titulo:'Cambio menú primavera',fecha:new Date().toISOString().slice(0,10),urgente:false}];
+
+let D={recipes:ld('recipes',DR),ingredientes:ld('ingredientes',DI),menu:ld('menu',DM),avisos:ld('avisos',DAV),proyectos:ld('proyectos',DPR),eventos:ld('eventos',DEV),proveedores:ld('proveedores',[])};
+let nid=300;
+function save(k){sd(k,D[k])}
+
+function doLogin(){
+  if(document.getElementById('pwd-input').value===PWD){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').className='visible';
+    initApp();
+  } else {
+    document.getElementById('login-err').textContent='Contraseña incorrecta';
+    setTimeout(()=>document.getElementById('login-err').textContent='',2000);
+  }
+}
+function doLogout(){document.getElementById('login-screen').style.display='flex';document.getElementById('app').className='';document.getElementById('pwd-input').value=''}
+
+function initApp(){
+  const now=new Date();
+  const dias=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const ds=`${dias[now.getDay()]}, ${now.getDate()} de ${meses[now.getMonth()]} ${now.getFullYear()}`;
+  document.getElementById('hdate').textContent=ds;
+  document.getElementById('inicio-fecha').textContent=ds;
+  renderInicio();renderRecetario();renderPedidoLista();renderMenu();renderProyectos();renderAvisos();calRender();
+}
+
+function showPanel(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>{if(b.getAttribute('onclick').includes("'"+id+"'"))b.classList.add('active')});
+}
+
+function renderInicio(){
+  const u=D.avisos.filter(a=>a.urgente);
+  document.getElementById('avisos-urgentes').innerHTML=u.map(a=>`<div class="notice urgent"><strong>${a.titulo}</strong><div>${a.texto}</div></div>`).join('');
+  const stats=[{l:'Platos en carta',v:D.recipes.length,lk:'recetario'},{l:'Ingredientes',v:D.ingredientes.length,lk:'pedidos'},{l:'Proyectos activos',v:D.proyectos.filter(p=>p.estado==='activo').length,lk:'proyectos'},{l:'Cambios de menú',v:D.menu.length,lk:'menu'}];
+  document.getElementById('inicio-cards').innerHTML=stats.map(s=>`<div class="card" onclick="showPanel('${s.lk}')" style="cursor:pointer"><div class="card-tag">OBA</div><h3 style="font-size:2rem;font-family:'Unbounded',sans-serif;font-weight:900">${s.v}</h3><p>${s.l}</p></div>`).join('')+(D.avisos.length?`<div class="card"><div class="card-tag">Último aviso</div><h3>${D.avisos[D.avisos.length-1].titulo}</h3><p>${D.avisos[D.avisos.length-1].texto.slice(0,80)}</p><div class="card-meta">${D.avisos[D.avisos.length-1].autor} · ${D.avisos[D.avisos.length-1].fecha}</div></div>`:'');
+}
+
+function bsec(s){const m={'Bosque/Setas':'bosque','Fluvial/Río':'fluvial','Corral':'corral','Caza':'caza','Postres':'postre','Pase de Huerta':'huerta','Acantilado':'caza','Monte Bajo':'corral'};return`<span class="badge badge-${m[s]||'base'}">${s}</span>`}
+function bcat(c){const m={'Bosque/Setas':'bosque','Fluvial/Río':'fluvial','Corral':'corral','Caza':'caza','Postre':'postre','Huerta':'huerta','Base/Fermentos':'base'};return`<span class="badge badge-${m[c]||'base'}">${c}</span>`}
+
+function renderRecetario(){
+  const q=(document.getElementById('rec-search')?.value||'').toLowerCase();
+  const cat=document.getElementById('rec-cat')?.value||'';
+  const list=D.recipes.filter(r=>(!q||r.nombre.toLowerCase().includes(q)||r.seccion.toLowerCase().includes(q))&&(!cat||r.seccion===cat));
+  document.getElementById('recipe-cards').innerHTML=list.map(r=>`<div class="card">${bsec(r.seccion)}<h3>${r.nombre}</h3><p>${r.descripcion}</p><div class="card-meta">Temporada: ${r.temporada}</div><div class="card-actions"><button class="btn btn-sm" onclick="openRecipeDetail(${r.id})">Ver ficha</button><button class="btn btn-outline btn-sm" onclick="openRecipeModal(${r.id})">Editar</button><button class="btn btn-sm btn-danger" onclick="delRecipe(${r.id})">×</button></div></div>`).join('')||'<p style="color:var(--gray-dark)">No se encontraron platos.</p>';
+}
+function openRecipeDetail(id){
+  const r=D.recipes.find(x=>x.id===id);if(!r)return;
+  document.getElementById('rd-title').textContent=r.nombre;
+  document.getElementById('rd-body').innerHTML=`<div class="recipe-section"><h4>Info</h4><div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;font-size:13px"><div><span style="color:var(--gray-dark)">Sección:</span> ${r.seccion}</div><div><span style="color:var(--gray-dark)">Temporada:</span> ${r.temporada}</div></div><p style="margin-top:.5rem;font-size:13px">${r.descripcion}</p></div><div class="recipe-section"><h4>Ingredientes</h4><div class="ing-grid"><div class="ih">Ingrediente</div><div class="ih">Cant.</div><div class="ih">Unidad</div>${r.ingredientes.map(i=>`<div>${i.i}</div><div style="text-align:right">${i.c||'—'}</div><div>${i.u||''}</div>`).join('')}</div></div><div class="recipe-section"><h4>Elaboración</h4><ol class="step-list">${r.pasos.map((p,i)=>`<li><div class="step-num">${i+1}</div><div>${p}</div></li>`).join('')}</ol></div>${r.notas?`<div class="notice"><strong>Notas:</strong> ${r.notas}</div>`:''}`;
+  document.getElementById('recipe-detail').classList.add('open');
+}
+function closeRecipeDetail(){document.getElementById('recipe-detail').classList.remove('open')}
+function openRecipeModal(id){
+  const r=id?D.recipes.find(x=>x.id===id):null;
+  const ing=r?r.ingredientes.map(i=>`${i.i}|${i.c}|${i.u}`).join('\n'):'';
+  const pasos=r?r.pasos.join('\n'):'';
+  openModal(`<h3>${r?'Editar plato':'Nuevo plato'}</h3><div class="form-row"><label>Nombre *</label><input id="m-rn" value="${r?r.nombre:''}"></div><div class="form-row"><label>Sección</label><select id="m-rs">${['Pase de Huerta','Bosque/Setas','Fluvial/Río','Corral','Acantilado','Monte Bajo','Postres'].map(s=>`<option${r&&r.seccion===s?' selected':''}>${s}</option>`).join('')}</select></div><div class="form-row"><label>Temporada</label><input id="m-rt" value="${r?r.temporada:''}"></div><div class="form-row"><label>Descripción</label><textarea id="m-rd">${r?r.descripcion:''}</textarea></div><div class="form-row"><label>Ingredientes (nombre|cantidad|unidad, uno por línea)</label><textarea id="m-ri" rows="5">${ing}</textarea></div><div class="form-row"><label>Elaboración (un paso por línea)</label><textarea id="m-rp" rows="5">${pasos}</textarea></div><div class="form-row"><label>Notas</label><input id="m-rno" value="${r?r.notas:''}"></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-green" onclick="saveRecipe(${id||'null'})">Guardar</button></div>`);
+}
+function saveRecipe(id){
+  const nombre=document.getElementById('m-rn').value.trim();if(!nombre)return alert('El nombre es obligatorio');
+  const ingredientes=document.getElementById('m-ri').value.split('\n').filter(l=>l.trim()).map(l=>{const p=l.split('|');return{i:p[0]||'',c:p[1]||'',u:p[2]||''}});
+  const pasos=document.getElementById('m-rp').value.split('\n').filter(l=>l.trim());
+  const obj={nombre,seccion:document.getElementById('m-rs').value,temporada:document.getElementById('m-rt').value,descripcion:document.getElementById('m-rd').value,ingredientes,pasos,notas:document.getElementById('m-rno').value};
+  if(id){Object.assign(D.recipes.find(x=>x.id===id),obj)}else{D.recipes.push({id:nid++,...obj})}
+  save('recipes');closeModal();renderRecetario();renderInicio();
+}
+function delRecipe(id){if(!confirm('¿Eliminar este plato?'))return;D.recipes=D.recipes.filter(r=>r.id!==id);save('recipes');renderRecetario();renderInicio()}
+
+let pedTab_='lista';
+function pedTab(t){
+  pedTab_=t;
+  ['lista','resumen','prov'].forEach(x=>{document.getElementById('ped-panel-'+x).style.display=x===t?'block':'none';document.getElementById('ped-tab-'+x).className='btn'+(x===t?'':' btn-outline')});
+  if(t==='resumen')renderPedidoResumen();
+  if(t==='prov')renderPedidoProv();
+}
+function renderPedidoLista(){
+  const provOpts=D.proveedores.length?D.proveedores.map(p=>`<option value="${p.nombre}">${p.nombre}</option>`).join('')+'<option value="">— sin asignar —</option>':'';
+  document.getElementById('ped-panel-lista').innerHTML=`<div class="tbl-wrap"><table><thead><tr><th style="width:24%">Ingrediente</th><th style="width:22%">Platos</th><th style="width:14%">Categoría</th><th style="width:22%">Proveedor</th><th style="width:12%">Cantidad</th><th style="width:6%"></th></tr></thead><tbody>${D.ingredientes.map(i=>`<tr><td style="font-weight:700">${i.ing}</td><td style="font-size:11px;color:var(--gray-dark)">${i.platos}</td><td>${bcat(i.cat)}</td><td>${D.proveedores.length?`<select onchange="updIng(${i.id},'prov',this.value)">${D.proveedores.map(p=>`<option value="${p.nombre}"${i.prov===p.nombre?' selected':''}>${p.nombre}</option>`).join('')}<option value=""${!i.prov?' selected':''}>— sin asignar —</option></select>`:`<input type="text" value="${i.prov}" onchange="updIng(${i.id},'prov',this.value)">`}</td><td><input type="text" value="${i.cant}" style="text-align:right" onchange="updIng(${i.id},'cant',this.value)"></td><td><button class="btn btn-sm btn-danger" onclick="delIng(${i.id})">×</button></td></tr>`).join('')}</tbody></table></div>`;
+}
+function updIng(id,f,v){const i=D.ingredientes.find(x=>x.id===id);if(i)i[f]=v;save('ingredientes')}
+function delIng(id){if(!confirm('¿Eliminar?'))return;D.ingredientes=D.ingredientes.filter(x=>x.id!==id);save('ingredientes');renderPedidoLista()}
+function renderPedidoResumen(){
+  const g={};D.ingredientes.forEach(i=>{if(i.prov){if(!g[i.prov])g[i.prov]=[];g[i.prov].push(i)}});
+  const sp=D.ingredientes.filter(i=>!i.prov);
+  let html='';
+  if(!Object.keys(g).length){html='<p style="color:var(--gray-dark)">Asigna proveedores en la pestaña Lista.</p>'}
+  else{Object.entries(g).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([prov,items])=>{html+=`<div class="prov-block"><div class="prov-block-head"><span>${prov}</span><small>${items.length} producto${items.length!==1?'s':''}</small></div><div class="prov-inner">${items.map(i=>`<div class="prov-row"><span style="font-weight:700">${i.ing}</span><span>${bcat(i.cat)}</span><span style="text-align:right;font-weight:700">${i.cant||'—'}</span></div>`).join('')}</div></div>`})}
+  if(sp.length)html+=`<div class="notice"><strong>${sp.length} ingrediente${sp.length!==1?'s':''} sin proveedor:</strong> ${sp.map(i=>i.ing).join(', ')}</div>`;
+  document.getElementById('ped-panel-resumen').innerHTML=html;
+}
+function renderPedidoProv(){
+  document.getElementById('ped-panel-prov').innerHTML=`<button class="btn btn-green" style="margin-bottom:1rem" onclick="openPedidoModal('prov')">+ Proveedor</button>${!D.proveedores.length?'<p style="color:var(--gray-dark)">No hay proveedores aún.</p>':D.proveedores.map((p,i)=>`<div class="project-card"><div class="project-title">${p.nombre}</div>${p.tel?`<div style="font-size:12px;color:var(--gray-dark)">Tel: ${p.tel}</div>`:''} ${p.nota?`<div style="font-size:12px;margin-top:.4rem">${p.nota}</div>`:''}<div class="card-actions"><button class="btn btn-sm btn-outline" onclick="editProv(${i})">Editar</button><button class="btn btn-sm btn-danger" onclick="delProv(${i})">Eliminar</button></div></div>`).join('')}`;
+}
+function openPedidoModal(type){
+  if(type==='ing'){openModal(`<h3>Nuevo ingrediente</h3><div class="form-row"><label>Nombre *</label><input id="m-in"></div><div class="form-row"><label>Platos donde se usa</label><input id="m-ip"></div><div class="form-row"><label>Categoría</label><select id="m-ic">${['Bosque/Setas','Fluvial/Río','Corral','Caza','Postre','Huerta','Base/Fermentos'].map(c=>`<option>${c}</option>`).join('')}</select></div><div class="form-row"><label>Proveedor</label><select id="m-iv"><option value="">— sin asignar —</option>${D.proveedores.map(p=>`<option value="${p.nombre}">${p.nombre}</option>`).join('')}</select></div><div class="form-row"><label>Cantidad/semana</label><input id="m-iq" placeholder="Ej: 2 kg"></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-green" onclick="saveIng()">Guardar</button></div>`)}
+  else{openModal(`<h3>Nuevo proveedor</h3><div class="form-row"><label>Nombre *</label><input id="m-pn"></div><div class="form-row"><label>Teléfono</label><input id="m-pt" placeholder="612 345 678"></div><div class="form-row"><label>Notas</label><textarea id="m-pno" placeholder="Días de reparto, mínimo..."></textarea></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-green" onclick="saveProv(-1)">Guardar</button></div>`)}
+}
+function saveIng(){const ing=document.getElementById('m-in').value.trim();if(!ing)return alert('El nombre es obligatorio');D.ingredientes.push({id:nid++,ing,platos:document.getElementById('m-ip').value||'Sin especificar',cat:document.getElementById('m-ic').value,prov:document.getElementById('m-iv').value,cant:document.getElementById('m-iq').value});save('ingredientes');closeModal();renderPedidoLista();renderInicio()}
+function editProv(idx){const p=D.proveedores[idx];openModal(`<h3>Editar proveedor</h3><div class="form-row"><label>Nombre *</label><input id="m-pn" value="${p.nombre}"></div><div class="form-row"><label>Teléfono</label><input id="m-pt" value="${p.tel||''}"></div><div class="form-row"><label>Notas</label><textarea id="m-pno">${p.nota||''}</textarea></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-green" onclick="saveProv(${idx})">Guardar</button></div>`)}
+function saveProv(idx){const nombre=document.getElementById('m-pn').value.trim();if(!nombre)return alert('El nombre es obligatorio');const p={nombre,tel:document.getElementById('m-pt').value.trim(),nota:document.getElementById('m-pno').value.trim()};if(idx===-1){if(D.proveedores.find(x=>x.nombre===nombre))return alert('Ya existe');D.proveedores.push(p)}else{const old=D.proveedores[idx].nombre;D.ingredientes.forEach(i=>{if(i.prov===old)i.prov=nombre});save('ingredientes');D.proveedores[idx]=p}save('proveedores');closeModal();renderPedidoProv();renderPedidoLista()}
+function delProv(idx){if(!confirm('¿Eliminar proveedor?'))return;const n=D.proveedores[idx].nombre;D.ingredientes.forEach(i=>{if(i.prov===n)i.prov=''});D.proveedores.splice(idx,1);save('proveedores');save('ingredientes');renderPedidoProv();renderPedidoLista()}
+
+function renderMenu(){document.getElementById('menu-body').innerHTML=D.menu.length?D.menu.map(m=>`<div class="project-card"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div class="project-title">${m.plato}</div><div style="margin-top:.2rem">${bsec(m.seccion)}</div>${m.nota?`<p style="font-size:12px;margin-top:.5rem;color:var(--gray-dark)">${m.nota}</p>`:''}<div style="font-size:11px;color:var(--gray);margin-top:.4rem">${m.fecha}</div></div><span class="project-status status-${m.estado==='activo'?'activo':'pausado'}">${m.estado}</span></div><div class="card-actions"><button class="btn btn-sm btn-outline" onclick="openMenuModal(${m.id})">Editar</button><button class="btn btn-sm btn-danger" onclick="delMenu(${m.id})">×</button></div></div>`).join(''):'<p style="color:var(--gray-dark)">Sin cambios esta semana.</p>'}
+function openMenuModal(id){const m=id?D.menu.find(x=>x.id===id):null;openModal(`<h3>${m?'Editar cambio':'Nuevo cambio de menú'}</h3><div class="form-row"><label>Plato *</label><input id="m-mp" value="${m?m.plato:''}"></div><div class="form-row"><label>Sección</label><select id="m-ms">${['Pase de Huerta','Bosque/Setas','Fluvial/Río','Corral','Acantilado','Monte Bajo','Postres','Bebida maridaje'].map(s=>`<option${m&&m.seccion===s?' selected':''}>${s}</option>`).join('')}</select></div><div class="form-row"><label>Estado</label><select id="m-me">${['activo','pausado'].map(s=>`<option${m&&m.estado===s?' selected':''}>${s}</option>`).join('')}</select></div><div class="form-row"><label>Nota</label><textarea id="m-mn">${m?m.nota:''}</textarea></div><div class="form-row"><label>Fecha</label><input type="date" id="m-mf" value="${m?m.fecha:new Date().toISOString().slice(0,10)}"></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-green" onclick="saveMenu(${id||'null'})">Guardar</button></div>`)}
+function saveMenu(id){const plato=document.getElementById('m-mp').value.trim();if(!plato)return alert('El nombre es obligatorio');const obj={plato,seccion:document.getElementById('m-ms').value,estado:document.getElementById('m-me').value,nota:document.getElementById('m-mn').value,fecha:document.getElementById('m-mf').value};if(id)Object.assign(D.menu.find(x=>x.id===id),obj);else D.menu.push({id:nid++,...obj});save('menu');closeModal();renderMenu();renderInicio()}
+function delMenu(id){if(!confirm('¿Eliminar?'))return;D.menu=D.menu.filter(x=>x.id!==id);save('menu');renderMenu();renderInicio()}
+
+let cY=new Date().getFullYear(),cM=new Date().getMonth();
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DS=['Lu','Ma','Mi','Ju','Vi','Sa','Do'];
+function calNav(d){cM+=d;if(cM>11){cM=0;cY++}if(cM<0){cM=11;cY--}calRender()}
+function calRender(){
+  document.getElementById('cal-title').textContent=`${MESES[cM]} ${cY}`;
+  document.getElementById('cal-heads').innerHTML=DS.map(d=>`<div class="cal-head">${d}</div>`).join('');
+  const first=new Date(cY,cM,1),last=new Date(cY,cM+1,0);
+  const startDay=(first.getDay()+6)%7;
+  const todayStr=new Date().toISOString().slice(0,10);
+  let html='';
+  for(let i=0;i<startDay;i++){const d=new Date(cY,cM,-(startDay-i-1));html+=`<div class="cal-day other-month"><div class="cal-day-num">${d.getDate()}</div></div>`}
+  for(let d=1;d<=last.getDate();d++){const ds=`${cY}-${String(cM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const evs=D.eventos.filter(e=>e.fecha===ds);html+=`<div class="cal-day${ds===todayStr?' today':''}" onclick="openCalModal('${ds}')"><div class="cal-day-num">${d}</div>${evs.map(e=>`<div class="cal-event${e.urgente?' urgent':''}">${e.titulo}</div>`).join('')}</div>`}
+  const rem=(7-((startDay+last.getDate())%7))%7;
+  for(let i=1;i<=rem;i++)html+=`<div class="cal-day other-month"><div class="cal-day-num">${i}</div></div>`;
+  document.getElementById('cal-body').innerHTML=html;
+  const me=D.eventos.filter(e=>e.fecha.startsWith(`${cY}-${String(cM+1).padStart(2,'0')}`));
+  document.getElementById('cal-list').innerHTML=me.length?'<div style="margin-bottom:.5rem;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray-dark)">Eventos del mes</div>'+me.map(e=>`<div class="notice${e.urgente?' urgent':''}"><strong>${e.titulo}</strong><div class="notice-date">${e.fecha}</div></div>`).join(''):'';
+}
+function openCalModal(fecha){openModal(`<h3>Nuevo evento</h3><div class="form-row"><label>Título *</label><input id="m-et"></div><div class="form-row"><label>Fecha</label><input type="date" id="m-ef" value="${typeof fecha==='string'?fecha:new Date().toISOString().slice(0,10)}"></div><div class="form-row"><label>Urgente</label><select id="m-eu"><option value="0">No</option><option value="1">Sí</option></select></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-green" onclick="saveEvento()">Guardar</button></div>`)}
+function saveEvento(){const titulo=document.getElementById('m-et').value.trim();if(!titulo)return alert('El título es obligatorio');D.eventos.push({id:nid++,titulo,fecha:document.getElementById('m-ef').value,urgente:document.getElementById('m-eu').value==='1'});save('eventos');closeModal();calRender()}
+
+function renderProyectos(){const f=document.getElementById('proj-filter')?.value||'';const list=D.proyectos.filter(p=>!f||p.estado===f);document.getElementById('proj-body').innerHTML=list.map(p=>`<div class="project-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem"><div class="project-title">${p.nombre}</div><span class="project-status status-${p.estado}">${p.estado}</span></div><p style="font-size:13px;margin:.4rem 0;color:var(--gray-dark)">${p.descripcion}</p>${p.responsable?`<div style="font-size:11px;color:var(--gray-dark)">Responsable: <strong>${p.responsable}</strong></div>`:''} ${p.notas?`<div class="notice" style="margin-top:.5rem;font-size:12px">${p.notas}</div>`:''}<div style="font-size:11px;color:var(--gray);margin-top:.4rem">${p.fecha}</div><div class="card-actions"><button class="btn btn-sm btn-outline" onclick="openProjModal(${p.id})">Editar</button><button class="btn btn-sm btn-danger" onclick="delProj(${p.id})">×</button></div></div>`).join('')||'<p style="color:var(--gray-dark)">Sin proyectos.</p>'}
+function openProjModal(id){const p=id?D.proyectos.find(x=>x.id===id):null;openModal(`<h3>${p?'Editar proyecto':'Nuevo proyecto'}</h3><div class="form-row"><label>Nombre *</label><input id="m-prn" value="${p?p.nombre:''}"></div><div class="form-row"><label>Descripción</label><textarea id="m-prd">${p?p.descripcion:''}</textarea></div><div class="form-row"><label>Estado</label><select id="m-pre">${['activo','testeo','listo','pausado'].map(s=>`<option${p&&p.estado===s?' selected':''}>${s}</option>`).join('')}</select></div><div class="form-row"><label>Responsable</label><input id="m-prr" value="${p?p.responsable:''}"></div><div class="form-row"><label>Notas</label><textarea id="m-prno">${p?p.notas:''}</textarea></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-green" onclick="saveProj(${id||'null'})">Guardar</button></div>`)}
+function saveProj(id){const nombre=document.getElementById('m-prn').value.trim();if(!nombre)return alert('El nombre es obligatorio');const obj={nombre,descripcion:document.getElementById('m-prd').value,estado:document.getElementById('m-pre').value,responsable:document.getElementById('m-prr').value,notas:document.getElementById('m-prno').value,fecha:new Date().toISOString().slice(0,10)};if(id)Object.assign(D.proyectos.find(x=>x.id===id),obj);else D.proyectos.push({id:nid++,...obj});save('proyectos');closeModal();renderProyectos();renderInicio()}
+function delProj(id){if(!confirm('¿Eliminar proyecto?'))return;D.proyectos=D.proyectos.filter(x=>x.id!==id);save('proyectos');renderProyectos();renderInicio()}
+
+function renderAvisos(){document.getElementById('avisos-body').innerHTML=D.avisos.slice().reverse().map(a=>`<div class="notice${a.urgente?' urgent':''}"><div style="display:flex;justify-content:space-between;align-items:flex-start"><strong>${a.titulo}</strong><div style="display:flex;gap:.4rem"><button class="btn btn-sm btn-outline" onclick="openAvisoModal(${a.id})">Editar</button><button class="btn btn-sm btn-danger" onclick="delAviso(${a.id})">×</button></div></div><div style="margin-top:.3rem;font-size:13px">${a.texto}</div><div class="notice-date">${a.autor} · ${a.fecha}</div></div>`).join('')||'<p style="color:var(--gray-dark)">Sin avisos.</p>'}
+function openAvisoModal(id){const a=id?D.avisos.find(x=>x.id===id):null;openModal(`<h3>${a?'Editar aviso':'Nuevo aviso'}</h3><div class="form-row"><label>Título *</label><input id="m-at" value="${a?a.titulo:''}"></div><div class="form-row"><label>Mensaje</label><textarea id="m-ax">${a?a.texto:''}</textarea></div><div class="form-row"><label>Autor</label><input id="m-aa" value="${a?a.autor:''}"></div><div class="form-row"><label>Urgente</label><select id="m-au"><option value="0"${a&&!a.urgente?' selected':''}>No</option><option value="1"${a&&a.urgente?' selected':''}>Sí — destacar en rojo</option></select></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-green" onclick="saveAviso(${id||'null'})">Guardar</button></div>`)}
+function saveAviso(id){const titulo=document.getElementById('m-at').value.trim();if(!titulo)return alert('El título es obligatorio');const obj={titulo,texto:document.getElementById('m-ax').value,autor:document.getElementById('m-aa').value,urgente:document.getElementById('m-au').value==='1',fecha:new Date().toISOString().slice(0,10)};if(id)Object.assign(D.avisos.find(x=>x.id===id),obj);else D.avisos.push({id:nid++,...obj});save('avisos');closeModal();renderAvisos();renderInicio()}
+function delAviso(id){if(!confirm('¿Eliminar aviso?'))return;D.avisos=D.avisos.filter(x=>x.id!==id);save('avisos');renderAvisos();renderInicio()}
+
+function openModal(html){document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal').classList.add('open');setTimeout(()=>{const f=document.querySelector('#modal-inner input,#modal-inner textarea');if(f)f.focus()},60)}
+function closeModal(){document.getElementById('modal').classList.remove('open')}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeModal()})
+</script>
+</body>
+</html>
+
 html{scroll-behavior:smooth}
 body{background:var(--white);color:var(--black);font-family:'Space Mono',monospace;font-size:13px;line-height:1.6;min-height:100vh}
 #login-screen{position:fixed;inset:0;background:var(--black);display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:2rem}
