@@ -6,6 +6,31 @@
 <title>OBA — Intranet</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@300;400;700;900&display=swap" rel="stylesheet">
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, getDocs, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAUUgLnKnh1xUbCjis4nPoEzoLLrJp9loY",
+  authDomain: "intranet-oba.firebaseapp.com",
+  projectId: "intranet-oba",
+  storageBucket: "intranet-oba.firebasestorage.app",
+  messagingSenderId: "603055689454",
+  appId: "1:603055689454:web:4e25c2a58f6a42c9c0adff"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+window._db = db;
+window._fbReady = true;
+window._col = collection;
+window._doc = doc;
+window._setDoc = setDoc;
+window._getDocs = getDocs;
+window._onSnapshot = onSnapshot;
+window._deleteDoc = deleteDoc;
+window.dispatchEvent(new Event('fbready'));
+</script>
 <style>
 :root{--green:#5a7a4a;--green-dark:#3d5433;--green-light:#7a9e68;--green-pale:#e8efe4;--black:#0a0a0a;--white:#f5f5f0;--gray:#c8c8c0;--gray-dark:#444440;--border:2px solid #0a0a0a}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -140,14 +165,9 @@ td input:focus,td select:focus{border-bottom-color:var(--green)}
 </head>
 <body>
 
-<div id="login-screen">
+<div id="login-screen" style="position:fixed;inset:0;background:#0a0a0a;display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:2rem">
   <div class="login-logo">OB<span>A</span></div>
-  <div class="login-sub">Intranet del equipo</div>
-  <div class="login-form">
-    <input class="login-input" type="password" id="pwd-input" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="login-btn" onclick="doLogin()">Entrar</button>
-    <div class="login-error" id="login-err"></div>
-  </div>
+  <div class="login-sub" style="color:#7a9e68">Cargando...</div>
 </div>
 
 <div id="app">
@@ -257,8 +277,6 @@ td input:focus,td select:focus{border-bottom-color:var(--green)}
 
 <script>
 const PWD='oba2025';
-function ld(k,d){try{const v=localStorage.getItem('oba_'+k);return v?JSON.parse(v):d}catch(e){return d}}
-function sd(k,v){try{localStorage.setItem('oba_'+k,JSON.stringify(v))}catch(e){}}
 
 const DR=[
   {id:1,nombre:'Espárrago con Salsa de Acederas',seccion:'Huerta',temporada:'Primavera',descripcion:'Espárrago de temporada con salsa de acederas.',ingredientes:[{i:'Espárragos frescos',c:'',u:'kg'},{i:'Acederas',c:'',u:'manojo'}],pasos:['Limpiar y pelar los espárragos.','Elaborar salsa de acederas.','Emplatar al pase.'],notas:'Cambia semanalmente.'},
@@ -272,9 +290,9 @@ const DR=[
 const DI=[
   {id:1,ing:'Trucha de río',platos:'Truchas en manteca · Trucha al sarmiento',cat:'Afluente',prov:'',cant:''},
   {id:2,ing:'Cangrejos de río',platos:'Crema de cangrejos · Chili crab',cat:'Afluente',prov:'',cant:''},
-  {id:3,ing:'Paloma torcaz',platos:'Torcaz en nabos',cat:'Caza',prov:'',cant:''},
-  {id:4,ing:'Paloma bravía',platos:'Paloma bravía frita',cat:'Caza',prov:'',cant:''},
-  {id:5,ing:'Jabalí (cabeza, papada, lomo)',platos:'Fiambre de jabalí · Mortadela',cat:'Caza',prov:'',cant:''},
+  {id:3,ing:'Paloma torcaz',platos:'Torcaz en nabos',cat:'Acantilado',prov:'',cant:''},
+  {id:4,ing:'Paloma bravía',platos:'Paloma bravía frita',cat:'Acantilado',prov:'',cant:''},
+  {id:5,ing:'Jabalí (cabeza, papada, lomo)',platos:'Fiambre de jabalí · Mortadela',cat:'Monte Bajo',prov:'',cant:''},
   {id:6,ing:'Gallina entera',platos:'Gallina dorada en pebre · Tonkotsu',cat:'Corral',prov:'',cant:''},
   {id:7,ing:'Espárragos frescos',platos:'Pase huerta: espárrago',cat:'Huerta',prov:'',cant:''},
   {id:8,ing:'Acederas',platos:'Salsa de acederas · Guiso perdiz',cat:'Huerta',prov:'',cant:''},
@@ -296,21 +314,112 @@ const DAV=[{id:1,titulo:'Bienvenida a la intranet OBA',texto:'Ya tenemos intrane
 const DPR=[{id:1,nombre:'Alita de pollo rellena',descripcion:'Receta por testear. Deshuesar, rellenar, bridar y lacar.',estado:'testeo',responsable:'Cocina',fecha:'2025-01-13',notas:''},{id:2,nombre:'Menú maridaje NATURA',descripcion:'Desarrollar los 8 maridajes por sección del menú.',estado:'activo',responsable:'Sala + Cocina',fecha:'2025-01-13',notas:'Ver hoja de maridajes'}];
 const DEV=[{id:1,titulo:'Cambio menú primavera',fecha:new Date().toISOString().slice(0,10),urgente:false}];
 
-let D={recipes:ld('recipes',DR),ingredientes:ld('ingredientes',DI),menu:ld('menu',DM),avisos:ld('avisos',DAV),proyectos:ld('proyectos',DPR),eventos:ld('eventos',DEV),proveedores:ld('proveedores',[])};
+let D={recipes:[],ingredientes:[],menu:[],avisos:[],proyectos:[],eventos:[],proveedores:[]};
 let nid=300;
-function save(k){sd(k,D[k])}
+let dbReady=false;
+
+// ── FIREBASE SYNC ────────────────────────────────────────────────────────────
+const COLECCIONES={recipes:'recipes',ingredientes:'ingredientes',menu:'menu',avisos:'avisos',proyectos:'proyectos',eventos:'eventos',proveedores:'proveedores'};
+const DEFAULTS={recipes:DR,ingredientes:DI,menu:DM,avisos:DAV,proyectos:DPR,eventos:DEV,proveedores:[]};
+
+async function fbLoad(col){
+  const db=window._db;
+  const snap=await window._getDocs(window._col(db,col));
+  if(snap.empty) return null;
+  return snap.docs.map(d=>d.data());
+}
+
+async function fbSave(col,items){
+  const db=window._db;
+  const c=window._col(db,col);
+  const snap=await window._getDocs(c);
+  const deletes=snap.docs.map(d=>window._deleteDoc(window._doc(db,col,d.id)));
+  await Promise.all(deletes);
+  await Promise.all(items.map(item=>window._setDoc(window._doc(db,col,String(item.id)),item)));
+}
+
+async function save(k){
+  fbSave(k,D[k]).catch(()=>{});
+  renderAll();
+}
+
+function fbListen(col,callback){
+  const db=window._db;
+  window._onSnapshot(window._col(db,col),snap=>{
+    const items=snap.docs.map(d=>d.data());
+    callback(items);
+  });
+}
+
+async function initFirebase(){
+  const showLoading=()=>{
+    document.getElementById('login-screen').innerHTML=`
+      <div class="login-logo">OB<span>A</span></div>
+      <div class="login-sub" style="color:var(--green-light)">Conectando...</div>`;
+  };
+  showLoading();
+  try{
+    for(const [key,col] of Object.entries(COLECCIONES)){
+      const data=await fbLoad(col);
+      if(!data||data.length===0){
+        D[key]=[...DEFAULTS[key]];
+        await fbSave(col,D[key]);
+      } else {
+        D[key]=data;
+      }
+    }
+    nid=Math.max(nid,...Object.values(D).flat().map(i=>((i.id||0)+1)));
+    dbReady=true;
+    Object.entries(COLECCIONES).forEach(([key,col])=>{
+      fbListen(col,items=>{
+        if(!items.length)return;
+        D[key]=items;
+        renderAll();
+      });
+    });
+    showLogin();
+  }catch(e){
+    document.getElementById('login-screen').innerHTML=`
+      <div class="login-logo">OB<span>A</span></div>
+      <div class="login-sub" style="color:#e87878">Error de conexión</div>
+      <div style="color:var(--gray);font-size:12px;text-align:center;max-width:260px">${e.message}</div>
+      <button class="login-btn" onclick="location.reload()">Reintentar</button>`;
+  }
+}
+
+function showLogin(){
+  document.getElementById('login-screen').innerHTML=`
+    <div class="login-logo">OB<span>A</span></div>
+    <div class="login-sub">Intranet del equipo</div>
+    <div class="login-form">
+      <input class="login-input" type="password" id="pwd-input" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="login-btn" onclick="doLogin()">Entrar</button>
+      <div class="login-error" id="login-err"></div>
+    </div>`;
+}
+
+function renderAll(){
+  if(document.getElementById('app').className!=='visible')return;
+  renderInicio();renderRecetario();renderPedidoLista();renderMenu();renderProyectos();renderAvisos();calRender();
+}
 
 function doLogin(){
-  if(document.getElementById('pwd-input').value===PWD){
+  const el=document.getElementById('pwd-input');
+  if(!el)return;
+  if(el.value===PWD){
     document.getElementById('login-screen').style.display='none';
     document.getElementById('app').className='visible';
     initApp();
   } else {
-    document.getElementById('login-err').textContent='Contraseña incorrecta';
-    setTimeout(()=>document.getElementById('login-err').textContent='',2000);
+    const err=document.getElementById('login-err');
+    if(err){err.textContent='Contraseña incorrecta';setTimeout(()=>err.textContent='',2000);}
   }
 }
-function doLogout(){document.getElementById('login-screen').style.display='flex';document.getElementById('app').className='';document.getElementById('pwd-input').value=''}
+function doLogout(){
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('app').className='';
+  showLogin();
+}
 
 function initApp(){
   const now=new Date();
@@ -321,6 +430,10 @@ function initApp(){
   document.getElementById('inicio-fecha').textContent=ds;
   renderInicio();renderRecetario();renderPedidoLista();renderMenu();renderProyectos();renderAvisos();calRender();initIA();
 }
+
+// Arrancar Firebase cuando esté listo
+if(window._fbReady){initFirebase();}
+else{window.addEventListener('fbready',()=>initFirebase());}
 
 function showPanel(id){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
