@@ -409,13 +409,15 @@ async function initFirebase(){
         D[key]=data;
       }
     }
-    nid=Math.max(nid,...Object.values(D).flat().map(i=>((i.id||0)+1)));
+    const allIds=Object.values(D).flat().map(i=>i&&i.id?i.id:0).filter(n=>!isNaN(n));
+    nid=allIds.length?Math.max(nid,...allIds)+1:nid;
     dbReady=true;
     Object.entries(COLECCIONES).forEach(([key,col])=>{
       fbListen(col,items=>{
         if(!items.length)return;
         D[key]=items;
-        const maxId=Math.max(0,...items.map(i=>i.id||0));
+        const ids=items.map(i=>i.id||0).filter(n=>!isNaN(n));
+        const maxId=ids.length?Math.max(...ids):0;
         if(maxId>=nid)nid=maxId+1;
         renderAll();
       });
@@ -655,6 +657,7 @@ document.getElementById('modal').addEventListener('click',e=>{if(e.target===docu
 
 // ── PRACTICANTES ──────────────────────────────────────────────────────────────
 function renderPracticantes(){
+  const el=document.getElementById('prac-body');if(!el)return;
   const f=document.getElementById('prac-filter')?.value||'';
   const list=D.practicantes.filter(p=>!f||p.estado===f);
   document.getElementById('prac-body').innerHTML=list.length?list.map(p=>`
