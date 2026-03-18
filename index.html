@@ -278,7 +278,7 @@ td input:focus,td select:focus{border-bottom-color:var(--green)}
       </div>
       <div id="prac-body"></div>
     </div>
-    <div class="panel" id="panel-prac-ficha" style="display:none">
+    <div class="panel" id="panel-prac-ficha">
       <div style="background:var(--black);color:var(--white);padding:1.25rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0">
         <span id="prac-ficha-titulo" style="font-family:'Unbounded',sans-serif;font-size:1rem;font-weight:700"></span>
         <button class="btn btn-sm" onclick="closePracFicha()">← Volver</button>
@@ -481,10 +481,11 @@ if(window._fbReady){initFirebase();}
 else{window.addEventListener('fbready',()=>initFirebase());}
 
 function showPanel(id){
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>{p.classList.remove('active');});
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('panel-'+id).classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b=>{if(b.getAttribute('onclick').includes("'"+id+"'"))b.classList.add('active')});
+  const panel=document.getElementById('panel-'+id);
+  if(panel)panel.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>{if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'"+id+"'"))b.classList.add('active')});
 }
 
 function renderInicio(){
@@ -701,12 +702,11 @@ function openPracFicha(id){
       <button class="btn btn-outline" onclick="openPracModal(${id})">Editar ficha</button>
       <button class="btn btn-danger btn-sm" onclick="delPrac(${id})">Eliminar</button>
     </div>`;
-  document.querySelectorAll('.panel').forEach(x=>x.style.display='none');
-  document.getElementById('panel-prac-ficha').style.display='block';
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  document.getElementById('panel-prac-ficha').classList.add('active');
 }
 
 function closePracFicha(){
-  document.getElementById('panel-prac-ficha').style.display='none';
   showPanel('practicantes');
 }
 
