@@ -626,7 +626,7 @@ function oRM(id){
     <div class="fr"><label>Tiempo de elaboración</label><input id="rtiem" placeholder="Ej: 2h 30min" value="${r?r.tiempoElaboracion||'':''}"></div>
     <div class="fr"><label>Temperatura de servicio</label><input id="rtemp" placeholder="Ej: 65°C / Frío / Ambiente" value="${r?r.temperatura||'':''}"></div>
     <div class="fr"><label>Foto (URL de imagen)</label><input id="rfoto" placeholder="https://..." value="${r?r.foto||'':''}"></div>
-    <div class="fr"><label>Alérgenos</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:.3rem .75rem">${ALERGEN_LIST.map(a=>`<label style="display:flex;align-items:center;gap:.4rem;font-size:12px;text-transform:none;letter-spacing:0"><input type="checkbox" id="al_${a.replace(/\s/g,'_')}"${alerg.includes(a)?' checked':''}> ${a}</label>`).join('')}</div></div>
+    <div class="fr"><label>Alérgenos</label><div style="display:flex;flex-wrap:wrap;gap:.4rem .75rem">${ALERGEN_LIST.map(a=>`<label style="display:flex;align-items:center;gap:.4rem;font-size:12px;text-transform:none;letter-spacing:0;min-width:140px"><input type="checkbox" id="al_${a.replace(/\s/g,'_')}"${alerg.includes(a)?' checked':''}> ${a}</label>`).join('')}</div></div>
     <div class="fr"><label>Ingredientes principales (nombre|cantidad|unidad — una línea por ingrediente)</label><textarea id="ri" rows="4">${r?r.ingredientes.map(i=>`${i.i}|${i.c}|${i.u}`).join('\n'):''}</textarea></div>
     <div class="fr"><label>Subrecetas (opcional)</label>
       <div id="subs-container">${subs.map((s,i)=>`<div class="sub-block" data-idx="${i}" style="border:1px solid var(--gr);padding:.6rem;margin-bottom:.5rem">
