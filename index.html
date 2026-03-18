@@ -506,11 +506,38 @@ function delIng(id){if(!confirm('¿Eliminar?'))return;D.ingredientes=D.ingredien
 function renderPedidoResumen(){
   const g={};D.ingredientes.forEach(i=>{if(i.prov){if(!g[i.prov])g[i.prov]=[];g[i.prov].push(i)}});
   const sp=D.ingredientes.filter(i=>!i.prov);
+  const fecha=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
   let html='';
   if(!Object.keys(g).length){html='<p style="color:var(--gray-dark)">Asigna proveedores en la pestaña Lista.</p>'}
-  else{Object.entries(g).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([prov,items])=>{html+=`<div class="prov-block"><div class="prov-block-head"><span>${prov}</span><small>${items.length} producto${items.length!==1?'s':''}</small></div><div class="prov-inner">${items.map(i=>`<div class="prov-row"><span style="font-weight:700">${i.ing}</span><span>${bcat(i.cat)}</span><span style="text-align:right;font-weight:700">${i.cant||'—'}</span></div>`).join('')}</div></div>`})}
+  else{Object.entries(g).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([prov,items])=>{
+    const provInfo=D.proveedores.find(p=>p.nombre===prov);
+    const tel=provInfo?.tel||'';
+    html+=`<div class="prov-block">
+      <div class="prov-block-head">
+        <span>${prov}</span>
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <small>${items.length} producto${items.length!==1?'s':''}</small>
+          <button onclick="enviarWhatsApp('${prov.replace(/'/g,"\\'")}','${tel}')" style="background:#25D366;color:#fff;border:none;font-family:'Space Mono',monospace;font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:.05em;text-transform:uppercase;border-radius:2px">
+            ✉ WhatsApp
+          </button>
+        </div>
+      </div>
+      <div class="prov-inner">${items.map(i=>`<div class="prov-row"><span style="font-weight:700">${i.ing}</span><span>${bcat(i.cat)}</span><span style="text-align:right;font-weight:700">${i.cant||'—'}</span></div>`).join('')}</div>
+    </div>`;
+  })}
   if(sp.length)html+=`<div class="notice"><strong>${sp.length} ingrediente${sp.length!==1?'s':''} sin proveedor:</strong> ${sp.map(i=>i.ing).join(', ')}</div>`;
   document.getElementById('ped-panel-resumen').innerHTML=html;
+}
+
+function enviarWhatsApp(prov,tel){
+  const fecha=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+  const items=D.ingredientes.filter(i=>i.prov===prov);
+  const lineas=items.map(i=>`• ${i.ing}${i.cant?' — '+i.cant:''}`).join('\n');
+  const msg=`🍃 *Pedido OBA*\n${fecha}\n\n*Para: ${prov}*\n\n${lineas}\n\nGracias 🙏`;
+  const url=tel
+    ?`https://wa.me/34${tel.replace(/\s/g,'')}?text=${encodeURIComponent(msg)}`
+    :`https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(url,'_blank');
 }
 function renderPedidoProv(){
   document.getElementById('ped-panel-prov').innerHTML=`<button class="btn btn-green" style="margin-bottom:1rem" onclick="openPedidoModal('prov')">+ Proveedor</button>${!D.proveedores.length?'<p style="color:var(--gray-dark)">No hay proveedores aún.</p>':D.proveedores.map((p,i)=>`<div class="project-card"><div class="project-title">${p.nombre}</div>${p.tel?`<div style="font-size:12px;color:var(--gray-dark)">Tel: ${p.tel}</div>`:''} ${p.nota?`<div style="font-size:12px;margin-top:.4rem">${p.nota}</div>`:''}<div class="card-actions"><button class="btn btn-sm btn-outline" onclick="editProv(${i})">Editar</button><button class="btn btn-sm btn-danger" onclick="delProv(${i})">Eliminar</button></div></div>`).join('')}`;
