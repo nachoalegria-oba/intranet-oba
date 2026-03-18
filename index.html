@@ -625,8 +625,18 @@ function oRM(id){
     <div class="fr"><label>Raciones</label><input id="rrac" placeholder="Ej: 4 personas" value="${r?r.raciones||'':''}"></div>
     <div class="fr"><label>Tiempo de elaboración</label><input id="rtiem" placeholder="Ej: 2h 30min" value="${r?r.tiempoElaboracion||'':''}"></div>
     <div class="fr"><label>Temperatura de servicio</label><input id="rtemp" placeholder="Ej: 65°C / Frío / Ambiente" value="${r?r.temperatura||'':''}"></div>
-    <div class="fr"><label>Foto (URL de imagen)</label><input id="rfoto" placeholder="https://..." value="${r?r.foto||'':''}"></div>
-    <div class="fr"><label>Alérgenos</label><div style="display:flex;flex-wrap:wrap;gap:.4rem .75rem">${ALERGEN_LIST.map(a=>`<label style="display:flex;align-items:center;gap:.4rem;font-size:12px;text-transform:none;letter-spacing:0;min-width:140px"><input type="checkbox" id="al_${a.replace(/\s/g,'_')}"${alerg.includes(a)?' checked':''}> ${a}</label>`).join('')}</div></div>
+    <div class="fr"><label>Foto del plato</label>
+      <div style="display:flex;flex-direction:column;gap:.5rem">
+        ${r&&r.foto?`<img src="${r.foto}" style="width:100%;max-height:160px;object-fit:cover;border:var(--br)" alt="foto actual"><p style="font-size:11px;color:var(--grd)">Foto actual — sube una nueva para reemplazarla</p>`:''}
+        <input type="file" id="rfoto-file" accept="image/*" capture="environment" style="font-family:'Space Mono',monospace;font-size:12px;border:var(--br);padding:.4rem .6rem;width:100%;background:transparent;cursor:pointer">
+        <p style="font-size:11px;color:var(--grd)">Puedes hacer una foto con la cámara o elegir una de la galería</p>
+      </div>
+    </div>
+    <div class="fr"><label>Alérgenos</label>
+      <div style="display:flex;flex-direction:column;gap:.5rem">
+        ${ALERGEN_LIST.map(a=>`<label style="display:flex;align-items:center;gap:.6rem;font-size:13px;text-transform:none;letter-spacing:0;cursor:pointer"><input type="checkbox" id="al_${a.replace(/\s/g,'_')}" style="width:16px;height:16px;cursor:pointer"${alerg.includes(a)?' checked':''}> ${a}</label>`).join('')}
+      </div>
+    </div>
     <div class="fr"><label>Ingredientes principales (nombre|cantidad|unidad — una línea por ingrediente)</label><textarea id="ri" rows="6">${r?r.ingredientes.map(i=>`${i.i}|${i.c}|${i.u}`).join('\n'):''}</textarea></div>
     <div class="fr"><label>Subrecetas (opcional)</label>
       <div id="subs-container">${subs.map((s,i)=>`<div class="sub-block" data-idx="${i}" style="border:1px solid var(--gr);padding:.6rem;margin-bottom:.5rem">
@@ -666,38 +676,28 @@ function removeSub(i){
 
 function sRec(id){
   const n=document.getElementById('rn').value.trim();if(!n)return alert('El nombre es obligatorio');
-  // Collect alérgenos
   const alergenos=ALERGEN_LIST.filter(a=>document.getElementById('al_'+a.replace(/\s/g,'_'))?.checked);
-  // Collect subrecetas
   const subrecetas=[];
   document.querySelectorAll('.sub-block').forEach(el=>{
     const i=el.dataset.idx;
     const sn=document.getElementById('sn_'+i)?.value.trim();
     if(!sn)return;
-    subrecetas.push({
-      nombre:sn,
-      descripcion:document.getElementById('sd_'+i)?.value||'',
-      ingredientes:(document.getElementById('si_'+i)?.value||'').split('\n').filter(l=>l.trim()).map(l=>{const p=l.split('|');return{i:p[0]||'',c:p[1]||'',u:p[2]||''}}),
-      pasos:(document.getElementById('sp_'+i)?.value||'').split('\n').filter(l=>l.trim())
-    });
+    subrecetas.push({nombre:sn,descripcion:document.getElementById('sd_'+i)?.value||'',ingredientes:(document.getElementById('si_'+i)?.value||'').split('\n').filter(l=>l.trim()).map(l=>{const p=l.split('|');return{i:p[0]||'',c:p[1]||'',u:p[2]||''}}),pasos:(document.getElementById('sp_'+i)?.value||'').split('\n').filter(l=>l.trim())});
   });
-  const obj={
-    nombre:n,
-    seccion:document.getElementById('rs').value,
-    temporada:document.getElementById('rt').value,
-    descripcion:document.getElementById('rd').value,
-    raciones:document.getElementById('rrac').value,
-    tiempoElaboracion:document.getElementById('rtiem').value,
-    temperatura:document.getElementById('rtemp').value,
-    foto:document.getElementById('rfoto').value,
-    alergenos,
-    ingredientes:document.getElementById('ri').value.split('\n').filter(l=>l.trim()).map(l=>{const p=l.split('|');return{i:p[0]||'',c:p[1]||'',u:p[2]||''}}),
-    subrecetas,
-    pasos:document.getElementById('rp').value.split('\n').filter(l=>l.trim()),
-    notas:document.getElementById('rno').value
+  const fileInput=document.getElementById('rfoto-file');
+  const existingFoto=id?D.recipes.find(x=>x.id===id)?.foto||'':'';
+  const doSave=(fotoData)=>{
+    const obj={nombre:n,seccion:document.getElementById('rs').value,temporada:document.getElementById('rt').value,descripcion:document.getElementById('rd').value,raciones:document.getElementById('rrac').value,tiempoElaboracion:document.getElementById('rtiem').value,temperatura:document.getElementById('rtemp').value,foto:fotoData,alergenos,ingredientes:document.getElementById('ri').value.split('\n').filter(l=>l.trim()).map(l=>{const p=l.split('|');return{i:p[0]||'',c:p[1]||'',u:p[2]||''}}),subrecetas,pasos:document.getElementById('rp').value.split('\n').filter(l=>l.trim()),notas:document.getElementById('rno').value};
+    if(id){Object.assign(D.recipes.find(x=>x.id===id),obj)}else{D.recipes.push({id:nid++,...obj})}
+    save('recipes');cModal();rRec();rInicio();
   };
-  if(id){Object.assign(D.recipes.find(x=>x.id===id),obj)}else{D.recipes.push({id:nid++,...obj})}
-  save('recipes');cModal();rRec();rInicio();
+  if(fileInput&&fileInput.files&&fileInput.files[0]){
+    const reader=new FileReader();
+    reader.onload=e=>doSave(e.target.result);
+    reader.readAsDataURL(fileInput.files[0]);
+  } else {
+    doSave(existingFoto);
+  }
 }
 function dRec(id){if(!confirm('¿Eliminar este plato?'))return;D.recipes=D.recipes.filter(x=>x.id!==id);save('recipes');rRec();rInicio()}
 
