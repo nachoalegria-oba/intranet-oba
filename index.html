@@ -80,7 +80,7 @@ td input:focus,td select:focus{border-bottom-color:var(--g)}
 .b-base{border-color:var(--grd);color:var(--grd)}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center}
 .modal-bg.open{display:flex}
-.modal{background:var(--wh);border:3px solid var(--bk);padding:1.5rem;width:min(480px,92vw);max-height:85vh;overflow-y:auto}
+.modal{background:var(--wh);border:3px solid var(--bk);padding:1.5rem;width:min(680px,96vw);max-height:92vh;overflow-y:auto}
 .modal h3{font-family:'Unbounded',sans-serif;font-size:1rem;font-weight:700;margin-bottom:1.25rem;padding-bottom:.6rem;border-bottom:2px solid var(--bk)}
 .fr{margin-bottom:.9rem}
 .fr label{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--grd);margin-bottom:.3rem}
@@ -627,7 +627,7 @@ function oRM(id){
     <div class="fr"><label>Temperatura de servicio</label><input id="rtemp" placeholder="Ej: 65°C / Frío / Ambiente" value="${r?r.temperatura||'':''}"></div>
     <div class="fr"><label>Foto (URL de imagen)</label><input id="rfoto" placeholder="https://..." value="${r?r.foto||'':''}"></div>
     <div class="fr"><label>Alérgenos</label><div style="display:flex;flex-wrap:wrap;gap:.4rem .75rem">${ALERGEN_LIST.map(a=>`<label style="display:flex;align-items:center;gap:.4rem;font-size:12px;text-transform:none;letter-spacing:0;min-width:140px"><input type="checkbox" id="al_${a.replace(/\s/g,'_')}"${alerg.includes(a)?' checked':''}> ${a}</label>`).join('')}</div></div>
-    <div class="fr"><label>Ingredientes principales (nombre|cantidad|unidad — una línea por ingrediente)</label><textarea id="ri" rows="4">${r?r.ingredientes.map(i=>`${i.i}|${i.c}|${i.u}`).join('\n'):''}</textarea></div>
+    <div class="fr"><label>Ingredientes principales (nombre|cantidad|unidad — una línea por ingrediente)</label><textarea id="ri" rows="6">${r?r.ingredientes.map(i=>`${i.i}|${i.c}|${i.u}`).join('\n'):''}</textarea></div>
     <div class="fr"><label>Subrecetas (opcional)</label>
       <div id="subs-container">${subs.map((s,i)=>`<div class="sub-block" data-idx="${i}" style="border:1px solid var(--gr);padding:.6rem;margin-bottom:.5rem">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem"><strong style="font-size:12px">Subreceta ${i+1}</strong><button type="button" onclick="removeSub(${i})" style="background:none;border:none;color:#c0392b;cursor:pointer;font-size:14px">×</button></div>
@@ -638,7 +638,7 @@ function oRM(id){
       </div>`).join('')}</div>
       <button type="button" class="btn btn-o btn-s" onclick="addSub()" style="margin-top:.4rem">+ Añadir subreceta</button>
     </div>
-    <div class="fr"><label>Elaboración final (un paso por línea)</label><textarea id="rp" rows="4">${r?r.pasos.join('\n'):''}</textarea></div>
+    <div class="fr"><label>Elaboración final (un paso por línea)</label><textarea id="rp" rows="6">${r?r.pasos.join('\n'):''}</textarea></div>
     <div class="fr"><label>Notas</label><input id="rno" value="${r?r.notas||'':''}"></div>
     <div class="mf"><button class="btn btn-o" onclick="cModal()">Cancelar</button><button class="btn btn-g" onclick="sRec(${id||'null'})">Guardar</button></div>`);
   window._subCount=subs.length;
