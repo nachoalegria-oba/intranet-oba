@@ -4,864 +4,672 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OBA — Intranet</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@300;400;700;900&display=swap" rel="stylesheet">
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, doc, setDoc, getDocs, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyAUUgLnKnh1xUbCjis4nPoEzoLLrJp9loY",
-  authDomain: "intranet-oba.firebaseapp.com",
-  projectId: "intranet-oba",
-  storageBucket: "intranet-oba.firebasestorage.app",
-  messagingSenderId: "603055689454",
-  appId: "1:603055689454:web:4e25c2a58f6a42c9c0adff"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-window._db = db;
-window._fbReady = true;
-window._col = collection;
-window._doc = doc;
-window._setDoc = setDoc;
-window._getDocs = getDocs;
-window._onSnapshot = onSnapshot;
-window._deleteDoc = deleteDoc;
-window.dispatchEvent(new Event('fbready'));
-</script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
-:root{--green:#5a7a4a;--green-dark:#3d5433;--green-light:#7a9e68;--green-pale:#e8efe4;--black:#0a0a0a;--white:#f5f5f0;--gray:#c8c8c0;--gray-dark:#444440;--border:2px solid #0a0a0a}
+:root{--g:#5a7a4a;--gd:#3d5433;--gl:#7a9e68;--gp:#e8efe4;--bk:#0a0a0a;--wh:#f5f5f0;--gr:#c8c8c0;--grd:#444440;--br:2px solid #0a0a0a}
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{background:var(--white);color:var(--black);font-family:'Space Mono',monospace;font-size:13px;line-height:1.6;min-height:100vh}
-#login-screen{position:fixed;inset:0;background:var(--black);display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:2rem}
-.login-logo{font-family:'Unbounded',sans-serif;font-size:clamp(3rem,12vw,6rem);font-weight:900;color:var(--white);letter-spacing:-.02em;line-height:1}
-.login-logo span{color:var(--green-light)}
-.login-sub{color:var(--gray);font-size:11px;letter-spacing:.2em;text-transform:uppercase}
-.login-form{display:flex;flex-direction:column;gap:.75rem;width:min(280px,90vw)}
-.login-input{background:transparent;border:none;border-bottom:2px solid var(--gray-dark);color:var(--white);font-family:'Space Mono',monospace;font-size:14px;padding:.6rem 0;outline:none;transition:border-color .2s}
-.login-input::placeholder{color:var(--gray-dark)}
-.login-input:focus{border-color:var(--green-light)}
-.login-btn{background:var(--green);color:var(--white);border:none;padding:.8rem;font-family:'Space Mono',monospace;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .15s}
-.login-btn:hover{background:var(--green-light)}
-.login-error{color:#e87878;font-size:12px;text-align:center;min-height:16px}
+body{background:var(--wh);color:var(--bk);font-family:'Space Mono',monospace;font-size:13px;line-height:1.6;min-height:100vh}
+#login-screen{position:fixed;inset:0;background:var(--bk);display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:2rem}
+.ll{font-family:'Unbounded',sans-serif;font-size:clamp(3rem,12vw,6rem);font-weight:900;color:var(--wh);letter-spacing:-.02em}
+.ll span{color:var(--gl)}
+.ls{color:var(--gr);font-size:11px;letter-spacing:.2em;text-transform:uppercase}
+.lf{display:flex;flex-direction:column;gap:.75rem;width:min(280px,90vw)}
+.li{background:transparent;border:none;border-bottom:2px solid var(--grd);color:var(--wh);font-family:'Space Mono',monospace;font-size:14px;padding:.6rem 0;outline:none}
+.li::placeholder{color:var(--grd)}
+.li:focus{border-color:var(--gl)}
+.lb{background:var(--g);color:var(--wh);border:none;padding:.8rem;font-family:'Space Mono',monospace;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.lb:hover{background:var(--gl)}
+.le{color:#e87878;font-size:12px;text-align:center;min-height:16px}
 #app{display:none;min-height:100vh;flex-direction:column}
 #app.visible{display:flex}
-header{background:var(--black);color:var(--white);display:flex;align-items:center;justify-content:space-between;padding:.75rem 1.25rem;border-bottom:3px solid var(--green);position:sticky;top:0;z-index:100}
-.header-logo{font-family:'Unbounded',sans-serif;font-size:1.4rem;font-weight:900;letter-spacing:-.02em}
-.header-logo span{color:var(--green-light)}
-.header-right{display:flex;align-items:center;gap:1rem}
-.header-date{font-size:11px;color:var(--gray);letter-spacing:.05em;display:none}
-.logout-btn{background:none;border:1px solid var(--gray-dark);color:var(--gray);font-family:'Space Mono',monospace;font-size:11px;padding:4px 10px;cursor:pointer;letter-spacing:.05em;text-transform:uppercase}
-.logout-btn:hover{border-color:var(--white);color:var(--white)}
-nav{background:var(--black);display:flex;overflow-x:auto;border-bottom:2px solid var(--green-dark);scrollbar-width:none}
+header{background:var(--bk);color:var(--wh);display:flex;align-items:center;justify-content:space-between;padding:.75rem 1.25rem;border-bottom:3px solid var(--g);position:sticky;top:0;z-index:100}
+.hl{font-family:'Unbounded',sans-serif;font-size:1.4rem;font-weight:900;letter-spacing:-.02em}
+.hl span{color:var(--gl)}
+.hr{display:flex;align-items:center;gap:1rem}
+.hd{font-size:11px;color:var(--gr);letter-spacing:.05em;display:none}
+.out{background:none;border:1px solid var(--grd);color:var(--gr);font-family:'Space Mono',monospace;font-size:11px;padding:4px 10px;cursor:pointer}
+.out:hover{border-color:var(--wh);color:var(--wh)}
+nav{background:var(--bk);display:flex;overflow-x:auto;border-bottom:2px solid var(--gd);scrollbar-width:none}
 nav::-webkit-scrollbar{display:none}
-.nav-btn{background:none;border:none;color:var(--gray);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:.65rem 1.1rem;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:all .15s;flex-shrink:0}
-.nav-btn:hover{color:var(--white)}
-.nav-btn.active{color:var(--green-light);border-bottom-color:var(--green-light)}
+.nb{background:none;border:none;color:var(--gr);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:.65rem 1.1rem;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:all .15s;flex-shrink:0}
+.nb:hover{color:var(--wh)}
+.nb.active{color:var(--gl);border-bottom-color:var(--gl)}
 main{flex:1;padding:1.25rem}
 .panel{display:none}
 .panel.active{display:block}
-.page-header{border-left:4px solid var(--green);padding:.25rem 0 .25rem .75rem;margin-bottom:1.5rem}
-.page-header h1{font-family:'Unbounded',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:-.01em}
-.page-header p{font-size:11px;color:var(--gray-dark);margin-top:.2rem}
+.ph{border-left:4px solid var(--g);padding:.25rem 0 .25rem .75rem;margin-bottom:1.5rem}
+.ph h1{font-family:'Unbounded',sans-serif;font-size:1.1rem;font-weight:700}
+.ph p{font-size:11px;color:var(--grd);margin-top:.2rem}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem}
-.card{border:var(--border);padding:1rem;position:relative;transition:transform .1s;background:var(--white)}
-.card:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--black)}
-.card-tag{font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:var(--green);color:var(--white);display:inline-block;padding:2px 8px;margin-bottom:.6rem}
+.card{border:var(--br);padding:1rem;background:var(--wh);transition:transform .1s;cursor:pointer}
+.card:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--bk)}
+.ctag{font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:var(--g);color:var(--wh);display:inline-block;padding:2px 8px;margin-bottom:.6rem}
 .card h3{font-family:'Unbounded',sans-serif;font-size:.85rem;font-weight:700;margin-bottom:.4rem}
-.card p{font-size:12px;color:var(--gray-dark);line-height:1.5}
-.card-meta{font-size:11px;color:var(--gray);margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--gray)}
-.card-actions{display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap}
-.btn{background:var(--black);color:var(--white);border:none;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:.5rem .9rem;cursor:pointer;transition:background .15s}
-.btn:hover{background:var(--green-dark)}
-.btn-outline{background:transparent;color:var(--black);border:var(--border)}
-.btn-outline:hover{background:var(--black);color:var(--white)}
-.btn-green{background:var(--green);color:var(--white)}
-.btn-green:hover{background:var(--green-dark)}
-.btn-sm{padding:.3rem .65rem;font-size:10px}
-.btn-danger{background:#c0392b;color:var(--white)}
-.btn-danger:hover{background:#96281b}
+.card p{font-size:12px;color:var(--grd);line-height:1.5}
+.cmeta{font-size:11px;color:var(--gr);margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--gr)}
+.ca{display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap}
+.btn{background:var(--bk);color:var(--wh);border:none;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:.5rem .9rem;cursor:pointer}
+.btn:hover{background:var(--gd)}
+.btn-o{background:transparent;color:var(--bk);border:var(--br)}
+.btn-o:hover{background:var(--bk);color:var(--wh)}
+.btn-g{background:var(--g);color:var(--wh)}
+.btn-g:hover{background:var(--gd)}
+.btn-s{padding:.3rem .65rem;font-size:10px}
+.btn-d{background:#c0392b;color:var(--wh)}
 .toolbar{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem}
-.search-box{flex:1;min-width:180px;border:var(--border);background:transparent;font-family:'Space Mono',monospace;font-size:12px;padding:.45rem .7rem;color:var(--black);outline:none}
-.search-box:focus{border-color:var(--green)}
-select.filter-sel{border:var(--border);background:var(--white);font-family:'Space Mono',monospace;font-size:11px;padding:.4rem .6rem;cursor:pointer;color:var(--black);outline:none}
-.tbl-wrap{overflow-x:auto;border:var(--border)}
+.sb{flex:1;min-width:180px;border:var(--br);background:transparent;font-family:'Space Mono',monospace;font-size:12px;padding:.45rem .7rem;color:var(--bk);outline:none}
+.sb:focus{border-color:var(--g)}
+select.fs{border:var(--br);background:var(--wh);font-family:'Space Mono',monospace;font-size:11px;padding:.4rem .6rem;cursor:pointer;color:var(--bk);outline:none}
+.tw{overflow-x:auto;border:var(--br)}
 table{width:100%;border-collapse:collapse;table-layout:fixed;min-width:500px}
-thead th{background:var(--black);color:var(--white);font-size:10px;letter-spacing:.1em;text-transform:uppercase;text-align:left;padding:.5rem .7rem;font-weight:700}
-tbody tr{border-bottom:1px solid var(--gray)}
-tbody tr:hover{background:var(--green-pale)}
+thead th{background:var(--bk);color:var(--wh);font-size:10px;letter-spacing:.1em;text-transform:uppercase;text-align:left;padding:.5rem .7rem;font-weight:700}
+tbody tr{border-bottom:1px solid var(--gr)}
+tbody tr:hover{background:var(--gp)}
 td{padding:.5rem .7rem;font-size:12px;vertical-align:top;word-break:break-word}
-td input,td select{width:100%;background:transparent;border:none;border-bottom:1px solid var(--gray);font-family:'Space Mono',monospace;font-size:12px;padding:2px 4px;color:var(--black);outline:none}
-td input:focus,td select:focus{border-bottom-color:var(--green)}
+td input,td select{width:100%;background:transparent;border:none;border-bottom:1px solid var(--gr);font-family:'Space Mono',monospace;font-size:12px;padding:2px 4px;color:var(--bk);outline:none}
+td input:focus,td select:focus{border-bottom-color:var(--g)}
 .badge{display:inline-block;padding:1px 7px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;border:1px solid}
-.badge-bosque{border-color:var(--green-dark);color:var(--green-dark)}
-.badge-fluvial{border-color:#2a5a7a;color:#2a5a7a}
-.badge-corral{border-color:#7a5a2a;color:#7a5a2a}
-.badge-caza{border-color:#7a2a2a;color:#7a2a2a}
-.badge-postre{border-color:#7a2a5a;color:#7a2a5a}
-.badge-huerta{border-color:var(--green);color:var(--green)}
-.badge-base{border-color:var(--gray-dark);color:var(--gray-dark)}
+.b-bosque{border-color:var(--gd);color:var(--gd)}
+.b-fluvial{border-color:#2a5a7a;color:#2a5a7a}
+.b-corral{border-color:#7a5a2a;color:#7a5a2a}
+.b-caza{border-color:#7a2a2a;color:#7a2a2a}
+.b-postre{border-color:#7a2a5a;color:#7a2a5a}
+.b-huerta{border-color:var(--g);color:var(--g)}
+.b-base{border-color:var(--grd);color:var(--grd)}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center}
 .modal-bg.open{display:flex}
-.modal{background:var(--white);border:3px solid var(--black);padding:1.5rem;width:min(480px,92vw);max-height:85vh;overflow-y:auto}
-.modal h3{font-family:'Unbounded',sans-serif;font-size:1rem;font-weight:700;margin-bottom:1.25rem;padding-bottom:.6rem;border-bottom:2px solid var(--black)}
-.form-row{margin-bottom:.9rem}
-.form-row label{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray-dark);margin-bottom:.3rem}
-.form-row input,.form-row select,.form-row textarea{width:100%;border:var(--border);background:transparent;font-family:'Space Mono',monospace;font-size:13px;padding:.5rem .7rem;color:var(--black);outline:none}
-.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--green)}
-.form-row textarea{resize:vertical;min-height:80px}
-.modal-footer{display:flex;justify-content:flex-end;gap:.6rem;margin-top:1.25rem;padding-top:.75rem;border-top:1px solid var(--gray)}
-.recipe-detail{display:none;position:fixed;inset:0;background:var(--white);z-index:150;overflow-y:auto}
-.recipe-detail.open{display:block}
-.recipe-header{background:var(--black);color:var(--white);padding:1.25rem;display:flex;justify-content:space-between;align-items:flex-start;position:sticky;top:0}
-.recipe-header h2{font-family:'Unbounded',sans-serif;font-size:1.1rem;font-weight:700;max-width:calc(100% - 80px)}
-.recipe-body{padding:1.25rem;max-width:700px;margin:0 auto}
-.recipe-section{margin-bottom:1.5rem}
-.recipe-section h4{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--gray-dark);margin-bottom:.6rem;padding-bottom:.3rem;border-bottom:1px solid var(--gray)}
-.step-list{list-style:none}
-.step-list li{display:flex;gap:.75rem;margin-bottom:.5rem;padding:.5rem;border-left:3px solid var(--green);background:var(--green-pale)}
-.step-num{font-family:'Unbounded',sans-serif;font-size:.7rem;font-weight:900;color:var(--green-dark);min-width:20px}
-.ing-grid{display:grid;grid-template-columns:1fr auto auto;gap:.25rem .75rem;font-size:12px}
-.ing-grid .ih{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-dark);border-bottom:1px solid var(--gray);padding-bottom:.3rem;margin-bottom:.2rem}
-.notice{border-left:4px solid var(--green);padding:.6rem .9rem;background:var(--green-pale);margin-bottom:.75rem;font-size:12px}
-.notice-date{font-size:10px;color:var(--gray-dark);margin-top:.2rem}
+.modal{background:var(--wh);border:3px solid var(--bk);padding:1.5rem;width:min(480px,92vw);max-height:85vh;overflow-y:auto}
+.modal h3{font-family:'Unbounded',sans-serif;font-size:1rem;font-weight:700;margin-bottom:1.25rem;padding-bottom:.6rem;border-bottom:2px solid var(--bk)}
+.fr{margin-bottom:.9rem}
+.fr label{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--grd);margin-bottom:.3rem}
+.fr input,.fr select,.fr textarea{width:100%;border:var(--br);background:transparent;font-family:'Space Mono',monospace;font-size:13px;padding:.5rem .7rem;color:var(--bk);outline:none}
+.fr input:focus,.fr select:focus,.fr textarea:focus{border-color:var(--g)}
+.fr textarea{resize:vertical;min-height:80px}
+.mf{display:flex;justify-content:flex-end;gap:.6rem;margin-top:1.25rem;padding-top:.75rem;border-top:1px solid var(--gr)}
+.rd{display:none;position:fixed;inset:0;background:var(--wh);z-index:150;overflow-y:auto}
+.rd.open{display:block}
+.rdh{background:var(--bk);color:var(--wh);padding:1.25rem;display:flex;justify-content:space-between;align-items:flex-start;position:sticky;top:0}
+.rdh h2{font-family:'Unbounded',sans-serif;font-size:1.1rem;font-weight:700;max-width:calc(100% - 80px)}
+.rdb{padding:1.25rem;max-width:700px;margin:0 auto}
+.rs{margin-bottom:1.5rem}
+.rs h4{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--grd);margin-bottom:.6rem;padding-bottom:.3rem;border-bottom:1px solid var(--gr)}
+.sl{list-style:none}
+.sl li{display:flex;gap:.75rem;margin-bottom:.5rem;padding:.5rem;border-left:3px solid var(--g);background:var(--gp)}
+.sn{font-family:'Unbounded',sans-serif;font-size:.7rem;font-weight:900;color:var(--gd);min-width:20px}
+.ig{display:grid;grid-template-columns:1fr auto auto;gap:.25rem .75rem;font-size:12px}
+.ih{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--grd);border-bottom:1px solid var(--gr);padding-bottom:.3rem;margin-bottom:.2rem}
+.notice{border-left:4px solid var(--g);padding:.6rem .9rem;background:var(--gp);margin-bottom:.75rem;font-size:12px}
+.nd{font-size:10px;color:var(--grd);margin-top:.2rem}
 .notice.urgent{border-color:#c0392b;background:#fdf0ee}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:.5rem}
-.cal-head{text-align:center;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-dark);padding:.3rem 0}
-.cal-day{border:1px solid var(--gray);padding:.4rem;min-height:56px;font-size:11px;cursor:pointer;transition:background .1s;background:var(--white)}
-.cal-day:hover{background:var(--green-pale)}
-.cal-day.today{border-color:var(--green);border-width:2px}
-.cal-day.other-month{opacity:.3}
-.cal-day-num{font-weight:700;font-size:12px;margin-bottom:.2rem}
-.cal-event{background:var(--green);color:var(--white);font-size:10px;padding:1px 4px;margin-bottom:1px;line-height:1.4}
-.cal-event.urgent{background:#c0392b}
-.prov-block{border:var(--border);margin-bottom:1rem}
-.prov-block-head{background:var(--black);color:var(--white);padding:.6rem .9rem;display:flex;justify-content:space-between;align-items:center}
-.prov-block-head span{font-family:'Unbounded',sans-serif;font-size:.8rem;font-weight:700}
-.prov-block-head small{font-size:11px;color:var(--gray);font-family:'Space Mono',monospace}
-.prov-inner{padding:.5rem}
-.prov-row{display:grid;grid-template-columns:1fr auto auto;gap:.5rem;align-items:center;padding:.3rem .5rem;font-size:12px;border-bottom:1px solid var(--gray)}
-.prov-row:last-child{border-bottom:none}
-.project-card{border:var(--border);padding:1rem;margin-bottom:.75rem;background:var(--white)}
-.project-title{font-family:'Unbounded',sans-serif;font-size:.9rem;font-weight:700;margin-bottom:.4rem}
-.project-status{display:inline-block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border:1px solid;margin-bottom:.5rem;white-space:nowrap}
-.status-activo{border-color:var(--green);color:var(--green)}
-.status-testeo{border-color:#c07020;color:#c07020}
-.status-pausado{border-color:var(--gray-dark);color:var(--gray-dark)}
-.status-listo{border-color:#2a7a5a;color:#2a7a5a}
+.cg{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:.5rem}
+.ch{text-align:center;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--grd);padding:.3rem 0}
+.cd{border:1px solid var(--gr);padding:.4rem;min-height:56px;font-size:11px;cursor:pointer;background:var(--wh);position:relative}
+.cd:hover{background:var(--gp)}
+.cd.today{border-color:var(--g);border-width:2px}
+.cd.om{opacity:.3}
+.cdn{font-weight:700;font-size:12px;margin-bottom:.2rem}
+.ce{background:var(--g);color:var(--wh);font-size:10px;padding:1px 4px;margin-bottom:1px;line-height:1.4}
+.ce-prac{background:#2a5a7a;color:#fff;font-size:10px;padding:1px 4px;margin-bottom:1px;line-height:1.4;cursor:pointer}
+.ce-esp{background:#8B4513;color:#fff;font-size:10px;padding:1px 4px;margin-bottom:1px;line-height:1.4}
+.ce-urg{background:#c0392b;color:#fff;font-size:10px;padding:1px 4px;margin-bottom:1px;line-height:1.4}
+.pb{border:var(--br);margin-bottom:1rem}
+.pbh{background:var(--bk);color:var(--wh);padding:.6rem .9rem;display:flex;justify-content:space-between;align-items:center}
+.pbh span{font-family:'Unbounded',sans-serif;font-size:.8rem;font-weight:700}
+.pbh small{font-size:11px;color:var(--gr);font-family:'Space Mono',monospace}
+.pi{padding:.5rem}
+.pr{display:grid;grid-template-columns:1fr auto auto;gap:.5rem;align-items:center;padding:.3rem .5rem;font-size:12px;border-bottom:1px solid var(--gr)}
+.pr:last-child{border-bottom:none}
+.pc{border:var(--br);padding:1rem;margin-bottom:.75rem;background:var(--wh)}
+.pt{font-family:'Unbounded',sans-serif;font-size:.9rem;font-weight:700;margin-bottom:.4rem}
+.ps{display:inline-block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border:1px solid;margin-bottom:.5rem;white-space:nowrap}
+.s-activo{border-color:var(--g);color:var(--g)}
+.s-testeo{border-color:#c07020;color:#c07020}
+.s-pausado{border-color:var(--grd);color:var(--grd)}
+.s-listo{border-color:#2a7a5a;color:#2a7a5a}
+.s-pendiente{border-color:#c07020;color:#c07020}
+.s-finalizado{border-color:var(--grd);color:var(--grd)}
+.skb{height:6px;background:var(--gr);margin-top:3px}
+.skbf{height:100%;background:var(--g)}
 .ia-msg{padding:.6rem .9rem;border-radius:2px;font-size:13px;line-height:1.6;max-width:85%}
-.ia-msg.user{background:var(--black);color:var(--white);align-self:flex-end;border-radius:2px}
-.ia-msg.bot{background:var(--green-pale);border-left:3px solid var(--green);align-self:flex-start}
-.ia-msg.loading{color:var(--gray-dark);font-style:italic;align-self:flex-start}
-.ia-sug{background:transparent;border:var(--border);font-family:'Space Mono',monospace;font-size:11px;padding:.5rem .6rem;cursor:pointer;text-align:left;line-height:1.4;transition:background .15s}
-.ia-sug:hover{background:var(--green-pale)}
-#nav-ia{color:var(--green-light)}
-.prac-card{border:var(--border);padding:1rem;margin-bottom:.75rem;background:var(--white);cursor:pointer;transition:transform .1s}
-.prac-card:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--black)}
-.prac-name{font-family:'Unbounded',sans-serif;font-size:.9rem;font-weight:700;margin-bottom:.3rem}
-.prac-dates{font-size:11px;color:var(--gray-dark);margin-bottom:.4rem}
-.prac-tags{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem}
-.status-activo{border-color:var(--green);color:var(--green)}
-.status-pendiente{border-color:#c07020;color:#c07020}
-.status-finalizado{border-color:var(--gray-dark);color:var(--gray-dark)}
-.skill-bar{height:6px;background:var(--gray);margin-top:3px;border-radius:0}
-.skill-bar-fill{height:100%;background:var(--green);transition:width .3s}
-.cal-event-prac{background:#2a5a7a;color:#fff;font-size:10px;padding:1px 4px;margin-bottom:1px;line-height:1.4;cursor:pointer}
-.cal-event-especial{background:#8B4513;color:#fff;font-size:10px;padding:1px 4px;margin-bottom:1px;line-height:1.4}
-.cal-event-urgente{background:#c0392b;color:#fff;font-size:10px;padding:1px 4px;margin-bottom:1px;line-height:1.4}
-@media(min-width:640px){.header-date{display:block}main{padding:1.5rem 2rem}}
-@media(max-width:420px){.cards{grid-template-columns:1fr}.cal-day{min-height:36px;padding:.2rem}.cal-event{display:none}}
+.ia-msg.user{background:var(--bk);color:var(--wh);align-self:flex-end}
+.ia-msg.bot{background:var(--gp);border-left:3px solid var(--g);align-self:flex-start}
+.ia-msg.loading{color:var(--grd);font-style:italic;align-self:flex-start}
+.ia-sug{background:transparent;border:var(--br);font-family:'Space Mono',monospace;font-size:11px;padding:.5rem .6rem;cursor:pointer;text-align:left;line-height:1.4}
+.ia-sug:hover{background:var(--gp)}
+@media(min-width:640px){.hd{display:block}main{padding:1.5rem 2rem}}
+@media(max-width:420px){.cards{grid-template-columns:1fr}.cd{min-height:36px;padding:.2rem}.ce,.ce-prac,.ce-esp,.ce-urg{display:none}}
 </style>
 </head>
 <body>
-
-<div id="login-screen" style="position:fixed;inset:0;background:#0a0a0a;display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:2rem">
-  <div class="login-logo">OB<span>A</span></div>
-  <div class="login-sub" style="color:#7a9e68">Cargando...</div>
+<div id="login-screen">
+  <div class="ll">OB<span>A</span></div>
+  <div class="ls" id="ls-sub">Conectando...</div>
+  <div class="lf" id="lf" style="display:none">
+    <input class="li" type="password" id="pwd" placeholder="Contraseña" onkeydown="if(event.key==='Enter')login()">
+    <button class="lb" onclick="login()">Entrar</button>
+    <div class="le" id="le"></div>
+  </div>
 </div>
-
 <div id="app">
   <header>
-    <div class="header-logo">OB<span>A</span></div>
-    <div class="header-right">
-      <div class="header-date" id="hdate"></div>
-      <button class="logout-btn" onclick="doLogout()">Salir</button>
+    <div class="hl">OB<span>A</span></div>
+    <div class="hr">
+      <div class="hd" id="hdate"></div>
+      <button class="out" onclick="logout()">Salir</button>
     </div>
   </header>
   <nav>
-    <button class="nav-btn active" onclick="showPanel('inicio')">Inicio</button>
-    <button class="nav-btn" onclick="showPanel('recetario')">Recetario</button>
-    <button class="nav-btn" onclick="showPanel('pedidos')">Pedidos</button>
-    <button class="nav-btn" onclick="showPanel('menu')">Menú semanal</button>
-    <button class="nav-btn" onclick="showPanel('calendario')">Calendario</button>
-    <button class="nav-btn" onclick="showPanel('proyectos')">Proyectos</button>
-    <button class="nav-btn" onclick="showPanel('avisos')">Avisos</button>
-    <button class="nav-btn" id="nav-ia" onclick="showPanel('ia')">★ Asistente IA</button>
-    <button class="nav-btn" onclick="showPanel('practicantes')">Practicantes</button>
+    <button class="nb active" onclick="sp('inicio')">Inicio</button>
+    <button class="nb" onclick="sp('recetario')">Recetario</button>
+    <button class="nb" onclick="sp('pedidos')">Pedidos</button>
+    <button class="nb" onclick="sp('menu')">Menú semanal</button>
+    <button class="nb" onclick="sp('calendario')">Calendario</button>
+    <button class="nb" onclick="sp('practicantes')">Practicantes</button>
+    <button class="nb" onclick="sp('proyectos')">Proyectos</button>
+    <button class="nb" onclick="sp('avisos')">Avisos</button>
+    <button class="nb" style="color:var(--gl)" onclick="sp('ia')">★ IA</button>
   </nav>
   <main>
     <div class="panel active" id="panel-inicio">
-      <div class="page-header"><h1>Buenos días, equipo</h1><p id="inicio-fecha"></p></div>
-      <div id="avisos-urgentes"></div>
-      <div class="cards" id="inicio-cards"></div>
+      <div class="ph"><h1>Buenos días, equipo</h1><p id="ifecha"></p></div>
+      <div id="iurg"></div>
+      <div class="cards" id="icards"></div>
     </div>
     <div class="panel" id="panel-recetario">
-      <div class="page-header"><h1>Recetario</h1><p>Fichas de platos, elaboraciones e ingredientes</p></div>
+      <div class="ph"><h1>Recetario</h1><p>Fichas de platos, elaboraciones e ingredientes</p></div>
       <div class="toolbar">
-        <input class="search-box" type="text" placeholder="Buscar plato..." id="rec-search" oninput="renderRecetario()">
-        <select class="filter-sel" id="rec-cat" onchange="renderRecetario()">
+        <input class="sb" type="text" placeholder="Buscar plato..." id="rsearch" oninput="rRec()">
+        <select class="fs" id="rcat" onchange="rRec()">
           <option value="">Todas las secciones</option>
           <option>Bienvenida</option><option>Huerta</option><option>Bosque</option><option>Afluente</option><option>Corral</option><option>Acantilado</option><option>Monte Bajo</option><option>Llanura</option><option>Rivera</option><option>Postres</option>
         </select>
-        <button class="btn btn-green" onclick="openRecipeModal()">+ Plato</button>
+        <button class="btn btn-g" onclick="oRM()">+ Plato</button>
       </div>
-      <div class="cards" id="recipe-cards"></div>
+      <div class="cards" id="rcards"></div>
     </div>
     <div class="panel" id="panel-pedidos">
-      <div class="page-header"><h1>Gestión de pedidos</h1><p>Ingredientes agrupados por proveedor</p></div>
+      <div class="ph"><h1>Pedidos</h1><p>Ingredientes agrupados por proveedor</p></div>
       <div style="display:flex;gap:.5rem;margin-bottom:1.25rem;flex-wrap:wrap">
-        <button class="btn" id="ped-tab-lista" onclick="pedTab('lista')">Lista</button>
-        <button class="btn btn-outline" id="ped-tab-resumen" onclick="pedTab('resumen')">Por proveedor</button>
-        <button class="btn btn-outline" id="ped-tab-prov" onclick="pedTab('prov')">Proveedores</button>
-        <button class="btn btn-green" style="margin-left:auto" onclick="openPedidoModal('ing')">+ Ingrediente</button>
+        <button class="btn" id="pt-lista" onclick="pedTab('lista')">Lista</button>
+        <button class="btn btn-o" id="pt-resumen" onclick="pedTab('resumen')">Por proveedor</button>
+        <button class="btn btn-o" id="pt-prov" onclick="pedTab('prov')">Proveedores</button>
+        <button class="btn btn-g" style="margin-left:auto" onclick="oPM('ing')">+ Ingrediente</button>
       </div>
-      <div id="ped-panel-lista"></div>
-      <div id="ped-panel-resumen" style="display:none"></div>
-      <div id="ped-panel-prov" style="display:none"></div>
+      <div id="pp-lista"></div>
+      <div id="pp-resumen" style="display:none"></div>
+      <div id="pp-prov" style="display:none"></div>
     </div>
     <div class="panel" id="panel-menu">
-      <div class="page-header"><h1>Menú semanal</h1><p>Pase de huerta y cambios de platos</p></div>
-      <div class="toolbar"><button class="btn btn-green" onclick="openMenuModal()">+ Cambio de plato</button></div>
-      <div id="menu-body"></div>
+      <div class="ph"><h1>Menú semanal</h1><p>Pase de huerta y cambios de platos</p></div>
+      <div class="toolbar"><button class="btn btn-g" onclick="oMM()">+ Cambio de plato</button></div>
+      <div id="mbody"></div>
     </div>
     <div class="panel" id="panel-calendario">
-      <div class="page-header"><h1>Calendario</h1><p>Turnos, eventos y fechas importantes</p></div>
+      <div class="ph"><h1>Calendario</h1><p>Eventos, practicantes y fechas importantes</p></div>
       <div class="toolbar">
-        <button class="btn btn-outline btn-sm" onclick="calNav(-1)">← Anterior</button>
+        <button class="btn btn-o btn-s" onclick="calNav(-1)">← Anterior</button>
         <span id="cal-title" style="font-family:'Unbounded',sans-serif;font-size:.85rem;font-weight:700;flex:1;text-align:center"></span>
-        <button class="btn btn-outline btn-sm" onclick="calNav(1)">Siguiente →</button>
-        <button class="btn btn-green btn-sm" onclick="openCalModal()">+ Evento</button>
+        <button class="btn btn-o btn-s" onclick="calNav(1)">Siguiente →</button>
+        <button class="btn btn-g btn-s" onclick="oCM()">+ Evento</button>
       </div>
-      <div class="cal-grid" id="cal-heads"></div>
-      <div class="cal-grid" id="cal-body"></div>
-      <div id="cal-list" style="margin-top:1rem"></div>
-    </div>
-    <div class="panel" id="panel-proyectos">
-      <div class="page-header"><h1>Proyectos & I+D</h1><p>Nuevos platos, ideas y desarrollo</p></div>
-      <div class="toolbar">
-        <select class="filter-sel" id="proj-filter" onchange="renderProyectos()">
-          <option value="">Todos</option><option value="activo">Activos</option>
-          <option value="testeo">En testeo</option><option value="listo">Listos</option><option value="pausado">Pausados</option>
-        </select>
-        <button class="btn btn-green" onclick="openProjModal()">+ Proyecto</button>
+      <div style="margin-bottom:.4rem;font-size:11px;color:var(--grd);display:flex;gap:1rem;flex-wrap:wrap">
+        <span><span style="display:inline-block;width:10px;height:10px;background:var(--g);margin-right:4px"></span>Evento</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:#8B4513;margin-right:4px"></span>★ Especial</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:#c0392b;margin-right:4px"></span>⚠ Urgente</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:#2a5a7a;margin-right:4px"></span>👤 Practicante</span>
       </div>
-      <div id="proj-body"></div>
-    </div>
-    <div class="panel" id="panel-avisos">
-      <div class="page-header"><h1>Avisos del equipo</h1><p>Comunicados internos</p></div>
-      <div class="toolbar"><button class="btn btn-green" onclick="openAvisoModal()">+ Aviso</button></div>
-      <div id="avisos-body"></div>
+      <div class="cg" id="cheads"></div>
+      <div class="cg" id="cbody"></div>
+      <div id="clist" style="margin-top:1rem"></div>
     </div>
     <div class="panel" id="panel-practicantes">
-      <div class="page-header"><h1>Practicantes</h1><p>Fichas, fechas y seguimiento del equipo en prácticas</p></div>
+      <div class="ph"><h1>Practicantes</h1><p>Fichas, fechas y seguimiento</p></div>
       <div class="toolbar">
-        <select class="filter-sel" id="prac-filter" onchange="renderPracticantes()">
+        <select class="fs" id="pfilt" onchange="rPrac()">
           <option value="">Todos</option>
           <option value="activo">En activo</option>
           <option value="pendiente">Pendiente de llegada</option>
           <option value="finalizado">Finalizados</option>
         </select>
-        <button class="btn btn-green" onclick="openPracModal()">+ Practicante</button>
+        <button class="btn btn-g" onclick="oPracM()">+ Practicante</button>
       </div>
-      <div id="prac-body"></div>
+      <div id="pracbody"></div>
     </div>
-    <div class="panel" id="panel-prac-ficha">
-      <div style="background:var(--black);color:var(--white);padding:1.25rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0">
-        <span id="prac-ficha-titulo" style="font-family:'Unbounded',sans-serif;font-size:1rem;font-weight:700"></span>
-        <button class="btn btn-sm" onclick="closePracFicha()">← Volver</button>
+    <div class="panel" id="panel-proyectos">
+      <div class="ph"><h1>Proyectos & I+D</h1><p>Nuevos platos, ideas y desarrollo</p></div>
+      <div class="toolbar">
+        <select class="fs" id="projfilt" onchange="rProj()">
+          <option value="">Todos</option><option value="activo">Activos</option><option value="testeo">En testeo</option><option value="listo">Listos</option><option value="pausado">Pausados</option>
+        </select>
+        <button class="btn btn-g" onclick="oProjM()">+ Proyecto</button>
       </div>
-      <div id="prac-ficha-body" style="padding:1.25rem;max-width:700px;margin:0 auto"></div>
+      <div id="projbody"></div>
+    </div>
+    <div class="panel" id="panel-avisos">
+      <div class="ph"><h1>Avisos</h1><p>Comunicados internos del equipo</p></div>
+      <div class="toolbar"><button class="btn btn-g" onclick="oAM()">+ Aviso</button></div>
+      <div id="avbody"></div>
     </div>
     <div class="panel" id="panel-ia">
-      <div class="page-header"><h1>Asistente IA</h1><p>Tu chef digital — recetas, pedidos, ideas y más</p></div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.5rem;margin-bottom:1.25rem" id="ia-sugerencias"></div>
-      <div id="ia-chat" style="border:var(--border);min-height:300px;max-height:50vh;overflow-y:auto;padding:1rem;margin-bottom:1rem;display:flex;flex-direction:column;gap:.75rem"></div>
+      <div class="ph"><h1>Asistente IA</h1><p>Tu chef digital — recetas, pedidos, ideas y más</p></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.5rem;margin-bottom:1.25rem" id="iasugs"></div>
+      <div id="iachat" style="border:var(--br);min-height:300px;max-height:50vh;overflow-y:auto;padding:1rem;margin-bottom:1rem;display:flex;flex-direction:column;gap:.75rem"></div>
       <div style="display:flex;gap:.5rem">
-        <input class="search-box" type="text" id="ia-input" placeholder="Pregunta algo al asistente..." style="flex:1" onkeydown="if(event.key==='Enter')iaEnviar()">
-        <button class="btn btn-green" onclick="iaEnviar()">Enviar</button>
+        <input class="sb" type="text" id="iainput" placeholder="Pregunta al asistente..." style="flex:1" onkeydown="if(event.key==='Enter')iaEnv()">
+        <button class="btn btn-g" onclick="iaEnv()">Enviar</button>
       </div>
     </div>
   </main>
 </div>
-
-<div class="recipe-detail" id="recipe-detail">
-  <div class="recipe-header">
-    <h2 id="rd-title"></h2>
-    <button class="btn btn-sm" onclick="closeRecipeDetail()">Cerrar</button>
-  </div>
-  <div class="recipe-body" id="rd-body"></div>
+<div class="rd" id="rdet">
+  <div class="rdh"><h2 id="rdtit"></h2><button class="btn btn-s" onclick="cRD()">Cerrar</button></div>
+  <div class="rdb" id="rdbody"></div>
 </div>
-
-<div class="modal-bg" id="modal">
-  <div class="modal" id="modal-inner"></div>
+<div class="rd" id="pfdet">
+  <div class="rdh"><h2 id="pftit"></h2><button class="btn btn-s" onclick="cPF()">← Volver</button></div>
+  <div class="rdb" id="pfbody"></div>
 </div>
+<div class="modal-bg" id="modal"><div class="modal" id="mi"></div></div>
 
 <script>
 const PWD='oba2025';
+const FB={apiKey:"AIzaSyAUUgLnKnh1xUbCjis4nPoEzoLLrJp9loY",authDomain:"intranet-oba.firebaseapp.com",projectId:"intranet-oba",storageBucket:"intranet-oba.firebasestorage.app",messagingSenderId:"603055689454",appId:"1:603055689454:web:4e25c2a58f6a42c9c0adff"};
+
+const SECS=['Bienvenida','Huerta','Bosque','Afluente','Corral','Acantilado','Monte Bajo','Llanura','Rivera','Postres'];
+const CATS=['Bienvenida','Huerta','Bosque','Afluente','Corral','Acantilado','Monte Bajo','Llanura','Rivera','Postres','Base/Fermentos'];
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DS=['Lu','Ma','Mi','Ju','Vi','Sa','Do'];
+const SKILLS=['Mise en place','Fondos y salsas','Carnes','Pescados','Pastelería','Fermentos','Limpieza y orden','Trabajo en equipo'];
+
+let db,D={recipes:[],ingredientes:[],menu:[],avisos:[],proyectos:[],eventos:[],proveedores:[],practicantes:[]};
+let nid=500,cY=new Date().getFullYear(),cM=new Date().getMonth();
 
 const DR=[
   {id:1,nombre:'Espárrago con Salsa de Acederas',seccion:'Huerta',temporada:'Primavera',descripcion:'Espárrago de temporada con salsa de acederas.',ingredientes:[{i:'Espárragos frescos',c:'',u:'kg'},{i:'Acederas',c:'',u:'manojo'}],pasos:['Limpiar y pelar los espárragos.','Elaborar salsa de acederas.','Emplatar al pase.'],notas:'Cambia semanalmente.'},
-  {id:2,nombre:'Cuajada de Castañas con Aceite de Pino',seccion:'Bosque',temporada:'Otoño',descripcion:'Cuajada de castañas con aceite de pino al final.',ingredientes:[{i:'Castañas',c:'',u:'kg'},{i:'Agua de setas',c:'',u:'ml'},{i:'Aceite de pino',c:'',u:'ml'},{i:'Garum de setas',c:'',u:'ml'},{i:'Mantequilla noisette',c:'',u:'g'}],pasos:['Elaborar base de cuajada con castañas.','Añadir agua de setas y garum.','Servir con aceite de pino al final.'],notas:'Plato [1] del apartado de setas.'},
+  {id:2,nombre:'Cuajada de Castañas con Aceite de Pino',seccion:'Bosque',temporada:'Otoño',descripcion:'Cuajada de castañas con aceite de pino al final.',ingredientes:[{i:'Castañas',c:'',u:'kg'},{i:'Agua de setas',c:'',u:'ml'},{i:'Aceite de pino',c:'',u:'ml'},{i:'Garum de setas',c:'',u:'ml'}],pasos:['Elaborar base de cuajada.','Añadir agua de setas y garum.','Servir con aceite de pino al final.'],notas:''},
   {id:3,nombre:'Truchas en Manteca',seccion:'Afluente',temporada:'Todo el año',descripcion:'Trucha confitada en manteca de cerdo.',ingredientes:[{i:'Trucha de río',c:'',u:'ud'},{i:'Manteca de cerdo',c:'',u:'g'},{i:'Ajo',c:'',u:'diente'}],pasos:['Limpiar y filetear la trucha.','Confitar en manteca a baja temperatura.','Servir con jugo de manteca.'],notas:''},
-  {id:4,nombre:'Gallina Dorada en Pebre',seccion:'Corral',temporada:'Todo el año',descripcion:'Pechuga de gallina, albóndiga con azafrán, andrajos.',ingredientes:[{i:'Gallina entera',c:'',u:'ud'},{i:'Azafrán',c:'',u:'g'},{i:'Perejil',c:'',u:'manojo'},{i:'Harina de trigo',c:'',u:'g'}],pasos:['Dorar la gallina entera.','Preparar albóndigas con azafrán y perejil.','Elaborar andrajos (pasta fresca rústica).','Emplatar con beurre blanc.'],notas:'Tonkotsu de puchero de base.'},
-  {id:5,nombre:'Torcaz en Nabos',seccion:'Acantilado',temporada:'Otoño-Invierno',descripcion:'Paloma torcaz en shio koji con nabo.',ingredientes:[{i:'Paloma torcaz',c:'',u:'ud'},{i:'Nabos',c:'',u:'kg'},{i:'Shio koji',c:'',u:'g'},{i:'Demi-glace de frutos rojos',c:'',u:'ml'}],pasos:['Marinar la paloma en shio koji 24-48h.','Asar a la brasa.','Cocinar nabos en manteca.','Elaborar demi-glace de frutos rojos.'],notas:''},
-  {id:6,nombre:'Oveja a la Etelvina',seccion:'Llanura',temporada:'Todo el año',descripcion:'Royal de oveja, lengua en roner, seso frito.',ingredientes:[{i:'Oveja (varios cortes)',c:'',u:'kg'},{i:'Suero de calostro',c:'',u:'ml'},{i:'Lengua de oveja',c:'',u:'ud'},{i:'Seso de oveja',c:'',u:'ud'}],pasos:['Preparar royal de oveja.','Cocer lengua en roner 72h.','Cortar la lengua perfecta.','Freír el seso.','Emplatar con suero de calostro.'],notas:''},
-  {id:7,nombre:'Pâté de Fruit',seccion:'Postres',temporada:'Todo el año',descripcion:'Pâté de fruit con tomillo y melisa.',ingredientes:[{i:'Agua',c:'500',u:'ml'},{i:'Azúcar',c:'360',u:'g'},{i:'Pectina',c:'14',u:'g'},{i:'Glucosa líquida',c:'100',u:'g'},{i:'Ácido cítrico',c:'5',u:'g'},{i:'Melisa',c:'4',u:'g'}],pasos:['Infusionar tomillo y melisa en agua.','Mezclar 50g azúcar con pectina.','Calentar e incorporar mezcla.','Añadir resto de azúcar y glucosa.','Cocer hasta 106°C.','Añadir ácido cítrico disuelto.','Verter en moldes.'],notas:'Temperatura final: 106°C.'},
+  {id:4,nombre:'Gallina Dorada en Pebre',seccion:'Corral',temporada:'Todo el año',descripcion:'Pechuga de gallina, albóndiga con azafrán, andrajos.',ingredientes:[{i:'Gallina entera',c:'',u:'ud'},{i:'Azafrán',c:'',u:'g'},{i:'Perejil',c:'',u:'manojo'}],pasos:['Dorar la gallina.','Preparar albóndigas con azafrán y perejil.','Elaborar andrajos.','Emplatar con beurre blanc.'],notas:''},
+  {id:5,nombre:'Torcaz en Nabos',seccion:'Acantilado',temporada:'Otoño-Invierno',descripcion:'Paloma torcaz en shio koji con nabo.',ingredientes:[{i:'Paloma torcaz',c:'',u:'ud'},{i:'Nabos',c:'',u:'kg'},{i:'Shio koji',c:'',u:'g'}],pasos:['Marinar la paloma en shio koji 24-48h.','Asar a la brasa.','Cocinar nabos en manteca.'],notas:''},
+  {id:6,nombre:'Oveja a la Etelvina',seccion:'Llanura',temporada:'Todo el año',descripcion:'Royal de oveja, lengua en roner, seso frito.',ingredientes:[{i:'Oveja (varios cortes)',c:'',u:'kg'},{i:'Suero de calostro',c:'',u:'ml'}],pasos:['Preparar royal de oveja.','Cocer lengua en roner 72h.','Freír el seso.'],notas:''},
+  {id:7,nombre:'Pâté de Fruit',seccion:'Postres',temporada:'Todo el año',descripcion:'Pâté de fruit con tomillo y melisa.',ingredientes:[{i:'Agua',c:'500',u:'ml'},{i:'Azúcar',c:'360',u:'g'},{i:'Pectina',c:'14',u:'g'},{i:'Glucosa',c:'100',u:'g'}],pasos:['Infusionar tomillo en agua.','Mezclar azúcar con pectina.','Cocer hasta 106°C.','Añadir ácido cítrico y verter en moldes.'],notas:'Temperatura: 106°C.'},
 ];
 const DI=[
-  {id:1,ing:'Trucha de río',platos:'Truchas en manteca · Trucha al sarmiento',cat:'Afluente',prov:'',cant:''},
-  {id:2,ing:'Cangrejos de río',platos:'Crema de cangrejos · Chili crab',cat:'Afluente',prov:'',cant:''},
-  {id:3,ing:'Paloma torcaz',platos:'Torcaz en nabos',cat:'Acantilado',prov:'',cant:''},
-  {id:4,ing:'Paloma bravía',platos:'Paloma bravía frita',cat:'Acantilado',prov:'',cant:''},
-  {id:5,ing:'Jabalí (cabeza, papada, lomo)',platos:'Fiambre de jabalí · Mortadela',cat:'Monte Bajo',prov:'',cant:''},
-  {id:6,ing:'Gallina entera',platos:'Gallina dorada en pebre · Tonkotsu',cat:'Corral',prov:'',cant:''},
-  {id:7,ing:'Espárragos frescos',platos:'Pase huerta: espárrago',cat:'Huerta',prov:'',cant:''},
-  {id:8,ing:'Acederas',platos:'Salsa de acederas · Guiso perdiz',cat:'Huerta',prov:'',cant:''},
-  {id:9,ing:'Colmenillas',platos:'Escabeche de colmenillas',cat:'Bosque',prov:'',cant:''},
-  {id:10,ing:'Boletus / Melena de León',platos:'Setas a la brasa',cat:'Bosque',prov:'',cant:''},
-  {id:11,ing:'Castañas',platos:'Cuajada de castañas',cat:'Bosque',prov:'',cant:''},
-  {id:12,ing:'Flores comestibles variadas',platos:'Ensalada de flores',cat:'Huerta',prov:'',cant:''},
-  {id:13,ing:'Flores de sauco',platos:'Fizz de sauco · Crema de sauco',cat:'Huerta',prov:'',cant:''},
-  {id:14,ing:'Koji (arroz)',platos:'Cake de koji · Aceite de koji',cat:'Base/Fermentos',prov:'',cant:''},
-  {id:15,ing:'Shio koji',platos:'Paloma torcaz · Entresijos gallo',cat:'Base/Fermentos',prov:'',cant:''},
-  {id:16,ing:'Mantequilla',platos:'Beurre blanc · Holandesa · Tuiles',cat:'Base/Fermentos',prov:'',cant:''},
-  {id:17,ing:'Huevas de trucha',platos:'Sopa de primavera',cat:'Afluente',prov:'',cant:''},
-  {id:18,ing:'Nabos',platos:'Torcaz en nabos',cat:'Huerta',prov:'',cant:''},
-  {id:19,ing:'Remolacha',platos:'Torta de gazpacho · Ketchup',cat:'Huerta',prov:'',cant:''},
-  {id:20,ing:'Pectina',platos:'Pâté de fruit',cat:'Base/Fermentos',prov:'',cant:''},
+  {id:1,ing:'Trucha de río',platos:'Truchas en manteca',cat:'Afluente',prov:'',cant:''},
+  {id:2,ing:'Paloma torcaz',platos:'Torcaz en nabos',cat:'Acantilado',prov:'',cant:''},
+  {id:3,ing:'Gallina entera',platos:'Gallina dorada en pebre',cat:'Corral',prov:'',cant:''},
+  {id:4,ing:'Espárragos frescos',platos:'Pase huerta',cat:'Huerta',prov:'',cant:''},
+  {id:5,ing:'Acederas',platos:'Salsa de acederas',cat:'Huerta',prov:'',cant:''},
+  {id:6,ing:'Colmenillas',platos:'Escabeche de colmenillas',cat:'Bosque',prov:'',cant:''},
+  {id:7,ing:'Castañas',platos:'Cuajada de castañas',cat:'Bosque',prov:'',cant:''},
+  {id:8,ing:'Shio koji',platos:'Paloma torcaz · Entresijos',cat:'Base/Fermentos',prov:'',cant:''},
+  {id:9,ing:'Mantequilla',platos:'Beurre blanc · Holandesa',cat:'Base/Fermentos',prov:'',cant:''},
+  {id:10,ing:'Pectina',platos:'Pâté de fruit',cat:'Base/Fermentos',prov:'',cant:''},
 ];
-const DM=[{id:1,plato:'Espárrago con Salsa de Acederas',seccion:'Huerta',estado:'activo',fecha:'2025-01-13',nota:'Cambio semanal según cosecha'}];
-const DAV=[{id:1,titulo:'Bienvenida a la intranet OBA',texto:'Ya tenemos intranet. Aquí encontraréis todas las recetas, pedidos y novedades del restaurante.',urgente:false,fecha:'2025-01-13',autor:'Dirección'}];
-const DPR=[{id:1,nombre:'Alita de pollo rellena',descripcion:'Receta por testear. Deshuesar, rellenar, bridar y lacar.',estado:'testeo',responsable:'Cocina',fecha:'2025-01-13',notas:''},{id:2,nombre:'Menú maridaje NATURA',descripcion:'Desarrollar los 8 maridajes por sección del menú.',estado:'activo',responsable:'Sala + Cocina',fecha:'2025-01-13',notas:'Ver hoja de maridajes'}];
-const DEV=[{id:1,titulo:'Cambio menú primavera',fecha:new Date().toISOString().slice(0,10),urgente:false}];
 
-let D={recipes:[],ingredientes:[],menu:[],avisos:[],proyectos:[],eventos:[],proveedores:[],practicantes:[]};
-let nid=300;
-let dbReady=false;
-
-// ── FIREBASE SYNC ────────────────────────────────────────────────────────────
-const COLECCIONES={recipes:'recipes',ingredientes:'ingredientes',menu:'menu',avisos:'avisos',proyectos:'proyectos',eventos:'eventos',proveedores:'proveedores',practicantes:'practicantes'};
-const DEFAULTS={recipes:DR,ingredientes:DI,menu:DM,avisos:DAV,proyectos:DPR,eventos:DEV,proveedores:[],practicantes:[]};
-
-async function fbLoad(col){
-  const db=window._db;
-  const snap=await window._getDocs(window._col(db,col));
-  if(snap.empty) return null;
-  const items=snap.docs.map(d=>d.data());
-  items.sort((a,b)=>(a._idx||0)-(b._idx||0));
-  return items.map(({_idx,...rest})=>rest);
-}
-
-async function fbSave(col,items){
-  const db=window._db;
-  const c=window._col(db,col);
-  const snap=await window._getDocs(c);
-  const deletes=snap.docs.map(d=>window._deleteDoc(window._doc(db,col,d.id)));
-  await Promise.all(deletes);
-  await Promise.all(items.map((item,idx)=>{
-    const docId=item.id!=null?String(item.id):String(idx);
-    return window._setDoc(window._doc(db,col,docId),{...item,_idx:idx});
-  }));
-}
-
-async function save(k){
-  fbSave(k,D[k]).catch(()=>{});
-  renderAll();
-}
-
-function fbListen(col,callback){
-  const db=window._db;
-  window._onSnapshot(window._col(db,col),snap=>{
-    const items=snap.docs.map(d=>d.data());
-    items.sort((a,b)=>(a._idx||0)-(b._idx||0));
-    const clean=items.map(({_idx,...rest})=>rest);
-    callback(clean);
-  });
-}
-
-async function initFirebase(){
-  const showLoading=()=>{
-    document.getElementById('login-screen').innerHTML=`
-      <div class="login-logo">OB<span>A</span></div>
-      <div class="login-sub" style="color:var(--green-light)">Conectando...</div>`;
-  };
-  showLoading();
+// ── FIREBASE ──────────────────────────────────────────────────────────────────
+function initApp(){
   try{
-    for(const [key,col] of Object.entries(COLECCIONES)){
-      const data=await fbLoad(col);
-      if(!data||data.length===0){
-        D[key]=[...DEFAULTS[key]];
-        await fbSave(col,D[key]);
+    firebase.initializeApp(FB);
+    db=firebase.firestore();
+    loadAll();
+  }catch(e){
+    showError(e.message);
+  }
+}
+
+async function loadAll(){
+  const cols=['recipes','ingredientes','menu','avisos','proyectos','eventos','proveedores','practicantes'];
+  const defaults={recipes:DR,ingredientes:DI,menu:[{id:1,plato:'Espárrago con Salsa de Acederas',seccion:'Huerta',estado:'activo',fecha:today(),nota:'Cambia según cosecha'}],avisos:[{id:1,titulo:'Bienvenida a la intranet OBA',texto:'Aquí encontraréis recetas, pedidos, avisos y novedades del restaurante.',urgente:false,fecha:today(),autor:'Dirección'}],proyectos:[{id:1,nombre:'Alita de pollo rellena',descripcion:'Receta por testear.',estado:'testeo',responsable:'Cocina',fecha:today(),notas:''},{id:2,nombre:'Menú maridaje NATURA',descripcion:'Desarrollar los 8 maridajes por sección.',estado:'activo',responsable:'Sala + Cocina',fecha:today(),notas:''}],eventos:[{id:1,titulo:'Inicio temporada',fecha:today(),tipo:'especial',urgente:false,nota:''}],proveedores:[],practicantes:[]};
+  try{
+    for(const col of cols){
+      const snap=await db.collection(col).get();
+      if(snap.empty){
+        D[col]=[...defaults[col]];
+        await saveCol(col);
       } else {
-        D[key]=data;
+        const items=snap.docs.map(d=>d.data());
+        items.sort((a,b)=>(a._i||0)-(b._i||0));
+        D[col]=items.map(({_i,...r})=>r);
       }
     }
-    const allIds=Object.values(D).flat().map(i=>i&&i.id?i.id:0).filter(n=>!isNaN(n));
-    nid=allIds.length?Math.max(nid,...allIds)+1:nid;
-    dbReady=true;
-    Object.entries(COLECCIONES).forEach(([key,col])=>{
-      fbListen(col,items=>{
-        if(!items.length)return;
-        D[key]=items;
-        const ids=items.map(i=>i.id||0).filter(n=>!isNaN(n));
-        const maxId=ids.length?Math.max(...ids):0;
-        if(maxId>=nid)nid=maxId+1;
+    const allIds=cols.flatMap(c=>D[c]).map(x=>x&&x.id?Number(x.id):0).filter(n=>n>0&&!isNaN(n));
+    if(allIds.length) nid=Math.max(...allIds)+1;
+    // Setup live listeners
+    cols.forEach(col=>{
+      db.collection(col).onSnapshot(snap=>{
+        if(snap.empty)return;
+        const items=snap.docs.map(d=>d.data());
+        items.sort((a,b)=>(a._i||0)-(b._i||0));
+        D[col]=items.map(({_i,...r})=>r);
+        const ids=D[col].map(x=>x&&x.id?Number(x.id):0).filter(n=>n>0&&!isNaN(n));
+        if(ids.length&&Math.max(...ids)>=nid) nid=Math.max(...ids)+1;
         renderAll();
       });
     });
-    showLogin();
+    showLoginForm();
   }catch(e){
-    document.getElementById('login-screen').innerHTML=`
-      <div class="login-logo">OB<span>A</span></div>
-      <div class="login-sub" style="color:#e87878">Error de conexión</div>
-      <div style="color:var(--gray);font-size:12px;text-align:center;max-width:260px">${e.message}</div>
-      <button class="login-btn" onclick="location.reload()">Reintentar</button>`;
+    showError(e.message);
   }
 }
 
-function showLogin(){
-  document.getElementById('login-screen').innerHTML=`
-    <div class="login-logo">OB<span>A</span></div>
-    <div class="login-sub">Intranet del equipo</div>
-    <div class="login-form">
-      <input class="login-input" type="password" id="pwd-input" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()">
-      <button class="login-btn" onclick="doLogin()">Entrar</button>
-      <div class="login-error" id="login-err"></div>
-    </div>`;
+async function saveCol(col){
+  const batch=db.batch();
+  // Delete existing
+  const snap=await db.collection(col).get();
+  snap.docs.forEach(d=>batch.delete(d.ref));
+  // Add new
+  D[col].forEach((item,idx)=>{
+    const id=item.id!=null?String(item.id):String(idx);
+    batch.set(db.collection(col).doc(id),{...item,_i:idx});
+  });
+  await batch.commit();
 }
 
-function renderAll(){
-  if(document.getElementById('app').className!=='visible')return;
-  renderInicio();renderRecetario();renderPedidoLista();renderMenu();renderProyectos();renderAvisos();calRender();renderPracticantes();
+function save(col){
+  saveCol(col).catch(e=>console.warn('Save error:',e));
+  renderAll();
 }
 
-function doLogin(){
-  const el=document.getElementById('pwd-input');
-  if(!el)return;
+function showError(msg){
+  document.getElementById('ls-sub').innerHTML=`<span style="color:#e87878">Error: ${msg}</span>`;
+  document.getElementById('lf').innerHTML=`<button class="lb" onclick="location.reload()">Reintentar</button>`;
+  document.getElementById('lf').style.display='flex';
+}
+
+function showLoginForm(){
+  document.getElementById('ls-sub').textContent='Intranet del equipo';
+  document.getElementById('lf').style.display='flex';
+}
+
+function login(){
+  const el=document.getElementById('pwd');if(!el)return;
   if(el.value===PWD){
     document.getElementById('login-screen').style.display='none';
     document.getElementById('app').className='visible';
-    initApp();
+    startApp();
   } else {
-    const err=document.getElementById('login-err');
-    if(err){err.textContent='Contraseña incorrecta';setTimeout(()=>err.textContent='',2000);}
+    const e=document.getElementById('le');e.textContent='Contraseña incorrecta';setTimeout(()=>e.textContent='',2000);
   }
 }
-function doLogout(){
+
+function logout(){
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('app').className='';
-  showLogin();
+  const pwd=document.getElementById('pwd');if(pwd)pwd.value='';
 }
 
-function initApp(){
+function startApp(){
   const now=new Date();
   const dias=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   const ds=`${dias[now.getDay()]}, ${now.getDate()} de ${meses[now.getMonth()]} ${now.getFullYear()}`;
   document.getElementById('hdate').textContent=ds;
-  document.getElementById('inicio-fecha').textContent=ds;
-  renderInicio();renderRecetario();renderPedidoLista();renderMenu();renderProyectos();renderAvisos();calRender();initIA();
+  document.getElementById('ifecha').textContent=ds;
+  renderAll();
 }
 
-// Arrancar Firebase cuando esté listo
-if(window._fbReady){initFirebase();}
-else{window.addEventListener('fbready',()=>initFirebase());}
+function today(){return new Date().toISOString().slice(0,10)}
 
-function showPanel(id){
-  document.querySelectorAll('.panel').forEach(p=>{p.classList.remove('active');});
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  const panel=document.getElementById('panel-'+id);
-  if(panel)panel.classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b=>{if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'"+id+"'"))b.classList.add('active')});
+function renderAll(){
+  if(document.getElementById('app').className!=='visible')return;
+  rInicio();rRec();rPedLista();rMenu();calRender();rPrac();rProj();rAv();
 }
 
-function renderInicio(){
+function sp(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  const p=document.getElementById('panel-'+id);if(p)p.classList.add('active');
+  document.querySelectorAll('.nb').forEach(b=>{if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'"+id+"'"))b.classList.add('active')});
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function bsec(s){const m={Bosque:'bosque',Afluente:'fluvial',Rivera:'fluvial',Corral:'corral',Caza:'caza',Acantilado:'caza','Monte Bajo':'caza',Llanura:'corral',Postres:'postre',Huerta:'huerta',Bienvenida:'base'};return`<span class="badge b-${m[s]||'base'}">${s}</span>`}
+function bcat(c){const m={Bosque:'bosque',Afluente:'fluvial',Rivera:'fluvial',Corral:'corral',Caza:'caza',Acantilado:'caza','Monte Bajo':'caza',Llanura:'corral',Postre:'postre',Postres:'postre',Huerta:'huerta',Bienvenida:'base','Base/Fermentos':'base'};return`<span class="badge b-${m[c]||'base'}">${c}</span>`}
+
+function oModal(html){document.getElementById('mi').innerHTML=html;document.getElementById('modal').classList.add('open');setTimeout(()=>{const f=document.querySelector('#mi input,#mi textarea');if(f)f.focus()},60)}
+function cModal(){document.getElementById('modal').classList.remove('open')}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))cModal()})
+
+// ── INICIO ────────────────────────────────────────────────────────────────────
+function rInicio(){
   const u=D.avisos.filter(a=>a.urgente);
-  document.getElementById('avisos-urgentes').innerHTML=u.map(a=>`<div class="notice urgent"><strong>${a.titulo}</strong><div>${a.texto}</div></div>`).join('');
-  const stats=[{l:'Platos en carta',v:D.recipes.length,lk:'recetario'},{l:'Ingredientes',v:D.ingredientes.length,lk:'pedidos'},{l:'Proyectos activos',v:D.proyectos.filter(p=>p.estado==='activo').length,lk:'proyectos'},{l:'Cambios de menú',v:D.menu.length,lk:'menu'}];
-  document.getElementById('inicio-cards').innerHTML=stats.map(s=>`<div class="card" onclick="showPanel('${s.lk}')" style="cursor:pointer"><div class="card-tag">OBA</div><h3 style="font-size:2rem;font-family:'Unbounded',sans-serif;font-weight:900">${s.v}</h3><p>${s.l}</p></div>`).join('')+(D.avisos.length?`<div class="card"><div class="card-tag">Último aviso</div><h3>${D.avisos[D.avisos.length-1].titulo}</h3><p>${D.avisos[D.avisos.length-1].texto.slice(0,80)}</p><div class="card-meta">${D.avisos[D.avisos.length-1].autor} · ${D.avisos[D.avisos.length-1].fecha}</div></div>`:'');
+  document.getElementById('iurg').innerHTML=u.map(a=>`<div class="notice urgent"><strong>${a.titulo}</strong><div>${a.texto}</div></div>`).join('');
+  document.getElementById('icards').innerHTML=[
+    {l:'Platos en carta',v:D.recipes.length,lk:'recetario'},
+    {l:'Ingredientes',v:D.ingredientes.length,lk:'pedidos'},
+    {l:'Practicantes activos',v:D.practicantes.filter(p=>p.estado==='activo').length,lk:'practicantes'},
+    {l:'Proyectos activos',v:D.proyectos.filter(p=>p.estado==='activo').length,lk:'proyectos'},
+  ].map(s=>`<div class="card" onclick="sp('${s.lk}')"><div class="ctag">OBA</div><h3 style="font-size:2rem;font-family:'Unbounded',sans-serif;font-weight:900">${s.v}</h3><p>${s.l}</p></div>`).join('')+(D.avisos.length?`<div class="card"><div class="ctag">Último aviso</div><h3>${D.avisos[D.avisos.length-1].titulo}</h3><p>${D.avisos[D.avisos.length-1].texto.slice(0,80)}</p><div class="cmeta">${D.avisos[D.avisos.length-1].autor} · ${D.avisos[D.avisos.length-1].fecha}</div></div>`:'');
 }
 
-function bsec(s){const m={'Bienvenida':'base','Huerta':'huerta','Bosque':'bosque','Afluente':'fluvial','Corral':'corral','Acantilado':'caza','Monte Bajo':'caza','Llanura':'corral','Rivera':'fluvial','Postres':'postre'};return`<span class="badge badge-${m[s]||'base'}">${s}</span>`}
-function bcat(c){const m={'Bosque':'bosque','Afluente':'fluvial','Rivera':'fluvial','Corral':'corral','Caza':'caza','Acantilado':'caza','Monte Bajo':'caza','Llanura':'corral','Postre':'postre','Huerta':'huerta','Bienvenida':'base','Base/Fermentos':'base'};return`<span class="badge badge-${m[c]||'base'}">${c}</span>`}
-
-function renderRecetario(){
-  const q=(document.getElementById('rec-search')?.value||'').toLowerCase();
-  const cat=document.getElementById('rec-cat')?.value||'';
+// ── RECETARIO ─────────────────────────────────────────────────────────────────
+function rRec(){
+  const q=(document.getElementById('rsearch')?.value||'').toLowerCase();
+  const cat=document.getElementById('rcat')?.value||'';
   const list=D.recipes.filter(r=>(!q||r.nombre.toLowerCase().includes(q)||r.seccion.toLowerCase().includes(q))&&(!cat||r.seccion===cat));
-  document.getElementById('recipe-cards').innerHTML=list.map(r=>`<div class="card">${bsec(r.seccion)}<h3>${r.nombre}</h3><p>${r.descripcion}</p><div class="card-meta">Temporada: ${r.temporada}</div><div class="card-actions"><button class="btn btn-sm" onclick="openRecipeDetail(${r.id})">Ver ficha</button><button class="btn btn-outline btn-sm" onclick="openRecipeModal(${r.id})">Editar</button><button class="btn btn-sm btn-danger" onclick="delRecipe(${r.id})">×</button></div></div>`).join('')||'<p style="color:var(--gray-dark)">No se encontraron platos.</p>';
+  document.getElementById('rcards').innerHTML=list.map(r=>`<div class="card">${bsec(r.seccion)}<h3>${r.nombre}</h3><p>${r.descripcion}</p><div class="cmeta">Temporada: ${r.temporada}</div><div class="ca"><button class="btn btn-s" onclick="oRD(${r.id})">Ver ficha</button><button class="btn btn-o btn-s" onclick="oRM(${r.id})">Editar</button><button class="btn btn-s btn-d" onclick="dRec(${r.id})">×</button></div></div>`).join('')||'<p style="color:var(--grd)">No se encontraron platos.</p>';
 }
-function openRecipeDetail(id){
+function oRD(id){
   const r=D.recipes.find(x=>x.id===id);if(!r)return;
-  document.getElementById('rd-title').textContent=r.nombre;
-  document.getElementById('rd-body').innerHTML=`<div class="recipe-section"><h4>Info</h4><div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;font-size:13px"><div><span style="color:var(--gray-dark)">Sección:</span> ${r.seccion}</div><div><span style="color:var(--gray-dark)">Temporada:</span> ${r.temporada}</div></div><p style="margin-top:.5rem;font-size:13px">${r.descripcion}</p></div><div class="recipe-section"><h4>Ingredientes</h4><div class="ing-grid"><div class="ih">Ingrediente</div><div class="ih">Cant.</div><div class="ih">Unidad</div>${r.ingredientes.map(i=>`<div>${i.i}</div><div style="text-align:right">${i.c||'—'}</div><div>${i.u||''}</div>`).join('')}</div></div><div class="recipe-section"><h4>Elaboración</h4><ol class="step-list">${r.pasos.map((p,i)=>`<li><div class="step-num">${i+1}</div><div>${p}</div></li>`).join('')}</ol></div>${r.notas?`<div class="notice"><strong>Notas:</strong> ${r.notas}</div>`:''}`;
-  document.getElementById('recipe-detail').classList.add('open');
+  document.getElementById('rdtit').textContent=r.nombre;
+  document.getElementById('rdbody').innerHTML=`<div class="rs"><h4>Info</h4><div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;font-size:13px"><div>Sección: ${r.seccion}</div><div>Temporada: ${r.temporada}</div></div><p style="margin-top:.5rem;font-size:13px">${r.descripcion}</p></div><div class="rs"><h4>Ingredientes</h4><div class="ig"><div class="ih">Ingrediente</div><div class="ih">Cant.</div><div class="ih">Unidad</div>${r.ingredientes.map(i=>`<div>${i.i}</div><div style="text-align:right">${i.c||'—'}</div><div>${i.u||''}</div>`).join('')}</div></div><div class="rs"><h4>Elaboración</h4><ol class="sl">${r.pasos.map((p,i)=>`<li><div class="sn">${i+1}</div><div>${p}</div></li>`).join('')}</ol></div>${r.notas?`<div class="notice"><strong>Notas:</strong> ${r.notas}</div>`:''}`;
+  document.getElementById('rdet').classList.add('open');
 }
-function closeRecipeDetail(){document.getElementById('recipe-detail').classList.remove('open')}
-function openRecipeModal(id){
+function cRD(){document.getElementById('rdet').classList.remove('open')}
+function oRM(id){
   const r=id?D.recipes.find(x=>x.id===id):null;
-  const ing=r?r.ingredientes.map(i=>`${i.i}|${i.c}|${i.u}`).join('\n'):'';
-  const pasos=r?r.pasos.join('\n'):'';
-  openModal(`<h3>${r?'Editar plato':'Nuevo plato'}</h3><div class="form-row"><label>Nombre *</label><input id="m-rn" value="${r?r.nombre:''}"></div><div class="form-row"><label>Sección</label><select id="m-rs">${['Bienvenida','Huerta','Bosque','Afluente','Corral','Acantilado','Monte Bajo','Llanura','Rivera','Postres'].map(s=>`<option${r&&r.seccion===s?' selected':''}>${s}</option>`).join('')}</select></div><div class="form-row"><label>Temporada</label><input id="m-rt" value="${r?r.temporada:''}"></div><div class="form-row"><label>Descripción</label><textarea id="m-rd">${r?r.descripcion:''}</textarea></div><div class="form-row"><label>Ingredientes (nombre|cantidad|unidad, uno por línea)</label><textarea id="m-ri" rows="5">${ing}</textarea></div><div class="form-row"><label>Elaboración (un paso por línea)</label><textarea id="m-rp" rows="5">${pasos}</textarea></div><div class="form-row"><label>Notas</label><input id="m-rno" value="${r?r.notas:''}"></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-green" onclick="saveRecipe(${id||'null'})">Guardar</button></div>`);
+  oModal(`<h3>${r?'Editar plato':'Nuevo plato'}</h3><div class="fr"><label>Nombre *</label><input id="rn" value="${r?r.nombre:''}"></div><div class="fr"><label>Sección</label><select id="rs">${SECS.map(s=>`<option${r&&r.seccion===s?' selected':''}>${s}</option>`).join('')}</select></div><div class="fr"><label>Temporada</label><input id="rt" value="${r?r.temporada:''}"></div><div class="fr"><label>Descripción</label><textarea id="rd">${r?r.descripcion:''}</textarea></div><div class="fr"><label>Ingredientes (nombre|cantidad|unidad — una línea por ingrediente)</label><textarea id="ri" rows="5">${r?r.ingredientes.map(i=>`${i.i}|${i.c}|${i.u}`).join('\n'):''}</textarea></div><div class="fr"><label>Elaboración (un paso por línea)</label><textarea id="rp" rows="5">${r?r.pasos.join('\n'):''}</textarea></div><div class="fr"><label>Notas</label><input id="rno" value="${r?r.notas:''}"></div><div class="mf"><button class="btn btn-o" onclick="cModal()">Cancelar</button><button class="btn btn-g" onclick="sRec(${id||'null'})">Guardar</button></div>`);
 }
-function saveRecipe(id){
-  const nombre=document.getElementById('m-rn').value.trim();if(!nombre)return alert('El nombre es obligatorio');
-  const ingredientes=document.getElementById('m-ri').value.split('\n').filter(l=>l.trim()).map(l=>{const p=l.split('|');return{i:p[0]||'',c:p[1]||'',u:p[2]||''}});
-  const pasos=document.getElementById('m-rp').value.split('\n').filter(l=>l.trim());
-  const obj={nombre,seccion:document.getElementById('m-rs').value,temporada:document.getElementById('m-rt').value,descripcion:document.getElementById('m-rd').value,ingredientes,pasos,notas:document.getElementById('m-rno').value};
+function sRec(id){
+  const n=document.getElementById('rn').value.trim();if(!n)return alert('El nombre es obligatorio');
+  const obj={nombre:n,seccion:document.getElementById('rs').value,temporada:document.getElementById('rt').value,descripcion:document.getElementById('rd').value,ingredientes:document.getElementById('ri').value.split('\n').filter(l=>l.trim()).map(l=>{const p=l.split('|');return{i:p[0]||'',c:p[1]||'',u:p[2]||''}}),pasos:document.getElementById('rp').value.split('\n').filter(l=>l.trim()),notas:document.getElementById('rno').value};
   if(id){Object.assign(D.recipes.find(x=>x.id===id),obj)}else{D.recipes.push({id:nid++,...obj})}
-  save('recipes');closeModal();renderRecetario();renderInicio();
+  save('recipes');cModal();rRec();rInicio();
 }
-function delRecipe(id){if(!confirm('¿Eliminar este plato?'))return;D.recipes=D.recipes.filter(r=>r.id!==id);save('recipes');renderRecetario();renderInicio()}
+function dRec(id){if(!confirm('¿Eliminar este plato?'))return;D.recipes=D.recipes.filter(x=>x.id!==id);save('recipes');rRec();rInicio()}
 
-let pedTab_='lista';
+// ── PEDIDOS ───────────────────────────────────────────────────────────────────
+let pedT='lista';
 function pedTab(t){
-  pedTab_=t;
-  ['lista','resumen','prov'].forEach(x=>{document.getElementById('ped-panel-'+x).style.display=x===t?'block':'none';document.getElementById('ped-tab-'+x).className='btn'+(x===t?'':' btn-outline')});
-  if(t==='resumen')renderPedidoResumen();
-  if(t==='prov')renderPedidoProv();
+  pedT=t;
+  ['lista','resumen','prov'].forEach(x=>{document.getElementById('pp-'+x).style.display=x===t?'block':'none';document.getElementById('pt-'+x).className='btn'+(x===t?'':' btn-o')});
+  if(t==='resumen')rPedRes();
+  if(t==='prov')rPedProv();
 }
-function renderPedidoLista(){
-  const provOpts=D.proveedores.length?D.proveedores.map(p=>`<option value="${p.nombre}">${p.nombre}</option>`).join('')+'<option value="">— sin asignar —</option>':'';
-  document.getElementById('ped-panel-lista').innerHTML=`<div class="tbl-wrap"><table><thead><tr><th style="width:24%">Ingrediente</th><th style="width:22%">Platos</th><th style="width:14%">Categoría</th><th style="width:22%">Proveedor</th><th style="width:12%">Cantidad</th><th style="width:6%"></th></tr></thead><tbody>${D.ingredientes.map(i=>`<tr><td style="font-weight:700">${i.ing}</td><td style="font-size:11px;color:var(--gray-dark)">${i.platos}</td><td>${bcat(i.cat)}</td><td>${D.proveedores.length?`<select onchange="updIng(${i.id},'prov',this.value)">${D.proveedores.map(p=>`<option value="${p.nombre}"${i.prov===p.nombre?' selected':''}>${p.nombre}</option>`).join('')}<option value=""${!i.prov?' selected':''}>— sin asignar —</option></select>`:`<input type="text" value="${i.prov}" onchange="updIng(${i.id},'prov',this.value)">`}</td><td><input type="text" value="${i.cant}" style="text-align:right" onchange="updIng(${i.id},'cant',this.value)"></td><td><button class="btn btn-sm btn-danger" onclick="delIng(${i.id})">×</button></td></tr>`).join('')}</tbody></table></div>`;
+function rPedLista(){
+  document.getElementById('pp-lista').innerHTML=`<div class="tw"><table><thead><tr><th style="width:24%">Ingrediente</th><th style="width:22%">Platos</th><th style="width:14%">Cat.</th><th style="width:22%">Proveedor</th><th style="width:12%">Cantidad</th><th style="width:6%"></th></tr></thead><tbody>${D.ingredientes.map(i=>`<tr><td style="font-weight:700">${i.ing}</td><td style="font-size:11px;color:var(--grd)">${i.platos}</td><td>${bcat(i.cat)}</td><td>${D.proveedores.length?`<select onchange="uIng(${i.id},'prov',this.value)">${D.proveedores.map(p=>`<option value="${p.nombre}"${i.prov===p.nombre?' selected':''}>${p.nombre}</option>`).join('')}<option value=""${!i.prov?' selected':''}>—</option></select>`:`<input type="text" value="${i.prov||''}" onchange="uIng(${i.id},'prov',this.value)">`}</td><td><input type="text" value="${i.cant||''}" style="text-align:right" onchange="uIng(${i.id},'cant',this.value)"></td><td><button class="btn btn-s btn-d" onclick="dIng(${i.id})">×</button></td></tr>`).join('')}</tbody></table></div>`;
 }
-function updIng(id,f,v){const i=D.ingredientes.find(x=>x.id===id);if(i)i[f]=v;save('ingredientes')}
-function delIng(id){if(!confirm('¿Eliminar?'))return;D.ingredientes=D.ingredientes.filter(x=>x.id!==id);save('ingredientes');renderPedidoLista()}
-function renderPedidoResumen(){
+function uIng(id,f,v){const i=D.ingredientes.find(x=>x.id===id);if(i)i[f]=v;save('ingredientes')}
+function dIng(id){if(!confirm('¿Eliminar?'))return;D.ingredientes=D.ingredientes.filter(x=>x.id!==id);save('ingredientes');rPedLista()}
+function rPedRes(){
   const g={};D.ingredientes.forEach(i=>{if(i.prov){if(!g[i.prov])g[i.prov]=[];g[i.prov].push(i)}});
   const sp=D.ingredientes.filter(i=>!i.prov);
   const fecha=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
   let html='';
-  if(!Object.keys(g).length){html='<p style="color:var(--gray-dark)">Asigna proveedores en la pestaña Lista.</p>'}
+  if(!Object.keys(g).length){html='<p style="color:var(--grd)">Asigna proveedores en la pestaña Lista.</p>'}
   else{Object.entries(g).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([prov,items])=>{
-    const provInfo=D.proveedores.find(p=>p.nombre===prov);
-    const tel=provInfo?.tel||'';
-    html+=`<div class="prov-block">
-      <div class="prov-block-head">
-        <span>${prov}</span>
-        <div style="display:flex;gap:.5rem;align-items:center">
-          <small>${items.length} producto${items.length!==1?'s':''}</small>
-          <button onclick="enviarWhatsApp('${prov.replace(/'/g,"\\'")}','${tel}')" style="background:#25D366;color:#fff;border:none;font-family:'Space Mono',monospace;font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:.05em;text-transform:uppercase;border-radius:2px">
-            ✉ WhatsApp
-          </button>
-        </div>
-      </div>
-      <div class="prov-inner">${items.map(i=>`<div class="prov-row"><span style="font-weight:700">${i.ing}</span><span>${bcat(i.cat)}</span><span style="text-align:right;font-weight:700">${i.cant||'—'}</span></div>`).join('')}</div>
-    </div>`;
+    const pi=D.proveedores.find(p=>p.nombre===prov);const tel=pi?.tel||'';
+    html+=`<div class="pb"><div class="pbh"><span>${prov}</span><div style="display:flex;gap:.5rem;align-items:center"><small>${items.length} producto${items.length!==1?'s':''}</small><button onclick="envWA('${prov.replace(/'/g,"\\'")}','${tel}')" style="background:#25D366;color:#fff;border:none;font-family:'Space Mono',monospace;font-size:10px;padding:4px 10px;cursor:pointer;text-transform:uppercase">✉ WhatsApp</button></div></div><div class="pi">${items.map(i=>`<div class="pr"><span style="font-weight:700">${i.ing}</span><span>${bcat(i.cat)}</span><span style="text-align:right;font-weight:700">${i.cant||'—'}</span></div>`).join('')}</div></div>`;
   })}
-  if(sp.length)html+=`<div class="notice"><strong>${sp.length} ingrediente${sp.length!==1?'s':''} sin proveedor:</strong> ${sp.map(i=>i.ing).join(', ')}</div>`;
-  document.getElementById('ped-panel-resumen').innerHTML=html;
+  if(sp.length)html+=`<div class="notice"><strong>${sp.length} sin proveedor:</strong> ${sp.map(i=>i.ing).join(', ')}</div>`;
+  document.getElementById('pp-resumen').innerHTML=html;
 }
-
-function enviarWhatsApp(prov,tel){
+function envWA(prov,tel){
   const fecha=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
   const items=D.ingredientes.filter(i=>i.prov===prov);
-  const lineas=items.map(i=>`• ${i.ing}${i.cant?' — '+i.cant:''}`).join('\n');
-  const msg=`🍃 *Pedido OBA*\n${fecha}\n\n*Para: ${prov}*\n\n${lineas}\n\nGracias 🙏`;
-  const url=tel
-    ?`https://wa.me/34${tel.replace(/\s/g,'')}?text=${encodeURIComponent(msg)}`
-    :`https://wa.me/?text=${encodeURIComponent(msg)}`;
+  const msg=`🍃 *Pedido OBA*\n${fecha}\n\n*Para: ${prov}*\n\n${items.map(i=>`• ${i.ing}${i.cant?' — '+i.cant:''}`).join('\n')}\n\nGracias 🙏`;
+  const url=tel?`https://wa.me/34${tel.replace(/\s/g,'')}?text=${encodeURIComponent(msg)}`:`https://wa.me/?text=${encodeURIComponent(msg)}`;
   window.open(url,'_blank');
 }
-function renderPedidoProv(){
-  document.getElementById('ped-panel-prov').innerHTML=`<button class="btn btn-green" style="margin-bottom:1rem" onclick="openPedidoModal('prov')">+ Proveedor</button>${!D.proveedores.length?'<p style="color:var(--gray-dark)">No hay proveedores aún.</p>':D.proveedores.map((p,i)=>`<div class="project-card"><div class="project-title">${p.nombre}</div>${p.tel?`<div style="font-size:12px;color:var(--gray-dark)">Tel: ${p.tel}</div>`:''} ${p.nota?`<div style="font-size:12px;margin-top:.4rem">${p.nota}</div>`:''}<div class="card-actions"><button class="btn btn-sm btn-outline" onclick="editProv(${i})">Editar</button><button class="btn btn-sm btn-danger" onclick="delProv(${i})">Eliminar</button></div></div>`).join('')}`;
+function rPedProv(){
+  document.getElementById('pp-prov').innerHTML=`<button class="btn btn-g" style="margin-bottom:1rem" onclick="oPM('prov')">+ Proveedor</button>${!D.proveedores.length?'<p style="color:var(--grd)">No hay proveedores aún.</p>':D.proveedores.map((p,i)=>`<div class="pc"><div class="pt">${p.nombre}</div>${p.tel?`<div style="font-size:12px;color:var(--grd)">Tel: ${p.tel}</div>`:''} ${p.nota?`<div style="font-size:12px;margin-top:.4rem">${p.nota}</div>`:''}<div class="ca"><button class="btn btn-s btn-o" onclick="eProv(${i})">Editar</button><button class="btn btn-s btn-d" onclick="dProv(${i})">Eliminar</button></div></div>`).join('')}`;
 }
-function openPedidoModal(type){
-  if(type==='ing'){openModal(`<h3>Nuevo ingrediente</h3><div class="form-row"><label>Nombre *</label><input id="m-in"></div><div class="form-row"><label>Platos donde se usa</label><input id="m-ip"></div><div class="form-row"><label>Categoría</label><select id="m-ic">${['Bienvenida','Huerta','Bosque','Afluente','Corral','Acantilado','Monte Bajo','Llanura','Rivera','Postres','Base/Fermentos'].map(c=>`<option>${c}</option>`).join('')}</select></div><div class="form-row"><label>Proveedor</label><select id="m-iv"><option value="">— sin asignar —</option>${D.proveedores.map(p=>`<option value="${p.nombre}">${p.nombre}</option>`).join('')}</select></div><div class="form-row"><label>Cantidad/semana</label><input id="m-iq" placeholder="Ej: 2 kg"></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-green" onclick="saveIng()">Guardar</button></div>`)}
-  else{openModal(`<h3>Nuevo proveedor</h3><div class="form-row"><label>Nombre *</label><input id="m-pn"></div><div class="form-row"><label>Teléfono</label><input id="m-pt" placeholder="612 345 678"></div><div class="form-row"><label>Notas</label><textarea id="m-pno" placeholder="Días de reparto, mínimo..."></textarea></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-green" onclick="saveProv(-1)">Guardar</button></div>`)}
+function oPM(type){
+  if(type==='ing'){oModal(`<h3>Nuevo ingrediente</h3><div class="fr"><label>Nombre *</label><input id="in"></div><div class="fr"><label>Platos donde se usa</label><input id="ip"></div><div class="fr"><label>Categoría</label><select id="ic">${CATS.map(c=>`<option>${c}</option>`).join('')}</select></div><div class="fr"><label>Proveedor</label><select id="iv"><option value="">— sin asignar —</option>${D.proveedores.map(p=>`<option value="${p.nombre}">${p.nombre}</option>`).join('')}</select></div><div class="fr"><label>Cantidad/semana</label><input id="iq" placeholder="Ej: 2 kg"></div><div class="mf"><button class="btn btn-o" onclick="cModal()">Cancelar</button><button class="btn btn-g" onclick="sIng()">Guardar</button></div>`)}
+  else{oModal(`<h3>Nuevo proveedor</h3><div class="fr"><label>Nombre *</label><input id="pn"></div><div class="fr"><label>Teléfono</label><input id="pt" placeholder="612 345 678"></div><div class="fr"><label>Notas</label><textarea id="pno"></textarea></div><div class="mf"><button class="btn btn-o" onclick="cModal()">Cancelar</button><button class="btn btn-g" onclick="sProv(-1)">Guardar</button></div>`)}
 }
-function saveIng(){const ing=document.getElementById('m-in').value.trim();if(!ing)return alert('El nombre es obligatorio');D.ingredientes.push({id:nid++,ing,platos:document.getElementById('m-ip').value||'Sin especificar',cat:document.getElementById('m-ic').value,prov:document.getElementById('m-iv').value,cant:document.getElementById('m-iq').value});save('ingredientes');closeModal();renderPedidoLista();renderInicio()}
-function editProv(idx){const p=D.proveedores[idx];openModal(`<h3>Editar proveedor</h3><div class="form-row"><label>Nombre *</label><input id="m-pn" value="${p.nombre}"></div><div class="form-row"><label>Teléfono</label><input id="m-pt" value="${p.tel||''}"></div><div class="form-row"><label>Notas</label><textarea id="m-pno">${p.nota||''}</textarea></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-green" onclick="saveProv(${idx})">Guardar</button></div>`)}
-function saveProv(idx){const nombre=document.getElementById('m-pn').value.trim();if(!nombre)return alert('El nombre es obligatorio');const p={id:nid++,nombre,tel:document.getElementById('m-pt').value.trim(),nota:document.getElementById('m-pno').value.trim()};if(idx===-1){if(D.proveedores.find(x=>x.nombre===nombre))return alert('Ya existe');D.proveedores.push(p)}else{const old=D.proveedores[idx].nombre;D.ingredientes.forEach(i=>{if(i.prov===old)i.prov=nombre});save('ingredientes');p.id=D.proveedores[idx].id||nid++;D.proveedores[idx]=p}save('proveedores');closeModal();renderPedidoProv();renderPedidoLista()}
-function delProv(idx){if(!confirm('¿Eliminar proveedor?'))return;const n=D.proveedores[idx].nombre;D.ingredientes.forEach(i=>{if(i.prov===n)i.prov=''});D.proveedores.splice(idx,1);save('proveedores');save('ingredientes');renderPedidoProv();renderPedidoLista()}
+function sIng(){const n=document.getElementById('in').value.trim();if(!n)return alert('El nombre es obligatorio');D.ingredientes.push({id:nid++,ing:n,platos:document.getElementById('ip').value||'Sin especificar',cat:document.getElementById('ic').value,prov:document.getElementById('iv').value,cant:document.getElementById('iq').value});save('ingredientes');cModal();rPedLista();rInicio()}
+function eProv(idx){const p=D.proveedores[idx];oModal(`<h3>Editar proveedor</h3><div class="fr"><label>Nombre *</label><input id="pn" value="${p.nombre}"></div><div class="fr"><label>Teléfono</label><input id="pt" value="${p.tel||''}"></div><div class="fr"><label>Notas</label><textarea id="pno">${p.nota||''}</textarea></div><div class="mf"><button class="btn btn-o" onclick="cModal()">Cancelar</button><button class="btn btn-g" onclick="sProv(${idx})">Guardar</button></div>`)}
+function sProv(idx){
+  const n=document.getElementById('pn').value.trim();if(!n)return alert('El nombre es obligatorio');
+  const p={id:nid++,nombre:n,tel:document.getElementById('pt').value.trim(),nota:document.getElementById('pno').value.trim()};
+  if(idx===-1){if(D.proveedores.find(x=>x.nombre===n))return alert('Ya existe');D.proveedores.push(p)}
+  else{const old=D.proveedores[idx].nombre;D.ingredientes.forEach(i=>{if(i.prov===old)i.prov=n});save('ingredientes');p.id=D.proveedores[idx].id||p.id;D.proveedores[idx]=p}
+  save('proveedores');cModal();rPedProv();rPedLista();
+}
+function dProv(idx){if(!confirm('¿Eliminar proveedor?'))return;const n=D.proveedores[idx].nombre;D.ingredientes.forEach(i=>{if(i.prov===n)i.prov=''});D.proveedores.splice(idx,1);save('proveedores');save('ingredientes');rPedProv();rPedLista()}
 
-function renderMenu(){document.getElementById('menu-body').innerHTML=D.menu.length?D.menu.map(m=>`<div class="project-card"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div class="project-title">${m.plato}</div><div style="margin-top:.2rem">${bsec(m.seccion)}</div>${m.nota?`<p style="font-size:12px;margin-top:.5rem;color:var(--gray-dark)">${m.nota}</p>`:''}<div style="font-size:11px;color:var(--gray);margin-top:.4rem">${m.fecha}</div></div><span class="project-status status-${m.estado==='activo'?'activo':'pausado'}">${m.estado}</span></div><div class="card-actions"><button class="btn btn-sm btn-outline" onclick="openMenuModal(${m.id})">Editar</button><button class="btn btn-sm btn-danger" onclick="delMenu(${m.id})">×</button></div></div>`).join(''):'<p style="color:var(--gray-dark)">Sin cambios esta semana.</p>'}
-function openMenuModal(id){const m=id?D.menu.find(x=>x.id===id):null;openModal(`<h3>${m?'Editar cambio':'Nuevo cambio de menú'}</h3><div class="form-row"><label>Plato *</label><input id="m-mp" value="${m?m.plato:''}"></div><div class="form-row"><label>Sección</label><select id="m-ms">${['Bienvenida','Huerta','Bosque','Afluente','Corral','Acantilado','Monte Bajo','Llanura','Rivera','Postres','Bebida maridaje'].map(s=>`<option${m&&m.seccion===s?' selected':''}>${s}</option>`).join('')}</select></div><div class="form-row"><label>Estado</label><select id="m-me">${['activo','pausado'].map(s=>`<option${m&&m.estado===s?' selected':''}>${s}</option>`).join('')}</select></div><div class="form-row"><label>Nota</label><textarea id="m-mn">${m?m.nota:''}</textarea></div><div class="form-row"><label>Fecha</label><input type="date" id="m-mf" value="${m?m.fecha:new Date().toISOString().slice(0,10)}"></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-green" onclick="saveMenu(${id||'null'})">Guardar</button></div>`)}
-function saveMenu(id){const plato=document.getElementById('m-mp').value.trim();if(!plato)return alert('El nombre es obligatorio');const obj={plato,seccion:document.getElementById('m-ms').value,estado:document.getElementById('m-me').value,nota:document.getElementById('m-mn').value,fecha:document.getElementById('m-mf').value};if(id)Object.assign(D.menu.find(x=>x.id===id),obj);else D.menu.push({id:nid++,...obj});save('menu');closeModal();renderMenu();renderInicio()}
-function delMenu(id){if(!confirm('¿Eliminar?'))return;D.menu=D.menu.filter(x=>x.id!==id);save('menu');renderMenu();renderInicio()}
+// ── MENÚ ──────────────────────────────────────────────────────────────────────
+function rMenu(){document.getElementById('mbody').innerHTML=D.menu.length?D.menu.map(m=>`<div class="pc"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div class="pt">${m.plato}</div><div style="margin-top:.2rem">${bsec(m.seccion)}</div>${m.nota?`<p style="font-size:12px;margin-top:.5rem;color:var(--grd)">${m.nota}</p>`:''}<div style="font-size:11px;color:var(--gr);margin-top:.4rem">${m.fecha}</div></div><span class="ps s-${m.estado==='activo'?'activo':'pausado'}">${m.estado}</span></div><div class="ca"><button class="btn btn-s btn-o" onclick="oMM(${m.id})">Editar</button><button class="btn btn-s btn-d" onclick="dMenu(${m.id})">×</button></div></div>`).join(''):'<p style="color:var(--grd)">Sin cambios esta semana.</p>'}
+function oMM(id){const m=id?D.menu.find(x=>x.id===id):null;oModal(`<h3>${m?'Editar cambio':'Nuevo cambio de menú'}</h3><div class="fr"><label>Plato *</label><input id="mp" value="${m?m.plato:''}"></div><div class="fr"><label>Sección</label><select id="ms">${[...SECS,'Bebida maridaje'].map(s=>`<option${m&&m.seccion===s?' selected':''}>${s}</option>`).join('')}</select></div><div class="fr"><label>Estado</label><select id="me">${['activo','pausado'].map(s=>`<option${m&&m.estado===s?' selected':''}>${s}</option>`).join('')}</select></div><div class="fr"><label>Nota</label><textarea id="mn">${m?m.nota:''}</textarea></div><div class="fr"><label>Fecha</label><input type="date" id="mf" value="${m?m.fecha:today()}"></div><div class="mf"><button class="btn btn-o" onclick="cModal()">Cancelar</button><button class="btn btn-g" onclick="sMenu(${id||'null'})">Guardar</button></div>`)}
+function sMenu(id){const p=document.getElementById('mp').value.trim();if(!p)return alert('El nombre es obligatorio');const obj={plato:p,seccion:document.getElementById('ms').value,estado:document.getElementById('me').value,nota:document.getElementById('mn').value,fecha:document.getElementById('mf').value};if(id)Object.assign(D.menu.find(x=>x.id===id),obj);else D.menu.push({id:nid++,...obj});save('menu');cModal();rMenu();rInicio()}
+function dMenu(id){if(!confirm('¿Eliminar?'))return;D.menu=D.menu.filter(x=>x.id!==id);save('menu');rMenu();rInicio()}
 
-let cY=new Date().getFullYear(),cM=new Date().getMonth();
-const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const DS=['Lu','Ma','Mi','Ju','Vi','Sa','Do'];
+// ── CALENDARIO ────────────────────────────────────────────────────────────────
 function calNav(d){cM+=d;if(cM>11){cM=0;cY++}if(cM<0){cM=11;cY--}calRender()}
 function calRender(){
-  document.getElementById('cal-title').textContent=`${MESES[cM]} ${cY}`;
-  document.getElementById('cal-heads').innerHTML=DS.map(d=>`<div class="cal-head">${d}</div>`).join('');
+  const el=document.getElementById('cal-title');if(!el)return;
+  el.textContent=`${MESES[cM]} ${cY}`;
+  document.getElementById('cheads').innerHTML=DS.map(d=>`<div class="ch">${d}</div>`).join('');
   const first=new Date(cY,cM,1),last=new Date(cY,cM+1,0);
   const startDay=(first.getDay()+6)%7;
-  const todayStr=new Date().toISOString().slice(0,10);
+  const todayStr=today();
   let html='';
-  for(let i=0;i<startDay;i++){const d=new Date(cY,cM,-(startDay-i-1));html+=`<div class="cal-day other-month"><div class="cal-day-num">${d.getDate()}</div></div>`}
+  for(let i=0;i<startDay;i++){const d=new Date(cY,cM,-(startDay-i-1));html+=`<div class="cd om"><div class="cdn">${d.getDate()}</div></div>`}
   for(let d=1;d<=last.getDate();d++){
     const ds=`${cY}-${String(cM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const evs=D.eventos.filter(e=>e.fecha===ds);
     const pracs=D.practicantes.filter(p=>p.fechaEntrada===ds);
-    const pracsHoy=D.practicantes.filter(p=>p.fechaEntrada<=ds&&p.fechaSalida>=ds&&p.estado==='activo');
-    let evHtml=evs.map(e=>{
-      const cls=e.tipo==='especial'?'cal-event-especial':e.urgente?'cal-event-urgente':'cal-event';
-      return `<div class="${cls}" onclick="event.stopPropagation()" title="${e.titulo}">${e.tipo==='especial'?'★ ':e.urgente?'⚠ ':''}${e.titulo}</div>`;
-    }).join('');
-    evHtml+=pracs.map(p=>`<div class="cal-event-prac" onclick="event.stopPropagation();openPracFicha(${p.id})" title="Llega ${p.nombre}">👤 ${p.nombre}</div>`).join('');
-    html+=`<div class="cal-day${ds===todayStr?' today':''}" onclick="openCalModal('${ds}')">${pracsHoy.length?`<div style="position:absolute;top:2px;right:2px;width:7px;height:7px;background:#2a5a7a;border-radius:50%"></div>`:''}<div class="cal-day-num" style="position:relative">${d}</div>${evHtml}</div>`;
+    let evHtml=evs.map(e=>{const cls=e.tipo==='especial'?'ce-esp':e.urgente||e.tipo==='urgente'?'ce-urg':'ce';return`<div class="${cls}">${e.tipo==='especial'?'★ ':e.urgente?'⚠ ':''}${e.titulo}</div>`}).join('');
+    evHtml+=pracs.map(p=>`<div class="ce-prac" onclick="event.stopPropagation();oPF(${p.id})">👤 ${p.nombre}</div>`).join('');
+    html+=`<div class="cd${ds===todayStr?' today':''}" onclick="oCM('${ds}')"><div class="cdn">${d}</div>${evHtml}</div>`;
   }
   const rem=(7-((startDay+last.getDate())%7))%7;
-  for(let i=1;i<=rem;i++)html+=`<div class="cal-day other-month"><div class="cal-day-num">${i}</div></div>`;
-  document.getElementById('cal-body').innerHTML=html;
+  for(let i=1;i<=rem;i++)html+=`<div class="cd om"><div class="cdn">${i}</div></div>`;
+  document.getElementById('cbody').innerHTML=html;
   const me=D.eventos.filter(e=>e.fecha.startsWith(`${cY}-${String(cM+1).padStart(2,'0')}`));
-  const mp=D.practicantes.filter(p=>p.fechaEntrada.startsWith(`${cY}-${String(cM+1).padStart(2,'0')}`));
-  let listHtml='';
+  const mp=D.practicantes.filter(p=>p.fechaEntrada&&p.fechaEntrada.startsWith(`${cY}-${String(cM+1).padStart(2,'0')}`));
+  let lHtml='';
   if(me.length||mp.length){
-    listHtml='<div style="margin-bottom:.5rem;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray-dark)">Este mes</div>';
-    listHtml+=me.map(e=>`<div class="notice${e.urgente?' urgent':''}${e.tipo==='especial'?' ':{}}"><strong>${e.tipo==='especial'?'★ Evento especial: ':e.urgente?'⚠ Urgente: '':''}${e.titulo}</strong><div class="notice-date">${e.fecha}</div></div>`).join('');
-    listHtml+=mp.map(p=>`<div class="notice" style="border-color:#2a5a7a;background:#e6f1fb;cursor:pointer" onclick="openPracFicha(${p.id})"><strong>👤 Llega ${p.nombre}</strong><div class="notice-date">${p.fechaEntrada} · ${p.partida||'Partida por asignar'}</div></div>`).join('');
+    lHtml='<div style="margin-bottom:.5rem;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--grd)">Este mes</div>';
+    lHtml+=me.map(e=>`<div class="notice${e.urgente||e.tipo==='urgente'?' urgent':''}"><strong>${e.tipo==='especial'?'★ ':e.urgente?'⚠ ':''}${e.titulo}</strong>${e.nota?`<div style="font-size:12px">${e.nota}</div>`:''}<div class="nd">${e.fecha}</div></div>`).join('');
+    lHtml+=mp.map(p=>`<div class="notice" style="border-color:#2a5a7a;background:#e6f1fb;cursor:pointer" onclick="oPF(${p.id})"><strong>👤 Llega: ${p.nombre}</strong><div class="nd">${p.fechaEntrada} · ${p.partida||'Partida por asignar'}</div></div>`).join('');
   }
-  document.getElementById('cal-list').innerHTML=listHtml;
+  document.getElementById('clist').innerHTML=lHtml;
 }
-function openCalModal(fecha){openModal(`<h3>Nuevo evento</h3>
-  <div class="form-row"><label>Título *</label><input id="m-et"></div>
-  <div class="form-row"><label>Tipo de evento</label><select id="m-etipo">
-    <option value="normal">Normal</option>
-    <option value="especial">★ Evento especial (cena, boda, privado...)</option>
-    <option value="urgente">⚠ Urgente</option>
-  </select></div>
-  <div class="form-row"><label>Fecha</label><input type="date" id="m-ef" value="${typeof fecha==='string'?fecha:new Date().toISOString().slice(0,10)}"></div>
-  <div class="form-row"><label>Notas</label><input id="m-enota" placeholder="Detalles del evento..."></div>
-  <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-green" onclick="saveEvento()">Guardar</button></div>`)}
-function saveEvento(){const titulo=document.getElementById('m-et').value.trim();if(!titulo)return alert('El título es obligatorio');const tipo=document.getElementById('m-etipo').value;D.eventos.push({id:nid++,titulo,fecha:document.getElementById('m-ef').value,tipo,urgente:tipo==='urgente',nota:document.getElementById('m-enota')?.value||''});save('eventos');closeModal();calRender()}
-
-function renderProyectos(){const f=document.getElementById('proj-filter')?.value||'';const list=D.proyectos.filter(p=>!f||p.estado===f);document.getElementById('proj-body').innerHTML=list.map(p=>`<div class="project-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem"><div class="project-title">${p.nombre}</div><span class="project-status status-${p.estado}">${p.estado}</span></div><p style="font-size:13px;margin:.4rem 0;color:var(--gray-dark)">${p.descripcion}</p>${p.responsable?`<div style="font-size:11px;color:var(--gray-dark)">Responsable: <strong>${p.responsable}</strong></div>`:''} ${p.notas?`<div class="notice" style="margin-top:.5rem;font-size:12px">${p.notas}</div>`:''}<div style="font-size:11px;color:var(--gray);margin-top:.4rem">${p.fecha}</div><div class="card-actions"><button class="btn btn-sm btn-outline" onclick="openProjModal(${p.id})">Editar</button><button class="btn btn-sm btn-danger" onclick="delProj(${p.id})">×</button></div></div>`).join('')||'<p style="color:var(--gray-dark)">Sin proyectos.</p>'}
-function openProjModal(id){const p=id?D.proyectos.find(x=>x.id===id):null;openModal(`<h3>${p?'Editar proyecto':'Nuevo proyecto'}</h3><div class="form-row"><label>Nombre *</label><input id="m-prn" value="${p?p.nombre:''}"></div><div class="form-row"><label>Descripción</label><textarea id="m-prd">${p?p.descripcion:''}</textarea></div><div class="form-row"><label>Estado</label><select id="m-pre">${['activo','testeo','listo','pausado'].map(s=>`<option${p&&p.estado===s?' selected':''}>${s}</option>`).join('')}</select></div><div class="form-row"><label>Responsable</label><input id="m-prr" value="${p?p.responsable:''}"></div><div class="form-row"><label>Notas</label><textarea id="m-prno">${p?p.notas:''}</textarea></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-green" onclick="saveProj(${id||'null'})">Guardar</button></div>`)}
-function saveProj(id){const nombre=document.getElementById('m-prn').value.trim();if(!nombre)return alert('El nombre es obligatorio');const obj={nombre,descripcion:document.getElementById('m-prd').value,estado:document.getElementById('m-pre').value,responsable:document.getElementById('m-prr').value,notas:document.getElementById('m-prno').value,fecha:new Date().toISOString().slice(0,10)};if(id)Object.assign(D.proyectos.find(x=>x.id===id),obj);else D.proyectos.push({id:nid++,...obj});save('proyectos');closeModal();renderProyectos();renderInicio()}
-function delProj(id){if(!confirm('¿Eliminar proyecto?'))return;D.proyectos=D.proyectos.filter(x=>x.id!==id);save('proyectos');renderProyectos();renderInicio()}
-
-function renderAvisos(){document.getElementById('avisos-body').innerHTML=D.avisos.slice().reverse().map(a=>`<div class="notice${a.urgente?' urgent':''}"><div style="display:flex;justify-content:space-between;align-items:flex-start"><strong>${a.titulo}</strong><div style="display:flex;gap:.4rem"><button class="btn btn-sm btn-outline" onclick="openAvisoModal(${a.id})">Editar</button><button class="btn btn-sm btn-danger" onclick="delAviso(${a.id})">×</button></div></div><div style="margin-top:.3rem;font-size:13px">${a.texto}</div><div class="notice-date">${a.autor} · ${a.fecha}</div></div>`).join('')||'<p style="color:var(--gray-dark)">Sin avisos.</p>'}
-function openAvisoModal(id){const a=id?D.avisos.find(x=>x.id===id):null;openModal(`<h3>${a?'Editar aviso':'Nuevo aviso'}</h3><div class="form-row"><label>Título *</label><input id="m-at" value="${a?a.titulo:''}"></div><div class="form-row"><label>Mensaje</label><textarea id="m-ax">${a?a.texto:''}</textarea></div><div class="form-row"><label>Autor</label><input id="m-aa" value="${a?a.autor:''}"></div><div class="form-row"><label>Urgente</label><select id="m-au"><option value="0"${a&&!a.urgente?' selected':''}>No</option><option value="1"${a&&a.urgente?' selected':''}>Sí — destacar en rojo</option></select></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-green" onclick="saveAviso(${id||'null'})">Guardar</button></div>`)}
-function saveAviso(id){const titulo=document.getElementById('m-at').value.trim();if(!titulo)return alert('El título es obligatorio');const obj={titulo,texto:document.getElementById('m-ax').value,autor:document.getElementById('m-aa').value,urgente:document.getElementById('m-au').value==='1',fecha:new Date().toISOString().slice(0,10)};if(id)Object.assign(D.avisos.find(x=>x.id===id),obj);else D.avisos.push({id:nid++,...obj});save('avisos');closeModal();renderAvisos();renderInicio()}
-function delAviso(id){if(!confirm('¿Eliminar aviso?'))return;D.avisos=D.avisos.filter(x=>x.id!==id);save('avisos');renderAvisos();renderInicio()}
-
-function openModal(html){document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal').classList.add('open');setTimeout(()=>{const f=document.querySelector('#modal-inner input,#modal-inner textarea');if(f)f.focus()},60)}
-function closeModal(){document.getElementById('modal').classList.remove('open')}
-document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeModal()})
+function oCM(fecha){oModal(`<h3>Nuevo evento</h3><div class="fr"><label>Título *</label><input id="et"></div><div class="fr"><label>Tipo</label><select id="etipo"><option value="normal">Normal</option><option value="especial">★ Evento especial</option><option value="urgente">⚠ Urgente</option></select></div><div class="fr"><label>Fecha</label><input type="date" id="ef" value="${typeof fecha==='string'?fecha:today()}"></div><div class="fr"><label>Notas</label><input id="enota" placeholder="Detalles..."></div><div class="mf"><button class="btn btn-o" onclick="cModal()">Cancelar</button><button class="btn btn-g" onclick="sEv()">Guardar</button></div>`)}
+function sEv(){const t=document.getElementById('et').value.trim();if(!t)return alert('El título es obligatorio');const tipo=document.getElementById('etipo').value;D.eventos.push({id:nid++,titulo:t,fecha:document.getElementById('ef').value,tipo,urgente:tipo==='urgente',nota:document.getElementById('enota')?.value||''});save('eventos');cModal();calRender()}
 
 // ── PRACTICANTES ──────────────────────────────────────────────────────────────
-function renderPracticantes(){
-  const el=document.getElementById('prac-body');if(!el)return;
-  const f=document.getElementById('prac-filter')?.value||'';
+function rPrac(){
+  const el=document.getElementById('pracbody');if(!el)return;
+  const f=document.getElementById('pfilt')?.value||'';
   const list=D.practicantes.filter(p=>!f||p.estado===f);
-  document.getElementById('prac-body').innerHTML=list.length?list.map(p=>`
-    <div class="prac-card" onclick="openPracFicha(${p.id})">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div>
-          <div class="prac-name">${p.nombre}</div>
-          <div class="prac-dates">📅 ${p.fechaEntrada} → ${p.fechaSalida||'Sin definir'}</div>
-          ${p.escuela?`<div style="font-size:11px;color:var(--gray-dark)">🏫 ${p.escuela}</div>`:''}
-        </div>
-        <span class="project-status status-${p.estado}">${p.estado}</span>
-      </div>
-      <div class="prac-tags">
-        ${p.partida?`<span class="badge badge-huerta">${p.partida}</span>`:''}
-        ${p.nivel?`<span class="badge badge-base">Nivel ${p.nivel}/5</span>`:''}
-      </div>
-    </div>`).join(''):'<p style="color:var(--gray-dark)">No hay practicantes. Añade el primero.</p>';
+  el.innerHTML=list.length?list.map(p=>`<div class="pc" style="cursor:pointer" onclick="oPF(${p.id})"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div class="pt">${p.nombre}</div><div style="font-size:11px;color:var(--grd);margin:.2rem 0">📅 ${p.fechaEntrada||'—'} → ${p.fechaSalida||'—'}</div>${p.escuela?`<div style="font-size:11px;color:var(--grd)">🏫 ${p.escuela}</div>`:''}</div><span class="ps s-${p.estado||'pendiente'}">${p.estado||'pendiente'}</span></div><div style="display:flex;gap:.4rem;margin-top:.5rem;flex-wrap:wrap">${p.partida?`<span class="badge b-huerta">${p.partida}</span>`:''}</div></div>`).join(''):'<p style="color:var(--grd)">No hay practicantes. Añade el primero con el botón de arriba.</p>';
 }
-
-function openPracFicha(id){
+function oPF(id){
   const p=D.practicantes.find(x=>x.id===id);if(!p)return;
-  document.getElementById('prac-ficha-titulo').textContent=p.nombre;
-  const habilidades=p.habilidades||[];
-  const SKILLS=['Mise en place','Fondos y salsas','Carnes','Pescados','Pastelería','Fermentos','Limpieza y orden','Trabajo en equipo'];
-  document.getElementById('prac-ficha-body').innerHTML=`
+  document.getElementById('pftit').textContent=p.nombre;
+  const hab=p.habilidades||{};
+  document.getElementById('pfbody').innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.25rem;font-size:13px">
-      <div><span style="color:var(--gray-dark)">Escuela:</span> ${p.escuela||'—'}</div>
-      <div><span style="color:var(--gray-dark)">Estado:</span> <span class="project-status status-${p.estado}" style="margin:0">${p.estado}</span></div>
-      <div><span style="color:var(--gray-dark)">Entrada:</span> ${p.fechaEntrada||'—'}</div>
-      <div><span style="color:var(--gray-dark)">Salida:</span> ${p.fechaSalida||'—'}</div>
-      <div><span style="color:var(--gray-dark)">Partida:</span> ${p.partida||'—'}</div>
-      <div><span style="color:var(--gray-dark)">Tutor:</span> ${p.tutor||'—'}</div>
+      <div><span style="color:var(--grd)">Escuela:</span> ${p.escuela||'—'}</div>
+      <div><span style="color:var(--grd)">Estado:</span> <span class="ps s-${p.estado||'pendiente'}" style="margin:0">${p.estado||'—'}</span></div>
+      <div><span style="color:var(--grd)">Entrada:</span> ${p.fechaEntrada||'—'}</div>
+      <div><span style="color:var(--grd)">Salida:</span> ${p.fechaSalida||'—'}</div>
+      <div><span style="color:var(--grd)">Partida:</span> ${p.partida||'—'}</div>
+      <div><span style="color:var(--grd)">Tutor:</span> ${p.tutor||'—'}</div>
     </div>
     ${p.descripcion?`<div class="notice" style="margin-bottom:1.25rem">${p.descripcion}</div>`:''}
     <div style="margin-bottom:1.25rem">
-      <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray-dark);margin-bottom:.75rem">Nivel de habilidades</div>
-      ${SKILLS.map(s=>{const v=habilidades[s]||0;return`<div style="margin-bottom:.6rem"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>${s}</span><span style="color:var(--gray-dark)">${v}/5</span></div><div class="skill-bar"><div class="skill-bar-fill" style="width:${v*20}%"></div></div>`}).join('')}</div>
+      <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--grd);margin-bottom:.75rem">Nivel de habilidades</div>
+      ${SKILLS.map(s=>{const v=hab[s]||0;return`<div style="margin-bottom:.6rem"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>${s}</span><span style="color:var(--grd)">${v}/5</span></div><div class="skb"><div class="skbf" style="width:${v*20}%"></div></div></div>`}).join('')}
     </div>
-    ${p.notas?`<div style="margin-bottom:1.25rem"><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray-dark);margin-bottom:.5rem">Notas de seguimiento</div><div style="font-size:13px;line-height:1.7;white-space:pre-wrap">${p.notas}</div></div>`:''}
-    <div class="card-actions">
-      <button class="btn btn-outline" onclick="openPracModal(${id})">Editar ficha</button>
-      <button class="btn btn-danger btn-sm" onclick="delPrac(${id})">Eliminar</button>
+    ${p.notas?`<div style="margin-bottom:1.25rem"><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--grd);margin-bottom:.5rem">Notas de seguimiento</div><div style="font-size:13px;line-height:1.7;white-space:pre-wrap">${p.notas}</div></div>`:''}
+    <div class="ca">
+      <button class="btn btn-o" onclick="oPracM(${id})">Editar ficha</button>
+      <button class="btn btn-d btn-s" onclick="dPrac(${id})">Eliminar</button>
     </div>`;
-  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
-  document.getElementById('panel-prac-ficha').classList.add('active');
+  document.getElementById('pfdet').classList.add('open');
 }
-
-function closePracFicha(){
-  showPanel('practicantes');
-}
-
-function openPracModal(id){
+function cPF(){document.getElementById('pfdet').classList.remove('open')}
+function oPracM(id){
   const p=id?D.practicantes.find(x=>x.id===id):null;
-  const SKILLS=['Mise en place','Fondos y salsas','Carnes','Pescados','Pastelería','Fermentos','Limpieza y orden','Trabajo en equipo'];
   const hab=p?.habilidades||{};
-  openModal(`<h3>${p?'Editar practicante':'Nuevo practicante'}</h3>
-    <div class="form-row"><label>Nombre completo *</label><input id="m-prn" value="${p?.nombre||''}"></div>
-    <div class="form-row"><label>Escuela / centro</label><input id="m-pre" value="${p?.escuela||''}"></div>
-    <div class="form-row"><label>Fecha de entrada</label><input type="date" id="m-pri" value="${p?.fechaEntrada||''}"></div>
-    <div class="form-row"><label>Fecha de salida</label><input type="date" id="m-prs" value="${p?.fechaSalida||''}"></div>
-    <div class="form-row"><label>Partida asignada</label><select id="m-prp">
-      <option value="">Sin asignar</option>
-      ${['Cocina fría','Cocina caliente','Pastelería','Sala','Todas'].map(x=>`<option${p?.partida===x?' selected':''}>${x}</option>`).join('')}
-    </select></div>
-    <div class="form-row"><label>Tutor/a responsable</label><input id="m-prt" value="${p?.tutor||''}"></div>
-    <div class="form-row"><label>Estado</label><select id="m-prst">
-      ${['activo','pendiente','finalizado'].map(s=>`<option${p?.estado===s?' selected':''}>${s}</option>`).join('')}
-    </select></div>
-    <div class="form-row"><label>Nivel general (1-5)</label><input type="number" id="m-prnv" min="1" max="5" value="${p?.nivel||''}"></div>
-    <div class="form-row"><label>Habilidades por área (0-5)</label>
-      ${SKILLS.map(s=>`<div style="display:flex;justify-content:space-between;align-items:center;margin:.3rem 0;font-size:12px"><span>${s}</span><input type="number" id="skill-${s.replace(/\s/g,'_')}" min="0" max="5" value="${hab[s]||0}" style="width:50px;border:1px solid var(--gray);padding:3px 6px;font-size:12px"></div>`).join('')}
-    </div>
-    <div class="form-row"><label>Descripción / perfil</label><textarea id="m-prd">${p?.descripcion||''}</textarea></div>
-    <div class="form-row"><label>Notas de seguimiento</label><textarea id="m-prno">${p?.notas||''}</textarea></div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-green" onclick="savePrac(${id||'null'})">Guardar</button>
-    </div>`);
+  oModal(`<h3>${p?'Editar practicante':'Nuevo practicante'}</h3>
+    <div class="fr"><label>Nombre completo *</label><input id="prn" value="${p?.nombre||''}"></div>
+    <div class="fr"><label>Escuela / centro formativo</label><input id="pre" value="${p?.escuela||''}"></div>
+    <div class="fr"><label>Fecha de entrada</label><input type="date" id="pri" value="${p?.fechaEntrada||''}"></div>
+    <div class="fr"><label>Fecha de salida</label><input type="date" id="prs" value="${p?.fechaSalida||''}"></div>
+    <div class="fr"><label>Partida asignada</label><select id="prp"><option value="">Sin asignar</option>${['Cocina fría','Cocina caliente','Pastelería','Sala','Todas'].map(x=>`<option${p?.partida===x?' selected':''}>${x}</option>`).join('')}</select></div>
+    <div class="fr"><label>Tutor/a responsable</label><input id="prt" value="${p?.tutor||''}"></div>
+    <div class="fr"><label>Estado</label><select id="prst">${['activo','pendiente','finalizado'].map(s=>`<option${(p?.estado||'pendiente')===s?' selected':''}>${s}</option>`).join('')}</select></div>
+    <div class="fr"><label>Habilidades por área (0-5)</label>${SKILLS.map(s=>`<div style="display:flex;justify-content:space-between;align-items:center;margin:.25rem 0;font-size:12px"><span>${s}</span><input type="number" id="sk_${s.replace(/[^a-zA-Z]/g,'_')}" min="0" max="5" value="${hab[s]||0}" style="width:50px;border:1px solid var(--gr);padding:3px 6px;font-size:12px;font-family:'Space Mono',monospace"></div>`).join('')}</div>
+    <div class="fr"><label>Descripción / perfil</label><textarea id="prd">${p?.descripcion||''}</textarea></div>
+    <div class="fr"><label>Notas de seguimiento</label><textarea id="prno">${p?.notas||''}</textarea></div>
+    <div class="mf"><button class="btn btn-o" onclick="cModal()">Cancelar</button><button class="btn btn-g" onclick="sPrac(${id||'null'})">Guardar</button></div>`);
 }
-
-function savePrac(id){
-  const nombre=document.getElementById('m-prn').value.trim();if(!nombre)return alert('El nombre es obligatorio');
-  const SKILLS=['Mise en place','Fondos y salsas','Carnes','Pescados','Pastelería','Fermentos','Limpieza y orden','Trabajo en equipo'];
-  const habilidades={};
-  SKILLS.forEach(s=>{const el=document.getElementById('skill-'+s.replace(/\s/g,'_'));if(el)habilidades[s]=parseInt(el.value)||0});
-  const obj={nombre,escuela:document.getElementById('m-pre').value,fechaEntrada:document.getElementById('m-pri').value,fechaSalida:document.getElementById('m-prs').value,partida:document.getElementById('m-prp').value,tutor:document.getElementById('m-prt').value,estado:document.getElementById('m-prst').value,nivel:document.getElementById('m-prnv').value,habilidades,descripcion:document.getElementById('m-prd').value,notas:document.getElementById('m-prno').value};
-  if(id){Object.assign(D.practicantes.find(x=>x.id===id),obj)}
-  else{D.practicantes.push({id:nid++,...obj})}
-  save('practicantes');closeModal();renderPracticantes();calRender();
+function sPrac(id){
+  const n=document.getElementById('prn').value.trim();if(!n)return alert('El nombre es obligatorio');
+  const hab={};SKILLS.forEach(s=>{const el=document.getElementById('sk_'+s.replace(/[^a-zA-Z]/g,'_'));if(el)hab[s]=parseInt(el.value)||0});
+  const obj={nombre:n,escuela:document.getElementById('pre').value,fechaEntrada:document.getElementById('pri').value,fechaSalida:document.getElementById('prs').value,partida:document.getElementById('prp').value,tutor:document.getElementById('prt').value,estado:document.getElementById('prst').value,habilidades:hab,descripcion:document.getElementById('prd').value,notas:document.getElementById('prno').value};
+  if(id){Object.assign(D.practicantes.find(x=>x.id===id),obj)}else{D.practicantes.push({id:nid++,...obj})}
+  save('practicantes');cModal();rPrac();calRender();
 }
+function dPrac(id){if(!confirm('¿Eliminar este practicante?'))return;D.practicantes=D.practicantes.filter(x=>x.id!==id);save('practicantes');cPF();rPrac()}
 
-function delPrac(id){
-  if(!confirm('¿Eliminar este practicante?'))return;
-  D.practicantes=D.practicantes.filter(x=>x.id!==id);
-  save('practicantes');closePracFicha();
-}
+// ── PROYECTOS ─────────────────────────────────────────────────────────────────
+function rProj(){const f=document.getElementById('projfilt')?.value||'';const list=D.proyectos.filter(p=>!f||p.estado===f);document.getElementById('projbody').innerHTML=list.map(p=>`<div class="pc"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem"><div class="pt">${p.nombre}</div><span class="ps s-${p.estado}">${p.estado}</span></div><p style="font-size:13px;margin:.4rem 0;color:var(--grd)">${p.descripcion}</p>${p.responsable?`<div style="font-size:11px;color:var(--grd)">Responsable: <strong>${p.responsable}</strong></div>`:''} ${p.notas?`<div class="notice" style="margin-top:.5rem;font-size:12px">${p.notas}</div>`:''}<div style="font-size:11px;color:var(--gr);margin-top:.4rem">${p.fecha}</div><div class="ca"><button class="btn btn-s btn-o" onclick="oProjM(${p.id})">Editar</button><button class="btn btn-s btn-d" onclick="dProj(${p.id})">×</button></div></div>`).join('')||'<p style="color:var(--grd)">Sin proyectos.</p>'}
+function oProjM(id){const p=id?D.proyectos.find(x=>x.id===id):null;oModal(`<h3>${p?'Editar':'Nuevo proyecto'}</h3><div class="fr"><label>Nombre *</label><input id="prjn" value="${p?p.nombre:''}"></div><div class="fr"><label>Descripción</label><textarea id="prjd">${p?p.descripcion:''}</textarea></div><div class="fr"><label>Estado</label><select id="prje">${['activo','testeo','listo','pausado'].map(s=>`<option${p&&p.estado===s?' selected':''}>${s}</option>`).join('')}</select></div><div class="fr"><label>Responsable</label><input id="prjr" value="${p?p.responsable:''}"></div><div class="fr"><label>Notas</label><textarea id="prjno">${p?p.notas:''}</textarea></div><div class="mf"><button class="btn btn-o" onclick="cModal()">Cancelar</button><button class="btn btn-g" onclick="sProj(${id||'null'})">Guardar</button></div>`)}
+function sProj(id){const n=document.getElementById('prjn').value.trim();if(!n)return alert('El nombre es obligatorio');const obj={nombre:n,descripcion:document.getElementById('prjd').value,estado:document.getElementById('prje').value,responsable:document.getElementById('prjr').value,notas:document.getElementById('prjno').value,fecha:today()};if(id)Object.assign(D.proyectos.find(x=>x.id===id),obj);else D.proyectos.push({id:nid++,...obj});save('proyectos');cModal();rProj();rInicio()}
+function dProj(id){if(!confirm('¿Eliminar?'))return;D.proyectos=D.proyectos.filter(x=>x.id!==id);save('proyectos');rProj();rInicio()}
 
-// ── ASISTENTE IA ─────────────────────────────────────────────────────────────
-const GROQ_URL='https://api.groq.com/openai/v1/chat/completions';
-let iaChatHistory=[];
+// ── AVISOS ────────────────────────────────────────────────────────────────────
+function rAv(){document.getElementById('avbody').innerHTML=D.avisos.slice().reverse().map(a=>`<div class="notice${a.urgente?' urgent':''}"><div style="display:flex;justify-content:space-between;align-items:flex-start"><strong>${a.titulo}</strong><div style="display:flex;gap:.4rem"><button class="btn btn-s btn-o" onclick="oAM(${a.id})">Editar</button><button class="btn btn-s btn-d" onclick="dAv(${a.id})">×</button></div></div><div style="margin-top:.3rem;font-size:13px">${a.texto}</div><div class="nd">${a.autor} · ${a.fecha}</div></div>`).join('')||'<p style="color:var(--grd)">Sin avisos.</p>'}
+function oAM(id){const a=id?D.avisos.find(x=>x.id===id):null;oModal(`<h3>${a?'Editar':'Nuevo aviso'}</h3><div class="fr"><label>Título *</label><input id="at" value="${a?a.titulo:''}"></div><div class="fr"><label>Mensaje</label><textarea id="ax">${a?a.texto:''}</textarea></div><div class="fr"><label>Autor</label><input id="aa" value="${a?a.autor:''}"></div><div class="fr"><label>Urgente</label><select id="au"><option value="0"${a&&!a.urgente?' selected':''}>No</option><option value="1"${a&&a.urgente?' selected':''}>Sí</option></select></div><div class="mf"><button class="btn btn-o" onclick="cModal()">Cancelar</button><button class="btn btn-g" onclick="sAv(${id||'null'})">Guardar</button></div>`)}
+function sAv(id){const t=document.getElementById('at').value.trim();if(!t)return alert('El título es obligatorio');const obj={titulo:t,texto:document.getElementById('ax').value,autor:document.getElementById('aa').value,urgente:document.getElementById('au').value==='1',fecha:today()};if(id)Object.assign(D.avisos.find(x=>x.id===id),obj);else D.avisos.push({id:nid++,...obj});save('avisos');cModal();rAv();rInicio()}
+function dAv(id){if(!confirm('¿Eliminar?'))return;D.avisos=D.avisos.filter(x=>x.id!==id);save('avisos');rAv();rInicio()}
 
-const IA_SUGERENCIAS=[
-  '¿Qué platos tenemos en la sección Bosque?',
-  'Genera la ficha de un plato nuevo con trucha y acederas',
-  'Calcula el pedido para 40 cubiertos esta semana',
-  '¿Qué ingredientes necesito para la Torcaz en Nabos?',
-  'Dame ideas para un plato de temporada con setas',
-  'Redacta un aviso para el equipo sobre el cambio de menú',
-  'Traduce al inglés: Cuajada de Castañas con Aceite de Pino',
-  'Sugiere un maridaje para el pase de Huerta',
-];
-
-function getGroqKey(){return localStorage.getItem('oba_groq_key')||''}
-function setGroqKey(k){localStorage.setItem('oba_groq_key',k)}
-
-function renderIAsugerencias(){
-  document.getElementById('ia-sugerencias').innerHTML=IA_SUGERENCIAS.map(s=>
-    `<button class="ia-sug" onclick="iaPregunta('${s.replace(/'/g,"\\'")}'">${s}</button>`
-  ).join('');
-}
-
-function iaPregunta(texto){
-  document.getElementById('ia-input').value=texto;
-  iaEnviar();
-}
-
-function iaContexto(){
-  const recetas=D.recipes.map(r=>`- ${r.nombre} (${r.seccion}, ${r.temporada}): ${r.descripcion}`).join('\n');
-  const ingredientes=D.ingredientes.slice(0,30).map(i=>`- ${i.ing} [${i.cat}]${i.prov?' · Proveedor: '+i.prov:''}`).join('\n');
-  return `Eres el asistente de cocina del restaurante OBA, un restaurante de cocina de autor en España con estilo brutalista y minimalista. Conoces todo el menú y el recetario del restaurante.\n\nRECETARIO ACTUAL:\n${recetas}\n\nINGREDIENTES PRINCIPALES:\n${ingredientes}\n\nResponde siempre en español, de forma concisa y útil para el equipo de cocina. Cuando generes fichas de platos usa el formato: Nombre, Sección, Temporada, Descripción, Ingredientes (lista), Elaboración (pasos numerados), Notas.`;
-}
-
-async function iaEnviar(){
-  const key=getGroqKey();
-  if(!key){pedirApiKey();return;}
-  const input=document.getElementById('ia-input');
-  const texto=input.value.trim();
-  if(!texto)return;
-  input.value='';
-  const chat=document.getElementById('ia-chat');
-  chat.innerHTML+=`<div class="ia-msg user">${texto}</div>`;
-  const loadId='ial'+Date.now();
-  chat.innerHTML+=`<div class="ia-msg loading" id="${loadId}">Pensando...</div>`;
-  chat.scrollTop=chat.scrollHeight;
-  iaChatHistory.push({role:'user',content:texto});
-  try{
-    const res=await fetch(GROQ_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-      body:JSON.stringify({
-        model:'llama-3.3-70b-versatile',
-        messages:[{role:'system',content:iaContexto()},...iaChatHistory.slice(-10)],
-        max_tokens:1024,
-        temperature:0.7
-      })
-    });
-    const data=await res.json();
-    document.getElementById(loadId)?.remove();
-    if(data.error){
-      chat.innerHTML+=`<div class="ia-msg bot" style="border-color:#c0392b">Error: ${data.error.message||'API key incorrecta'}. <button class="btn btn-sm" onclick="pedirApiKey()">Cambiar API key</button></div>`;
-    } else {
-      const respuesta=data.choices?.[0]?.message?.content||'Sin respuesta.';
-      iaChatHistory.push({role:'assistant',content:respuesta});
-      chat.innerHTML+=`<div class="ia-msg bot">${respuesta.replace(/\n/g,'<br>')}</div>`;
-    }
-    chat.scrollTop=chat.scrollHeight;
-  }catch(e){
-    document.getElementById(loadId)?.remove();
-    chat.innerHTML+=`<div class="ia-msg bot" style="border-color:#c0392b">Error de conexión. <button class="btn btn-sm" onclick="pedirApiKey()">Revisar API key</button></div>`;
-    chat.scrollTop=chat.scrollHeight;
-  }
-}
-
-function pedirApiKey(){
-  openModal(`<h3>Activar Asistente IA</h3>
-    <p style="font-size:13px;color:var(--gray-dark);margin-bottom:1rem">Introduce tu API key de Groq. Se guardará solo en este navegador y no aparecerá en el código.</p>
-    <div class="form-row"><label>API Key de Groq</label><input id="m-apikey" type="password" placeholder="gsk_..."></div>
-    <p style="font-size:11px;color:var(--gray-dark);margin-top:.5rem">Consíguela gratis en <strong>console.groq.com</strong> → API Keys → Create API Key</p>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-green" onclick="guardarApiKey()">Activar</button>
-    </div>`);
-  setTimeout(()=>document.getElementById('m-apikey')?.focus(),100);
-}
-
-function guardarApiKey(){
-  const k=document.getElementById('m-apikey').value.trim();
-  if(!k)return alert('Introduce tu API key');
-  setGroqKey(k);
-  closeModal();
-  const chat=document.getElementById('ia-chat');
-  chat.innerHTML=`<div class="ia-msg bot">API key guardada. Ya puedes usar el asistente de OBA. ¿En qué te ayudo?</div>`;
-}
-
+// ── ASISTENTE IA ──────────────────────────────────────────────────────────────
+const GROQ='https://api.groq.com/openai/v1/chat/completions';
+let iaH=[];
+const IASUGS=['¿Qué platos tenemos en Bosque?','Genera ficha de un plato con trucha','Calcula pedido para 40 cubiertos','¿Ingredientes para la Torcaz en Nabos?','Ideas para plato de temporada con setas','Redacta aviso para el equipo','Traduce al inglés: Cuajada de Castañas','Sugiere maridaje para el pase de Huerta'];
+function gKey(){return localStorage.getItem('oba_gk')||''}
+function sKey(k){localStorage.setItem('oba_gk',k)}
 function initIA(){
-  renderIAsugerencias();
-  const chat=document.getElementById('ia-chat');
-  if(getGroqKey()){
-    chat.innerHTML=`<div class="ia-msg bot">Hola equipo — Soy el asistente de OBA. ¿En qué te ayudo hoy?</div>`;
-  } else {
-    chat.innerHTML=`<div class="ia-msg bot">Para activar el asistente necesitas tu API key de Groq (gratis). <button class="btn btn-sm btn-green" onclick="pedirApiKey()">Configurar ahora</button></div>`;
-  }
+  document.getElementById('iasugs').innerHTML=IASUGS.map(s=>`<button class="ia-sug" onclick="iaSug('${s.replace(/'/g,"\\'")}')">${s}</button>`).join('');
+  const chat=document.getElementById('iachat');
+  if(gKey()){chat.innerHTML=`<div class="ia-msg bot">Hola equipo 👋 Soy el asistente de OBA. ¿En qué te ayudo hoy?</div>`}
+  else{chat.innerHTML=`<div class="ia-msg bot">Para usar el asistente necesitas una API key gratuita de Groq. <button class="btn btn-s btn-g" onclick="pKey()">Configurar</button></div>`}
 }
+function iaSug(t){document.getElementById('iainput').value=t;iaEnv()}
+function iaCtx(){return`Eres el asistente del restaurante OBA (cocina de autor, España). Recetario: ${D.recipes.map(r=>`${r.nombre}(${r.seccion})`).join(', ')}. Ingredientes principales: ${D.ingredientes.slice(0,20).map(i=>i.ing).join(', ')}. Responde en español, conciso y útil para el equipo de cocina.`}
+async function iaEnv(){
+  const k=gKey();if(!k){pKey();return}
+  const input=document.getElementById('iainput');const t=input.value.trim();if(!t)return;input.value='';
+  const chat=document.getElementById('iachat');
+  const lid='ia'+Date.now();
+  chat.innerHTML+=`<div class="ia-msg user">${t}</div><div class="ia-msg loading" id="${lid}">Pensando...</div>`;
+  chat.scrollTop=chat.scrollHeight;iaH.push({role:'user',content:t});
+  try{
+    const res=await fetch(GROQ,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'system',content:iaCtx()},...iaH.slice(-10)],max_tokens:1024,temperature:0.7})});
+    const data=await res.json();
+    document.getElementById(lid)?.remove();
+    if(data.error){chat.innerHTML+=`<div class="ia-msg bot" style="border-color:#c0392b">Error: ${data.error.message} <button class="btn btn-s" onclick="pKey()">Cambiar API key</button></div>`}
+    else{const r=data.choices?.[0]?.message?.content||'Sin respuesta.';iaH.push({role:'assistant',content:r});chat.innerHTML+=`<div class="ia-msg bot">${r.replace(/\n/g,'<br>')}</div>`}
+    chat.scrollTop=chat.scrollHeight;
+  }catch(e){document.getElementById(lid)?.remove();chat.innerHTML+=`<div class="ia-msg bot" style="border-color:#c0392b">Error de conexión. <button class="btn btn-s" onclick="pKey()">Revisar API key</button></div>`;chat.scrollTop=chat.scrollHeight}
+}
+function pKey(){oModal(`<h3>Activar Asistente IA</h3><p style="font-size:13px;color:var(--grd);margin-bottom:1rem">Introduce tu API key de Groq. Se guarda solo en este navegador.</p><div class="fr"><label>API Key de Groq</label><input id="apik" type="password" placeholder="gsk_..."></div><p style="font-size:11px;color:var(--grd);margin-top:.5rem">Consíguela gratis en <strong>console.groq.com</strong></p><div class="mf"><button class="btn btn-o" onclick="cModal()">Cancelar</button><button class="btn btn-g" onclick="gAPIK()">Activar</button></div>`)}
+function gAPIK(){const k=document.getElementById('apik').value.trim();if(!k)return alert('Introduce tu API key');sKey(k);cModal();initIA()}
+
+// ── ARRANQUE ──────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  initApp();
+  initIA();
+});
 </script>
 </body>
 </html>
