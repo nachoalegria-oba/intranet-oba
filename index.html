@@ -159,6 +159,19 @@ td input:focus,td select:focus{border-bottom-color:var(--green)}
 .ia-sug{background:transparent;border:var(--border);font-family:'Space Mono',monospace;font-size:11px;padding:.5rem .6rem;cursor:pointer;text-align:left;line-height:1.4;transition:background .15s}
 .ia-sug:hover{background:var(--green-pale)}
 #nav-ia{color:var(--green-light)}
+.prac-card{border:var(--border);padding:1rem;margin-bottom:.75rem;background:var(--white);cursor:pointer;transition:transform .1s}
+.prac-card:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--black)}
+.prac-name{font-family:'Unbounded',sans-serif;font-size:.9rem;font-weight:700;margin-bottom:.3rem}
+.prac-dates{font-size:11px;color:var(--gray-dark);margin-bottom:.4rem}
+.prac-tags{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem}
+.status-activo{border-color:var(--green);color:var(--green)}
+.status-pendiente{border-color:#c07020;color:#c07020}
+.status-finalizado{border-color:var(--gray-dark);color:var(--gray-dark)}
+.skill-bar{height:6px;background:var(--gray);margin-top:3px;border-radius:0}
+.skill-bar-fill{height:100%;background:var(--green);transition:width .3s}
+.cal-event-prac{background:#2a5a7a;color:#fff;font-size:10px;padding:1px 4px;margin-bottom:1px;line-height:1.4;cursor:pointer}
+.cal-event-especial{background:#8B4513;color:#fff;font-size:10px;padding:1px 4px;margin-bottom:1px;line-height:1.4}
+.cal-event-urgente{background:#c0392b;color:#fff;font-size:10px;padding:1px 4px;margin-bottom:1px;line-height:1.4}
 @media(min-width:640px){.header-date{display:block}main{padding:1.5rem 2rem}}
 @media(max-width:420px){.cards{grid-template-columns:1fr}.cal-day{min-height:36px;padding:.2rem}.cal-event{display:none}}
 </style>
@@ -187,6 +200,7 @@ td input:focus,td select:focus{border-bottom-color:var(--green)}
     <button class="nav-btn" onclick="showPanel('proyectos')">Proyectos</button>
     <button class="nav-btn" onclick="showPanel('avisos')">Avisos</button>
     <button class="nav-btn" id="nav-ia" onclick="showPanel('ia')">★ Asistente IA</button>
+    <button class="nav-btn" onclick="showPanel('practicantes')">Practicantes</button>
   </nav>
   <main>
     <div class="panel active" id="panel-inicio">
@@ -251,6 +265,26 @@ td input:focus,td select:focus{border-bottom-color:var(--green)}
       <div class="toolbar"><button class="btn btn-green" onclick="openAvisoModal()">+ Aviso</button></div>
       <div id="avisos-body"></div>
     </div>
+    <div class="panel" id="panel-practicantes">
+      <div class="page-header"><h1>Practicantes</h1><p>Fichas, fechas y seguimiento del equipo en prácticas</p></div>
+      <div class="toolbar">
+        <select class="filter-sel" id="prac-filter" onchange="renderPracticantes()">
+          <option value="">Todos</option>
+          <option value="activo">En activo</option>
+          <option value="pendiente">Pendiente de llegada</option>
+          <option value="finalizado">Finalizados</option>
+        </select>
+        <button class="btn btn-green" onclick="openPracModal()">+ Practicante</button>
+      </div>
+      <div id="prac-body"></div>
+    </div>
+    <div class="panel" id="panel-prac-ficha" style="display:none">
+      <div style="background:var(--black);color:var(--white);padding:1.25rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0">
+        <span id="prac-ficha-titulo" style="font-family:'Unbounded',sans-serif;font-size:1rem;font-weight:700"></span>
+        <button class="btn btn-sm" onclick="closePracFicha()">← Volver</button>
+      </div>
+      <div id="prac-ficha-body" style="padding:1.25rem;max-width:700px;margin:0 auto"></div>
+    </div>
     <div class="panel" id="panel-ia">
       <div class="page-header"><h1>Asistente IA</h1><p>Tu chef digital — recetas, pedidos, ideas y más</p></div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.5rem;margin-bottom:1.25rem" id="ia-sugerencias"></div>
@@ -314,13 +348,13 @@ const DAV=[{id:1,titulo:'Bienvenida a la intranet OBA',texto:'Ya tenemos intrane
 const DPR=[{id:1,nombre:'Alita de pollo rellena',descripcion:'Receta por testear. Deshuesar, rellenar, bridar y lacar.',estado:'testeo',responsable:'Cocina',fecha:'2025-01-13',notas:''},{id:2,nombre:'Menú maridaje NATURA',descripcion:'Desarrollar los 8 maridajes por sección del menú.',estado:'activo',responsable:'Sala + Cocina',fecha:'2025-01-13',notas:'Ver hoja de maridajes'}];
 const DEV=[{id:1,titulo:'Cambio menú primavera',fecha:new Date().toISOString().slice(0,10),urgente:false}];
 
-let D={recipes:[],ingredientes:[],menu:[],avisos:[],proyectos:[],eventos:[],proveedores:[]};
+let D={recipes:[],ingredientes:[],menu:[],avisos:[],proyectos:[],eventos:[],proveedores:[],practicantes:[]};
 let nid=300;
 let dbReady=false;
 
 // ── FIREBASE SYNC ────────────────────────────────────────────────────────────
-const COLECCIONES={recipes:'recipes',ingredientes:'ingredientes',menu:'menu',avisos:'avisos',proyectos:'proyectos',eventos:'eventos',proveedores:'proveedores'};
-const DEFAULTS={recipes:DR,ingredientes:DI,menu:DM,avisos:DAV,proyectos:DPR,eventos:DEV,proveedores:[]};
+const COLECCIONES={recipes:'recipes',ingredientes:'ingredientes',menu:'menu',avisos:'avisos',proyectos:'proyectos',eventos:'eventos',proveedores:'proveedores',practicantes:'practicantes'};
+const DEFAULTS={recipes:DR,ingredientes:DI,menu:DM,avisos:DAV,proyectos:DPR,eventos:DEV,proveedores:[],practicantes:[]};
 
 async function fbLoad(col){
   const db=window._db;
@@ -409,7 +443,7 @@ function showLogin(){
 
 function renderAll(){
   if(document.getElementById('app').className!=='visible')return;
-  renderInicio();renderRecetario();renderPedidoLista();renderMenu();renderProyectos();renderAvisos();calRender();
+  renderInicio();renderRecetario();renderPedidoLista();renderMenu();renderProyectos();renderAvisos();calRender();renderPracticantes();
 }
 
 function doLogin(){
@@ -568,15 +602,42 @@ function calRender(){
   const todayStr=new Date().toISOString().slice(0,10);
   let html='';
   for(let i=0;i<startDay;i++){const d=new Date(cY,cM,-(startDay-i-1));html+=`<div class="cal-day other-month"><div class="cal-day-num">${d.getDate()}</div></div>`}
-  for(let d=1;d<=last.getDate();d++){const ds=`${cY}-${String(cM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const evs=D.eventos.filter(e=>e.fecha===ds);html+=`<div class="cal-day${ds===todayStr?' today':''}" onclick="openCalModal('${ds}')"><div class="cal-day-num">${d}</div>${evs.map(e=>`<div class="cal-event${e.urgente?' urgent':''}">${e.titulo}</div>`).join('')}</div>`}
+  for(let d=1;d<=last.getDate();d++){
+    const ds=`${cY}-${String(cM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const evs=D.eventos.filter(e=>e.fecha===ds);
+    const pracs=D.practicantes.filter(p=>p.fechaEntrada===ds);
+    const pracsHoy=D.practicantes.filter(p=>p.fechaEntrada<=ds&&p.fechaSalida>=ds&&p.estado==='activo');
+    let evHtml=evs.map(e=>{
+      const cls=e.tipo==='especial'?'cal-event-especial':e.urgente?'cal-event-urgente':'cal-event';
+      return `<div class="${cls}" onclick="event.stopPropagation()" title="${e.titulo}">${e.tipo==='especial'?'★ ':e.urgente?'⚠ ':''}${e.titulo}</div>`;
+    }).join('');
+    evHtml+=pracs.map(p=>`<div class="cal-event-prac" onclick="event.stopPropagation();openPracFicha(${p.id})" title="Llega ${p.nombre}">👤 ${p.nombre}</div>`).join('');
+    html+=`<div class="cal-day${ds===todayStr?' today':''}" onclick="openCalModal('${ds}')">${pracsHoy.length?`<div style="position:absolute;top:2px;right:2px;width:7px;height:7px;background:#2a5a7a;border-radius:50%"></div>`:''}<div class="cal-day-num" style="position:relative">${d}</div>${evHtml}</div>`;
+  }
   const rem=(7-((startDay+last.getDate())%7))%7;
   for(let i=1;i<=rem;i++)html+=`<div class="cal-day other-month"><div class="cal-day-num">${i}</div></div>`;
   document.getElementById('cal-body').innerHTML=html;
   const me=D.eventos.filter(e=>e.fecha.startsWith(`${cY}-${String(cM+1).padStart(2,'0')}`));
-  document.getElementById('cal-list').innerHTML=me.length?'<div style="margin-bottom:.5rem;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray-dark)">Eventos del mes</div>'+me.map(e=>`<div class="notice${e.urgente?' urgent':''}"><strong>${e.titulo}</strong><div class="notice-date">${e.fecha}</div></div>`).join(''):'';
+  const mp=D.practicantes.filter(p=>p.fechaEntrada.startsWith(`${cY}-${String(cM+1).padStart(2,'0')}`));
+  let listHtml='';
+  if(me.length||mp.length){
+    listHtml='<div style="margin-bottom:.5rem;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray-dark)">Este mes</div>';
+    listHtml+=me.map(e=>`<div class="notice${e.urgente?' urgent':''}${e.tipo==='especial'?' ':{}}"><strong>${e.tipo==='especial'?'★ Evento especial: ':e.urgente?'⚠ Urgente: '':''}${e.titulo}</strong><div class="notice-date">${e.fecha}</div></div>`).join('');
+    listHtml+=mp.map(p=>`<div class="notice" style="border-color:#2a5a7a;background:#e6f1fb;cursor:pointer" onclick="openPracFicha(${p.id})"><strong>👤 Llega ${p.nombre}</strong><div class="notice-date">${p.fechaEntrada} · ${p.partida||'Partida por asignar'}</div></div>`).join('');
+  }
+  document.getElementById('cal-list').innerHTML=listHtml;
 }
-function openCalModal(fecha){openModal(`<h3>Nuevo evento</h3><div class="form-row"><label>Título *</label><input id="m-et"></div><div class="form-row"><label>Fecha</label><input type="date" id="m-ef" value="${typeof fecha==='string'?fecha:new Date().toISOString().slice(0,10)}"></div><div class="form-row"><label>Urgente</label><select id="m-eu"><option value="0">No</option><option value="1">Sí</option></select></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-green" onclick="saveEvento()">Guardar</button></div>`)}
-function saveEvento(){const titulo=document.getElementById('m-et').value.trim();if(!titulo)return alert('El título es obligatorio');D.eventos.push({id:nid++,titulo,fecha:document.getElementById('m-ef').value,urgente:document.getElementById('m-eu').value==='1'});save('eventos');closeModal();calRender()}
+function openCalModal(fecha){openModal(`<h3>Nuevo evento</h3>
+  <div class="form-row"><label>Título *</label><input id="m-et"></div>
+  <div class="form-row"><label>Tipo de evento</label><select id="m-etipo">
+    <option value="normal">Normal</option>
+    <option value="especial">★ Evento especial (cena, boda, privado...)</option>
+    <option value="urgente">⚠ Urgente</option>
+  </select></div>
+  <div class="form-row"><label>Fecha</label><input type="date" id="m-ef" value="${typeof fecha==='string'?fecha:new Date().toISOString().slice(0,10)}"></div>
+  <div class="form-row"><label>Notas</label><input id="m-enota" placeholder="Detalles del evento..."></div>
+  <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-green" onclick="saveEvento()">Guardar</button></div>`)}
+function saveEvento(){const titulo=document.getElementById('m-et').value.trim();if(!titulo)return alert('El título es obligatorio');const tipo=document.getElementById('m-etipo').value;D.eventos.push({id:nid++,titulo,fecha:document.getElementById('m-ef').value,tipo,urgente:tipo==='urgente',nota:document.getElementById('m-enota')?.value||''});save('eventos');closeModal();calRender()}
 
 function renderProyectos(){const f=document.getElementById('proj-filter')?.value||'';const list=D.proyectos.filter(p=>!f||p.estado===f);document.getElementById('proj-body').innerHTML=list.map(p=>`<div class="project-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem"><div class="project-title">${p.nombre}</div><span class="project-status status-${p.estado}">${p.estado}</span></div><p style="font-size:13px;margin:.4rem 0;color:var(--gray-dark)">${p.descripcion}</p>${p.responsable?`<div style="font-size:11px;color:var(--gray-dark)">Responsable: <strong>${p.responsable}</strong></div>`:''} ${p.notas?`<div class="notice" style="margin-top:.5rem;font-size:12px">${p.notas}</div>`:''}<div style="font-size:11px;color:var(--gray);margin-top:.4rem">${p.fecha}</div><div class="card-actions"><button class="btn btn-sm btn-outline" onclick="openProjModal(${p.id})">Editar</button><button class="btn btn-sm btn-danger" onclick="delProj(${p.id})">×</button></div></div>`).join('')||'<p style="color:var(--gray-dark)">Sin proyectos.</p>'}
 function openProjModal(id){const p=id?D.proyectos.find(x=>x.id===id):null;openModal(`<h3>${p?'Editar proyecto':'Nuevo proyecto'}</h3><div class="form-row"><label>Nombre *</label><input id="m-prn" value="${p?p.nombre:''}"></div><div class="form-row"><label>Descripción</label><textarea id="m-prd">${p?p.descripcion:''}</textarea></div><div class="form-row"><label>Estado</label><select id="m-pre">${['activo','testeo','listo','pausado'].map(s=>`<option${p&&p.estado===s?' selected':''}>${s}</option>`).join('')}</select></div><div class="form-row"><label>Responsable</label><input id="m-prr" value="${p?p.responsable:''}"></div><div class="form-row"><label>Notas</label><textarea id="m-prno">${p?p.notas:''}</textarea></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-green" onclick="saveProj(${id||'null'})">Guardar</button></div>`)}
@@ -591,6 +652,106 @@ function delAviso(id){if(!confirm('¿Eliminar aviso?'))return;D.avisos=D.avisos.
 function openModal(html){document.getElementById('modal-inner').innerHTML=html;document.getElementById('modal').classList.add('open');setTimeout(()=>{const f=document.querySelector('#modal-inner input,#modal-inner textarea');if(f)f.focus()},60)}
 function closeModal(){document.getElementById('modal').classList.remove('open')}
 document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeModal()})
+
+// ── PRACTICANTES ──────────────────────────────────────────────────────────────
+function renderPracticantes(){
+  const f=document.getElementById('prac-filter')?.value||'';
+  const list=D.practicantes.filter(p=>!f||p.estado===f);
+  document.getElementById('prac-body').innerHTML=list.length?list.map(p=>`
+    <div class="prac-card" onclick="openPracFicha(${p.id})">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div class="prac-name">${p.nombre}</div>
+          <div class="prac-dates">📅 ${p.fechaEntrada} → ${p.fechaSalida||'Sin definir'}</div>
+          ${p.escuela?`<div style="font-size:11px;color:var(--gray-dark)">🏫 ${p.escuela}</div>`:''}
+        </div>
+        <span class="project-status status-${p.estado}">${p.estado}</span>
+      </div>
+      <div class="prac-tags">
+        ${p.partida?`<span class="badge badge-huerta">${p.partida}</span>`:''}
+        ${p.nivel?`<span class="badge badge-base">Nivel ${p.nivel}/5</span>`:''}
+      </div>
+    </div>`).join(''):'<p style="color:var(--gray-dark)">No hay practicantes. Añade el primero.</p>';
+}
+
+function openPracFicha(id){
+  const p=D.practicantes.find(x=>x.id===id);if(!p)return;
+  document.getElementById('prac-ficha-titulo').textContent=p.nombre;
+  const habilidades=p.habilidades||[];
+  const SKILLS=['Mise en place','Fondos y salsas','Carnes','Pescados','Pastelería','Fermentos','Limpieza y orden','Trabajo en equipo'];
+  document.getElementById('prac-ficha-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.25rem;font-size:13px">
+      <div><span style="color:var(--gray-dark)">Escuela:</span> ${p.escuela||'—'}</div>
+      <div><span style="color:var(--gray-dark)">Estado:</span> <span class="project-status status-${p.estado}" style="margin:0">${p.estado}</span></div>
+      <div><span style="color:var(--gray-dark)">Entrada:</span> ${p.fechaEntrada||'—'}</div>
+      <div><span style="color:var(--gray-dark)">Salida:</span> ${p.fechaSalida||'—'}</div>
+      <div><span style="color:var(--gray-dark)">Partida:</span> ${p.partida||'—'}</div>
+      <div><span style="color:var(--gray-dark)">Tutor:</span> ${p.tutor||'—'}</div>
+    </div>
+    ${p.descripcion?`<div class="notice" style="margin-bottom:1.25rem">${p.descripcion}</div>`:''}
+    <div style="margin-bottom:1.25rem">
+      <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray-dark);margin-bottom:.75rem">Nivel de habilidades</div>
+      ${SKILLS.map(s=>{const v=habilidades[s]||0;return`<div style="margin-bottom:.6rem"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>${s}</span><span style="color:var(--gray-dark)">${v}/5</span></div><div class="skill-bar"><div class="skill-bar-fill" style="width:${v*20}%"></div></div>`}).join('')}</div>
+    </div>
+    ${p.notas?`<div style="margin-bottom:1.25rem"><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray-dark);margin-bottom:.5rem">Notas de seguimiento</div><div style="font-size:13px;line-height:1.7;white-space:pre-wrap">${p.notas}</div></div>`:''}
+    <div class="card-actions">
+      <button class="btn btn-outline" onclick="openPracModal(${id})">Editar ficha</button>
+      <button class="btn btn-danger btn-sm" onclick="delPrac(${id})">Eliminar</button>
+    </div>`;
+  document.querySelectorAll('.panel').forEach(x=>x.style.display='none');
+  document.getElementById('panel-prac-ficha').style.display='block';
+}
+
+function closePracFicha(){
+  document.getElementById('panel-prac-ficha').style.display='none';
+  showPanel('practicantes');
+}
+
+function openPracModal(id){
+  const p=id?D.practicantes.find(x=>x.id===id):null;
+  const SKILLS=['Mise en place','Fondos y salsas','Carnes','Pescados','Pastelería','Fermentos','Limpieza y orden','Trabajo en equipo'];
+  const hab=p?.habilidades||{};
+  openModal(`<h3>${p?'Editar practicante':'Nuevo practicante'}</h3>
+    <div class="form-row"><label>Nombre completo *</label><input id="m-prn" value="${p?.nombre||''}"></div>
+    <div class="form-row"><label>Escuela / centro</label><input id="m-pre" value="${p?.escuela||''}"></div>
+    <div class="form-row"><label>Fecha de entrada</label><input type="date" id="m-pri" value="${p?.fechaEntrada||''}"></div>
+    <div class="form-row"><label>Fecha de salida</label><input type="date" id="m-prs" value="${p?.fechaSalida||''}"></div>
+    <div class="form-row"><label>Partida asignada</label><select id="m-prp">
+      <option value="">Sin asignar</option>
+      ${['Cocina fría','Cocina caliente','Pastelería','Sala','Todas'].map(x=>`<option${p?.partida===x?' selected':''}>${x}</option>`).join('')}
+    </select></div>
+    <div class="form-row"><label>Tutor/a responsable</label><input id="m-prt" value="${p?.tutor||''}"></div>
+    <div class="form-row"><label>Estado</label><select id="m-prst">
+      ${['activo','pendiente','finalizado'].map(s=>`<option${p?.estado===s?' selected':''}>${s}</option>`).join('')}
+    </select></div>
+    <div class="form-row"><label>Nivel general (1-5)</label><input type="number" id="m-prnv" min="1" max="5" value="${p?.nivel||''}"></div>
+    <div class="form-row"><label>Habilidades por área (0-5)</label>
+      ${SKILLS.map(s=>`<div style="display:flex;justify-content:space-between;align-items:center;margin:.3rem 0;font-size:12px"><span>${s}</span><input type="number" id="skill-${s.replace(/\s/g,'_')}" min="0" max="5" value="${hab[s]||0}" style="width:50px;border:1px solid var(--gray);padding:3px 6px;font-size:12px"></div>`).join('')}
+    </div>
+    <div class="form-row"><label>Descripción / perfil</label><textarea id="m-prd">${p?.descripcion||''}</textarea></div>
+    <div class="form-row"><label>Notas de seguimiento</label><textarea id="m-prno">${p?.notas||''}</textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-green" onclick="savePrac(${id||'null'})">Guardar</button>
+    </div>`);
+}
+
+function savePrac(id){
+  const nombre=document.getElementById('m-prn').value.trim();if(!nombre)return alert('El nombre es obligatorio');
+  const SKILLS=['Mise en place','Fondos y salsas','Carnes','Pescados','Pastelería','Fermentos','Limpieza y orden','Trabajo en equipo'];
+  const habilidades={};
+  SKILLS.forEach(s=>{const el=document.getElementById('skill-'+s.replace(/\s/g,'_'));if(el)habilidades[s]=parseInt(el.value)||0});
+  const obj={nombre,escuela:document.getElementById('m-pre').value,fechaEntrada:document.getElementById('m-pri').value,fechaSalida:document.getElementById('m-prs').value,partida:document.getElementById('m-prp').value,tutor:document.getElementById('m-prt').value,estado:document.getElementById('m-prst').value,nivel:document.getElementById('m-prnv').value,habilidades,descripcion:document.getElementById('m-prd').value,notas:document.getElementById('m-prno').value};
+  if(id){Object.assign(D.practicantes.find(x=>x.id===id),obj)}
+  else{D.practicantes.push({id:nid++,...obj})}
+  save('practicantes');closeModal();renderPracticantes();calRender();
+}
+
+function delPrac(id){
+  if(!confirm('¿Eliminar este practicante?'))return;
+  D.practicantes=D.practicantes.filter(x=>x.id!==id);
+  save('practicantes');closePracFicha();
+}
 
 // ── ASISTENTE IA ─────────────────────────────────────────────────────────────
 const GROQ_URL='https://api.groq.com/openai/v1/chat/completions';
