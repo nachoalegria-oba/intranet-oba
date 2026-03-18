@@ -445,26 +445,257 @@ function rInicio(){
 }
 
 // ── RECETARIO ─────────────────────────────────────────────────────────────────
+const ALERGEN_LIST=['Gluten','Crustáceos','Huevos','Pescado','Cacahuetes','Soja','Lácteos','Frutos de cáscara','Apio','Mostaza','Sésamo','Dióxido de azufre','Altramuces','Moluscos'];
+
 function rRec(){
   const q=(document.getElementById('rsearch')?.value||'').toLowerCase();
   const cat=document.getElementById('rcat')?.value||'';
   const list=D.recipes.filter(r=>(!q||r.nombre.toLowerCase().includes(q)||r.seccion.toLowerCase().includes(q))&&(!cat||r.seccion===cat));
-  document.getElementById('rcards').innerHTML=list.map(r=>`<div class="card">${bsec(r.seccion)}<h3>${r.nombre}</h3><p>${r.descripcion}</p><div class="cmeta">Temporada: ${r.temporada}</div><div class="ca"><button class="btn btn-s" onclick="oRD(${r.id})">Ver ficha</button><button class="btn btn-o btn-s" onclick="oRM(${r.id})">Editar</button><button class="btn btn-s btn-d" onclick="dRec(${r.id})">×</button></div></div>`).join('')||'<p style="color:var(--grd)">No se encontraron platos.</p>';
+  document.getElementById('rcards').innerHTML=list.map(r=>{
+    const subs=r.subrecetas||[];
+    return`<div class="card">
+      ${bsec(r.seccion)}
+      <h3>${r.nombre}</h3>
+      <p>${r.descripcion}</p>
+      <div class="cmeta">
+        ${r.temporada?`Temporada: ${r.temporada}`:''}
+        ${r.tiempoElaboracion?` · ⏱ ${r.tiempoElaboracion}`:''}
+        ${r.temperatura?` · 🌡 ${r.temperatura}`:''}
+        ${r.raciones?` · ${r.raciones} rac.`:''}
+        ${subs.length?`<br><span style="color:var(--g);font-size:10px">+ ${subs.length} subreceta${subs.length>1?'s':''}</span>`:''}
+      </div>
+      <div class="ca">
+        <button class="btn btn-s" onclick="oRD(${r.id})">Ver ficha</button>
+        <button class="btn btn-o btn-s" onclick="oRM(${r.id})">Editar</button>
+        <button class="btn btn-s btn-d" onclick="dRec(${r.id})">×</button>
+      </div>
+    </div>`;
+  }).join('')||'<p style="color:var(--grd)">No se encontraron platos.</p>';
 }
+
+function buildFichaHTML(r, forPrint=false){
+  const subs=r.subrecetas||[];
+  const alerg=r.alergenos||[];
+  const foto=r.foto?`<img src="${r.foto}" style="width:100%;max-height:260px;object-fit:cover;margin-bottom:1.25rem;border:var(--br)" alt="${r.nombre}">` :'';
+
+  // Main ingredients block
+  const ingBlock=r.ingredientes&&r.ingredientes.length?`
+    <div class="rs">
+      <h4>Ingredientes principales</h4>
+      <div class="ig">
+        <div class="ih">Ingrediente</div><div class="ih">Cantidad</div><div class="ih">Unidad</div>
+        ${r.ingredientes.map(i=>`<div>${i.i}</div><div style="text-align:right">${i.c||'—'}</div><div>${i.u||''}</div>`).join('')}
+      </div>
+    </div>`:'';
+
+  // Subrecetas blocks
+  const subBlocks=subs.map(s=>`
+    <div class="rs" style="border-left:3px solid var(--g);padding-left:.75rem;margin-left:.25rem">
+      <h4 style="color:var(--g)">Subreceta: ${s.nombre}</h4>
+      ${s.descripcion?`<p style="font-size:12px;color:var(--grd);margin-bottom:.5rem">${s.descripcion}</p>`:''}
+      ${s.ingredientes&&s.ingredientes.length?`<div class="ig" style="margin-bottom:.75rem">
+        <div class="ih">Ingrediente</div><div class="ih">Cantidad</div><div class="ih">Unidad</div>
+        ${s.ingredientes.map(i=>`<div>${i.i}</div><div style="text-align:right">${i.c||'—'}</div><div>${i.u||''}</div>`).join('')}
+      </div>`:''}
+      ${s.pasos&&s.pasos.length?`<ol class="sl">${s.pasos.map((p,i)=>`<li><div class="sn">${i+1}</div><div>${p}</div></li>`).join('')}</ol>`:''}
+    </div>`).join('');
+
+  // Steps
+  const stepsBlock=r.pasos&&r.pasos.length?`
+    <div class="rs">
+      <h4>Elaboración final</h4>
+      <ol class="sl">${r.pasos.map((p,i)=>`<li><div class="sn">${i+1}</div><div>${p}</div></li>`).join('')}</ol>
+    </div>`:'';
+
+  // Alérgenos
+  const alergBlock=alerg.length?`
+    <div class="rs">
+      <h4>Alérgenos</h4>
+      <div style="display:flex;flex-wrap:wrap;gap:.4rem">
+        ${alerg.map(a=>`<span style="background:#fdf0ee;border:1px solid #c0392b;color:#c0392b;font-size:10px;padding:2px 8px;letter-spacing:.05em">${a}</span>`).join('')}
+      </div>
+    </div>`:'';
+
+  // Notas
+  const notasBlock=r.notas?`<div class="notice"><strong>Notas:</strong> ${r.notas}</div>`:'';
+
+  return `
+    ${foto}
+    <div class="rs">
+      <h4>Información</h4>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem .75rem;font-size:13px">
+        ${r.seccion?`<div><span style="color:var(--grd)">Sección:</span> ${r.seccion}</div>`:''}
+        ${r.temporada?`<div><span style="color:var(--grd)">Temporada:</span> ${r.temporada}</div>`:''}
+        ${r.raciones?`<div><span style="color:var(--grd)">Raciones:</span> ${r.raciones}</div>`:''}
+        ${r.tiempoElaboracion?`<div><span style="color:var(--grd)">Tiempo:</span> ${r.tiempoElaboracion}</div>`:''}
+        ${r.temperatura?`<div><span style="color:var(--grd)">Temperatura servicio:</span> ${r.temperatura}</div>`:''}
+      </div>
+      ${r.descripcion?`<p style="margin-top:.6rem;font-size:13px">${r.descripcion}</p>`:''}
+    </div>
+    ${ingBlock}
+    ${subBlocks}
+    ${stepsBlock}
+    ${alergBlock}
+    ${notasBlock}`;
+}
+
 function oRD(id){
   const r=D.recipes.find(x=>x.id===id);if(!r)return;
   document.getElementById('rdtit').textContent=r.nombre;
-  document.getElementById('rdbody').innerHTML=`<div class="rs"><h4>Info</h4><div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;font-size:13px"><div>Sección: ${r.seccion}</div><div>Temporada: ${r.temporada}</div></div><p style="margin-top:.5rem;font-size:13px">${r.descripcion}</p></div><div class="rs"><h4>Ingredientes</h4><div class="ig"><div class="ih">Ingrediente</div><div class="ih">Cant.</div><div class="ih">Unidad</div>${r.ingredientes.map(i=>`<div>${i.i}</div><div style="text-align:right">${i.c||'—'}</div><div>${i.u||''}</div>`).join('')}</div></div><div class="rs"><h4>Elaboración</h4><ol class="sl">${r.pasos.map((p,i)=>`<li><div class="sn">${i+1}</div><div>${p}</div></li>`).join('')}</ol></div>${r.notas?`<div class="notice"><strong>Notas:</strong> ${r.notas}</div>`:''}`;
+  document.getElementById('rdbody').innerHTML=buildFichaHTML(r);
+  // Add print button to header
+  document.querySelector('.rdh').innerHTML=`
+    <h2 id="rdtit">${r.nombre}</h2>
+    <div style="display:flex;gap:.5rem">
+      <button class="btn btn-g btn-s" onclick="printFicha(${id})">⬇ PDF / Imprimir</button>
+      <button class="btn btn-s" onclick="cRD()">Cerrar</button>
+    </div>`;
   document.getElementById('rdet').classList.add('open');
 }
-function cRD(){document.getElementById('rdet').classList.remove('open')}
+
+function printFicha(id){
+  const r=D.recipes.find(x=>x.id===id);if(!r)return;
+  const b64Logo=document.querySelector('header img')?.src||'';
+  const html=`<!DOCTYPE html><html lang="es"><head>
+    <meta charset="UTF-8">
+    <title>Ficha — ${r.nombre}</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:'Space Mono',monospace,sans-serif;font-size:12px;line-height:1.6;color:#0a0a0a;padding:1.5rem;max-width:800px;margin:0 auto}
+      @media print{body{padding:.5rem}@page{margin:1.5cm}}
+      .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #0a0a0a;padding-bottom:.75rem;margin-bottom:1.25rem}
+      .logo{font-size:1.5rem;font-weight:900;letter-spacing:-.02em}
+      .title{font-size:1.2rem;font-weight:700;margin-bottom:.2rem}
+      .meta{font-size:11px;color:#666;display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:1.25rem}
+      .section{margin-bottom:1.25rem}
+      .section h4{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#666;border-bottom:1px solid #ccc;padding-bottom:.3rem;margin-bottom:.6rem}
+      .ing-grid{display:grid;grid-template-columns:1fr auto auto;gap:.2rem .75rem;font-size:12px}
+      .ih{font-size:10px;text-transform:uppercase;color:#888;border-bottom:1px solid #eee;padding-bottom:.2rem;margin-bottom:.2rem}
+      .steps{list-style:none}
+      .steps li{display:flex;gap:.6rem;margin-bottom:.4rem;padding:.4rem;border-left:3px solid #5a7a4a;background:#f5f5f0}
+      .step-num{font-weight:700;font-size:.65rem;color:#3d5433;min-width:18px}
+      .sub{border-left:3px solid #5a7a4a;padding-left:.75rem;margin-left:.25rem;margin-bottom:1rem}
+      .sub h4{color:#5a7a4a}
+      .alergen{display:inline-block;padding:2px 7px;border:1px solid #c0392b;color:#c0392b;font-size:10px;margin:2px}
+      .notice{border-left:4px solid #5a7a4a;padding:.5rem .75rem;background:#e8efe4;font-size:12px;margin-top:1rem}
+      img.foto{width:100%;max-height:220px;object-fit:cover;margin-bottom:1rem}
+    </style>
+  </head><body>
+    <div class="header">
+      <div>${b64Logo?`<img src="${b64Logo}" style="height:28px">` :'<span class="logo">oba-</span>'}</div>
+      <div style="text-align:right;font-size:11px;color:#888">Ficha técnica · ${new Date().toLocaleDateString('es-ES')}</div>
+    </div>
+    <div class="title">${r.nombre}</div>
+    <div class="meta">
+      ${r.seccion?`<span>📍 ${r.seccion}</span>`:''}
+      ${r.temporada?`<span>🌿 ${r.temporada}</span>`:''}
+      ${r.raciones?`<span>👥 ${r.raciones} raciones</span>`:''}
+      ${r.tiempoElaboracion?`<span>⏱ ${r.tiempoElaboracion}</span>`:''}
+      ${r.temperatura?`<span>🌡 ${r.temperatura}</span>`:''}
+    </div>
+    ${r.foto?`<img class="foto" src="${r.foto}" alt="${r.nombre}">`:''}
+    ${r.descripcion?`<p style="margin-bottom:1.25rem;font-size:13px">${r.descripcion}</p>`:''}
+    ${r.ingredientes&&r.ingredientes.length?`<div class="section"><h4>Ingredientes principales</h4><div class="ing-grid"><div class="ih">Ingrediente</div><div class="ih">Cantidad</div><div class="ih">Unidad</div>${r.ingredientes.map(i=>`<div>${i.i}</div><div style="text-align:right">${i.c||'—'}</div><div>${i.u||''}</div>`).join('')}</div></div>`:''}
+    ${(r.subrecetas||[]).map(s=>`<div class="sub"><h4>Subreceta: ${s.nombre}</h4>${s.descripcion?`<p style="font-size:12px;color:#666;margin:.3rem 0">${s.descripcion}</p>`:''}${s.ingredientes&&s.ingredientes.length?`<div class="ing-grid" style="margin-bottom:.6rem"><div class="ih">Ingrediente</div><div class="ih">Cantidad</div><div class="ih">Unidad</div>${s.ingredientes.map(i=>`<div>${i.i}</div><div style="text-align:right">${i.c||'—'}</div><div>${i.u||''}</div>`).join('')}</div>`:''}${s.pasos&&s.pasos.length?`<ol class="steps">${s.pasos.map((p,i)=>`<li><div class="step-num">${i+1}</div><div>${p}</div></li>`).join('')}</ol>`:''}</div>`).join('')}
+    ${r.pasos&&r.pasos.length?`<div class="section"><h4>Elaboración final</h4><ol class="steps">${r.pasos.map((p,i)=>`<li><div class="step-num">${i+1}</div><div>${p}</div></li>`).join('')}</ol></div>`:''}
+    ${(r.alergenos||[]).length?`<div class="section"><h4>Alérgenos</h4>${(r.alergenos||[]).map(a=>`<span class="alergen">${a}</span>`).join('')}</div>`:''}
+    ${r.notas?`<div class="notice"><strong>Notas:</strong> ${r.notas}</div>`:''}
+  </body></html>`;
+  const w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(()=>w.print(),500);
+}
+
+function cRD(){
+  document.getElementById('rdet').classList.remove('open');
+  // Reset header
+  document.querySelector('.rdh').innerHTML=`<h2 id="rdtit"></h2><button class="btn btn-s" onclick="cRD()">Cerrar</button>`;
+}
+
 function oRM(id){
   const r=id?D.recipes.find(x=>x.id===id):null;
-  oModal(`<h3>${r?'Editar plato':'Nuevo plato'}</h3><div class="fr"><label>Nombre *</label><input id="rn" value="${r?r.nombre:''}"></div><div class="fr"><label>Sección</label><select id="rs">${SECS.map(s=>`<option${r&&r.seccion===s?' selected':''}>${s}</option>`).join('')}</select></div><div class="fr"><label>Temporada</label><input id="rt" value="${r?r.temporada:''}"></div><div class="fr"><label>Descripción</label><textarea id="rd">${r?r.descripcion:''}</textarea></div><div class="fr"><label>Ingredientes (nombre|cantidad|unidad — una línea por ingrediente)</label><textarea id="ri" rows="5">${r?r.ingredientes.map(i=>`${i.i}|${i.c}|${i.u}`).join('\n'):''}</textarea></div><div class="fr"><label>Elaboración (un paso por línea)</label><textarea id="rp" rows="5">${r?r.pasos.join('\n'):''}</textarea></div><div class="fr"><label>Notas</label><input id="rno" value="${r?r.notas:''}"></div><div class="mf"><button class="btn btn-o" onclick="cModal()">Cancelar</button><button class="btn btn-g" onclick="sRec(${id||'null'})">Guardar</button></div>`);
+  const subs=r?.subrecetas||[];
+  const alerg=r?.alergenos||[];
+  oModal(`<h3>${r?'Editar plato':'Nuevo plato'}</h3>
+    <div class="fr"><label>Nombre *</label><input id="rn" value="${r?r.nombre:''}"></div>
+    <div class="fr"><label>Sección</label><select id="rs">${SECS.map(s=>`<option${r&&r.seccion===s?' selected':''}>${s}</option>`).join('')}</select></div>
+    <div class="fr"><label>Temporada</label><input id="rt" value="${r?r.temporada||'':''}"></div>
+    <div class="fr"><label>Descripción</label><textarea id="rd">${r?r.descripcion||'':''}</textarea></div>
+    <div class="fr"><label>Raciones</label><input id="rrac" placeholder="Ej: 4 personas" value="${r?r.raciones||'':''}"></div>
+    <div class="fr"><label>Tiempo de elaboración</label><input id="rtiem" placeholder="Ej: 2h 30min" value="${r?r.tiempoElaboracion||'':''}"></div>
+    <div class="fr"><label>Temperatura de servicio</label><input id="rtemp" placeholder="Ej: 65°C / Frío / Ambiente" value="${r?r.temperatura||'':''}"></div>
+    <div class="fr"><label>Foto (URL de imagen)</label><input id="rfoto" placeholder="https://..." value="${r?r.foto||'':''}"></div>
+    <div class="fr"><label>Alérgenos</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:.3rem .75rem">${ALERGEN_LIST.map(a=>`<label style="display:flex;align-items:center;gap:.4rem;font-size:12px;text-transform:none;letter-spacing:0"><input type="checkbox" id="al_${a.replace(/\s/g,'_')}"${alerg.includes(a)?' checked':''}> ${a}</label>`).join('')}</div></div>
+    <div class="fr"><label>Ingredientes principales (nombre|cantidad|unidad — una línea por ingrediente)</label><textarea id="ri" rows="4">${r?r.ingredientes.map(i=>`${i.i}|${i.c}|${i.u}`).join('\n'):''}</textarea></div>
+    <div class="fr"><label>Subrecetas (opcional)</label>
+      <div id="subs-container">${subs.map((s,i)=>`<div class="sub-block" data-idx="${i}" style="border:1px solid var(--gr);padding:.6rem;margin-bottom:.5rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem"><strong style="font-size:12px">Subreceta ${i+1}</strong><button type="button" onclick="removeSub(${i})" style="background:none;border:none;color:#c0392b;cursor:pointer;font-size:14px">×</button></div>
+        <input placeholder="Nombre subreceta *" id="sn_${i}" value="${s.nombre||''}" style="width:100%;border:1px solid var(--gr);padding:4px 7px;font-family:'Space Mono',monospace;font-size:12px;margin-bottom:.3rem">
+        <textarea placeholder="Descripción" id="sd_${i}" rows="1" style="width:100%;border:1px solid var(--gr);padding:4px 7px;font-family:'Space Mono',monospace;font-size:12px;margin-bottom:.3rem;resize:vertical">${s.descripcion||''}</textarea>
+        <textarea placeholder="Ingredientes (nombre|cant|unidad)" id="si_${i}" rows="3" style="width:100%;border:1px solid var(--gr);padding:4px 7px;font-family:'Space Mono',monospace;font-size:12px;margin-bottom:.3rem;resize:vertical">${s.ingredientes?s.ingredientes.map(x=>`${x.i}|${x.c}|${x.u}`).join('\n'):''}</textarea>
+        <textarea placeholder="Elaboración (un paso por línea)" id="sp_${i}" rows="3" style="width:100%;border:1px solid var(--gr);padding:4px 7px;font-family:'Space Mono',monospace;font-size:12px;resize:vertical">${s.pasos?s.pasos.join('\n'):''}</textarea>
+      </div>`).join('')}</div>
+      <button type="button" class="btn btn-o btn-s" onclick="addSub()" style="margin-top:.4rem">+ Añadir subreceta</button>
+    </div>
+    <div class="fr"><label>Elaboración final (un paso por línea)</label><textarea id="rp" rows="4">${r?r.pasos.join('\n'):''}</textarea></div>
+    <div class="fr"><label>Notas</label><input id="rno" value="${r?r.notas||'':''}"></div>
+    <div class="mf"><button class="btn btn-o" onclick="cModal()">Cancelar</button><button class="btn btn-g" onclick="sRec(${id||'null'})">Guardar</button></div>`);
+  window._subCount=subs.length;
 }
+
+function addSub(){
+  const i=window._subCount||0;
+  const container=document.getElementById('subs-container');
+  const div=document.createElement('div');
+  div.className='sub-block';div.dataset.idx=i;
+  div.style.cssText='border:1px solid var(--gr);padding:.6rem;margin-bottom:.5rem';
+  div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem"><strong style="font-size:12px">Subreceta ${i+1}</strong><button type="button" onclick="removeSub(${i})" style="background:none;border:none;color:#c0392b;cursor:pointer;font-size:14px">×</button></div>
+    <input placeholder="Nombre subreceta *" id="sn_${i}" style="width:100%;border:1px solid var(--gr);padding:4px 7px;font-family:'Space Mono',monospace;font-size:12px;margin-bottom:.3rem">
+    <textarea placeholder="Descripción" id="sd_${i}" rows="1" style="width:100%;border:1px solid var(--gr);padding:4px 7px;font-family:'Space Mono',monospace;font-size:12px;margin-bottom:.3rem;resize:vertical"></textarea>
+    <textarea placeholder="Ingredientes (nombre|cant|unidad)" id="si_${i}" rows="3" style="width:100%;border:1px solid var(--gr);padding:4px 7px;font-family:'Space Mono',monospace;font-size:12px;margin-bottom:.3rem;resize:vertical"></textarea>
+    <textarea placeholder="Elaboración (un paso por línea)" id="sp_${i}" rows="3" style="width:100%;border:1px solid var(--gr);padding:4px 7px;font-family:'Space Mono',monospace;font-size:12px;resize:vertical"></textarea>`;
+  container.appendChild(div);
+  window._subCount=i+1;
+}
+
+function removeSub(i){
+  const el=document.querySelector(`.sub-block[data-idx="${i}"]`);
+  if(el)el.remove();
+}
+
 function sRec(id){
   const n=document.getElementById('rn').value.trim();if(!n)return alert('El nombre es obligatorio');
-  const obj={nombre:n,seccion:document.getElementById('rs').value,temporada:document.getElementById('rt').value,descripcion:document.getElementById('rd').value,ingredientes:document.getElementById('ri').value.split('\n').filter(l=>l.trim()).map(l=>{const p=l.split('|');return{i:p[0]||'',c:p[1]||'',u:p[2]||''}}),pasos:document.getElementById('rp').value.split('\n').filter(l=>l.trim()),notas:document.getElementById('rno').value};
+  // Collect alérgenos
+  const alergenos=ALERGEN_LIST.filter(a=>document.getElementById('al_'+a.replace(/\s/g,'_'))?.checked);
+  // Collect subrecetas
+  const subrecetas=[];
+  document.querySelectorAll('.sub-block').forEach(el=>{
+    const i=el.dataset.idx;
+    const sn=document.getElementById('sn_'+i)?.value.trim();
+    if(!sn)return;
+    subrecetas.push({
+      nombre:sn,
+      descripcion:document.getElementById('sd_'+i)?.value||'',
+      ingredientes:(document.getElementById('si_'+i)?.value||'').split('\n').filter(l=>l.trim()).map(l=>{const p=l.split('|');return{i:p[0]||'',c:p[1]||'',u:p[2]||''}}),
+      pasos:(document.getElementById('sp_'+i)?.value||'').split('\n').filter(l=>l.trim())
+    });
+  });
+  const obj={
+    nombre:n,
+    seccion:document.getElementById('rs').value,
+    temporada:document.getElementById('rt').value,
+    descripcion:document.getElementById('rd').value,
+    raciones:document.getElementById('rrac').value,
+    tiempoElaboracion:document.getElementById('rtiem').value,
+    temperatura:document.getElementById('rtemp').value,
+    foto:document.getElementById('rfoto').value,
+    alergenos,
+    ingredientes:document.getElementById('ri').value.split('\n').filter(l=>l.trim()).map(l=>{const p=l.split('|');return{i:p[0]||'',c:p[1]||'',u:p[2]||''}}),
+    subrecetas,
+    pasos:document.getElementById('rp').value.split('\n').filter(l=>l.trim()),
+    notas:document.getElementById('rno').value
+  };
   if(id){Object.assign(D.recipes.find(x=>x.id===id),obj)}else{D.recipes.push({id:nid++,...obj})}
   save('recipes');cModal();rRec();rInicio();
 }
