@@ -326,7 +326,9 @@ async function fbLoad(col){
   const db=window._db;
   const snap=await window._getDocs(window._col(db,col));
   if(snap.empty) return null;
-  return snap.docs.map(d=>d.data());
+  const items=snap.docs.map(d=>d.data());
+  items.sort((a,b)=>(a._idx||0)-(b._idx||0));
+  return items.map(({_idx,...rest})=>rest);
 }
 
 async function fbSave(col,items){
@@ -335,7 +337,10 @@ async function fbSave(col,items){
   const snap=await window._getDocs(c);
   const deletes=snap.docs.map(d=>window._deleteDoc(window._doc(db,col,d.id)));
   await Promise.all(deletes);
-  await Promise.all(items.map(item=>window._setDoc(window._doc(db,col,String(item.id)),item)));
+  await Promise.all(items.map((item,idx)=>{
+    const docId=item.id!=null?String(item.id):String(idx);
+    return window._setDoc(window._doc(db,col,docId),{...item,_idx:idx});
+  }));
 }
 
 async function save(k){
