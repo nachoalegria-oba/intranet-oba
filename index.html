@@ -352,7 +352,9 @@ function fbListen(col,callback){
   const db=window._db;
   window._onSnapshot(window._col(db,col),snap=>{
     const items=snap.docs.map(d=>d.data());
-    callback(items);
+    items.sort((a,b)=>(a._idx||0)-(b._idx||0));
+    const clean=items.map(({_idx,...rest})=>rest);
+    callback(clean);
   });
 }
 
@@ -379,6 +381,8 @@ async function initFirebase(){
       fbListen(col,items=>{
         if(!items.length)return;
         D[key]=items;
+        const maxId=Math.max(0,...items.map(i=>i.id||0));
+        if(maxId>=nid)nid=maxId+1;
         renderAll();
       });
     });
@@ -517,7 +521,7 @@ function openPedidoModal(type){
 }
 function saveIng(){const ing=document.getElementById('m-in').value.trim();if(!ing)return alert('El nombre es obligatorio');D.ingredientes.push({id:nid++,ing,platos:document.getElementById('m-ip').value||'Sin especificar',cat:document.getElementById('m-ic').value,prov:document.getElementById('m-iv').value,cant:document.getElementById('m-iq').value});save('ingredientes');closeModal();renderPedidoLista();renderInicio()}
 function editProv(idx){const p=D.proveedores[idx];openModal(`<h3>Editar proveedor</h3><div class="form-row"><label>Nombre *</label><input id="m-pn" value="${p.nombre}"></div><div class="form-row"><label>Teléfono</label><input id="m-pt" value="${p.tel||''}"></div><div class="form-row"><label>Notas</label><textarea id="m-pno">${p.nota||''}</textarea></div><div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-green" onclick="saveProv(${idx})">Guardar</button></div>`)}
-function saveProv(idx){const nombre=document.getElementById('m-pn').value.trim();if(!nombre)return alert('El nombre es obligatorio');const p={nombre,tel:document.getElementById('m-pt').value.trim(),nota:document.getElementById('m-pno').value.trim()};if(idx===-1){if(D.proveedores.find(x=>x.nombre===nombre))return alert('Ya existe');D.proveedores.push(p)}else{const old=D.proveedores[idx].nombre;D.ingredientes.forEach(i=>{if(i.prov===old)i.prov=nombre});save('ingredientes');D.proveedores[idx]=p}save('proveedores');closeModal();renderPedidoProv();renderPedidoLista()}
+function saveProv(idx){const nombre=document.getElementById('m-pn').value.trim();if(!nombre)return alert('El nombre es obligatorio');const p={id:nid++,nombre,tel:document.getElementById('m-pt').value.trim(),nota:document.getElementById('m-pno').value.trim()};if(idx===-1){if(D.proveedores.find(x=>x.nombre===nombre))return alert('Ya existe');D.proveedores.push(p)}else{const old=D.proveedores[idx].nombre;D.ingredientes.forEach(i=>{if(i.prov===old)i.prov=nombre});save('ingredientes');p.id=D.proveedores[idx].id||nid++;D.proveedores[idx]=p}save('proveedores');closeModal();renderPedidoProv();renderPedidoLista()}
 function delProv(idx){if(!confirm('¿Eliminar proveedor?'))return;const n=D.proveedores[idx].nombre;D.ingredientes.forEach(i=>{if(i.prov===n)i.prov=''});D.proveedores.splice(idx,1);save('proveedores');save('ingredientes');renderPedidoProv();renderPedidoLista()}
 
 function renderMenu(){document.getElementById('menu-body').innerHTML=D.menu.length?D.menu.map(m=>`<div class="project-card"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div class="project-title">${m.plato}</div><div style="margin-top:.2rem">${bsec(m.seccion)}</div>${m.nota?`<p style="font-size:12px;margin-top:.5rem;color:var(--gray-dark)">${m.nota}</p>`:''}<div style="font-size:11px;color:var(--gray);margin-top:.4rem">${m.fecha}</div></div><span class="project-status status-${m.estado==='activo'?'activo':'pausado'}">${m.estado}</span></div><div class="card-actions"><button class="btn btn-sm btn-outline" onclick="openMenuModal(${m.id})">Editar</button><button class="btn btn-sm btn-danger" onclick="delMenu(${m.id})">×</button></div></div>`).join(''):'<p style="color:var(--gray-dark)">Sin cambios esta semana.</p>'}
