@@ -579,7 +579,9 @@ function printFicha(id){
       .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #0a0a0a;padding-bottom:.75rem;margin-bottom:1.25rem}
       .logo{font-size:1.5rem;font-weight:900;letter-spacing:-.02em}
       .title{font-size:1.2rem;font-weight:700;margin-bottom:.2rem}
-      .meta{font-size:11px;color:#666;display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:1.25rem}
+      .meta{font-size:11px;color:#666;display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:1.25rem;align-items:center}
+      .meta span{display:flex;align-items:center;gap:.35rem}
+      .dot{display:inline-block;width:8px;height:8px;flex-shrink:0}
       .section{margin-bottom:1.25rem}
       .section h4{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#666;border-bottom:1px solid #ccc;padding-bottom:.3rem;margin-bottom:.6rem}
       .ing-grid{display:grid;grid-template-columns:1fr auto auto;gap:.2rem .75rem;font-size:12px}
@@ -604,11 +606,11 @@ function printFicha(id){
     </div>
     <div class="title">${r.nombre}</div>
     <div class="meta">
-      ${r.seccion?`<span>📍 ${r.seccion}</span>`:''}
-      ${r.temporada?`<span>🌿 ${r.temporada}</span>`:''}
-      ${r.raciones?`<span>👥 ${r.raciones} raciones</span>`:''}
-      ${r.tiempoElaboracion?`<span>⏱ ${r.tiempoElaboracion}</span>`:''}
-      ${r.temperatura?`<span>🌡 ${r.temperatura}</span>`:''}
+      ${r.seccion?`<span><span class="dot" style="background:#5a7a4a"></span>${r.seccion}</span>`:''}
+      ${r.temporada?`<span><span class="dot" style="background:#7a9e68"></span>${r.temporada}</span>`:''}
+      ${r.raciones?`<span><span class="dot" style="background:#444"></span>${r.raciones} raciones</span>`:''}
+      ${r.tiempoElaboracion?`<span><span class="dot" style="background:#888"></span>${r.tiempoElaboracion}</span>`:''}
+      ${r.temperatura?`<span><span class="dot" style="background:#c0392b"></span>${r.temperatura}</span>`:''}
     </div>
     ${r.foto?`<img class="foto" src="${r.foto}" alt="${r.nombre}">`:''}
     ${r.descripcion?`<p style="margin-bottom:1.25rem;font-size:13px">${r.descripcion}</p>`:''}
