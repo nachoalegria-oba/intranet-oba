@@ -191,11 +191,15 @@ td input:focus,td select:focus{border-bottom-color:var(--g)}
     </div>
     <div class="panel" id="panel-pedidos">
       <div class="ph"><h1>Pedidos</h1><p>Ingredientes agrupados por proveedor</p></div>
-      <div style="display:flex;gap:.5rem;margin-bottom:1.25rem;flex-wrap:wrap">
+      <div style="display:flex;gap:.5rem;margin-bottom:.75rem;flex-wrap:wrap">
         <button class="btn" id="pt-lista" onclick="pedTab('lista')">Lista</button>
         <button class="btn btn-o" id="pt-resumen" onclick="pedTab('resumen')">Por proveedor</button>
         <button class="btn btn-o" id="pt-prov" onclick="pedTab('prov')">Proveedores</button>
-        <button class="btn btn-g" style="margin-left:auto" onclick="oPM('ing')">+ Ingrediente</button>
+        <button class="btn btn-o" id="pt-sort" onclick="toggleSort()" style="margin-left:auto">A→Z</button>
+        <button class="btn btn-g" onclick="oPM('ing')">+ Ingrediente</button>
+      </div>
+      <div style="display:flex;gap:.5rem;margin-bottom:1rem">
+        <input class="sb" type="text" id="ped-search" placeholder="Buscar proveedor o ingrediente..." oninput="onPedSearch()" style="flex:1">
       </div>
       <div id="pp-lista"></div>
       <div id="pp-resumen" style="display:none"></div>
@@ -408,6 +412,12 @@ function startApp(){
   document.getElementById('hdate').textContent=ds;
   document.getElementById('ifecha').textContent=ds;
   renderAll();
+  // Deep link: if URL has #receta-ID, open that recipe
+  const hash=location.hash;
+  if(hash&&hash.startsWith('#receta-')){
+    const id=parseInt(hash.replace('#receta-',''));
+    if(!isNaN(id))setTimeout(()=>{sp('recetario');oRD(id);},300);
+  }
 }
 
 function today(){return new Date().toISOString().slice(0,10)}
@@ -541,9 +551,10 @@ function buildFichaHTML(r, forPrint=false){
 
 function oRD(id){
   const r=D.recipes.find(x=>x.id===id);if(!r)return;
+  // Set URL hash for deep linking
+  history.replaceState(null,'',`#receta-${id}`);
   document.getElementById('rdtit').textContent=r.nombre;
   document.getElementById('rdbody').innerHTML=buildFichaHTML(r);
-  // Add print button to header
   document.querySelector('.rdh').innerHTML=`
     <h2 id="rdtit">${r.nombre}</h2>
     <div style="display:flex;gap:.5rem">
@@ -556,6 +567,8 @@ function oRD(id){
 function printFicha(id){
   const r=D.recipes.find(x=>x.id===id);if(!r)return;
   const b64Logo=document.querySelector('header img')?.src||'';
+  const recetaURL=`${location.origin}${location.pathname}#receta-${id}`;
+  const qrURL=`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(recetaURL)}`;
   const html=`<!DOCTYPE html><html lang="es"><head>
     <meta charset="UTF-8">
     <title>Ficha — ${r.nombre}</title>
@@ -579,10 +592,14 @@ function printFicha(id){
       .alergen{display:inline-block;padding:2px 7px;border:1px solid #c0392b;color:#c0392b;font-size:10px;margin:2px}
       .notice{border-left:4px solid #5a7a4a;padding:.5rem .75rem;background:#e8efe4;font-size:12px;margin-top:1rem}
       img.foto{width:100%;max-height:220px;object-fit:cover;margin-bottom:1rem}
+      .qr-block{margin-top:1.5rem;padding-top:1rem;border-top:1px solid #ccc;display:flex;align-items:center;gap:1rem}
+      .qr-block img{width:100px;height:100px;border:1px solid #ccc}
+      .qr-text{font-size:10px;color:#888;line-height:1.6}
+      .qr-text strong{display:block;font-size:11px;color:#444;margin-bottom:.2rem}
     </style>
   </head><body>
     <div class="header">
-      <div>${b64Logo?`<img src="${b64Logo}" style="height:28px">` :'<span class="logo">oba-</span>'}</div>
+      <div>${b64Logo?`<img src="${b64Logo}" style="height:28px">`:'<span class="logo">oba-</span>'}</div>
       <div style="text-align:right;font-size:11px;color:#888">Ficha técnica · ${new Date().toLocaleDateString('es-ES')}</div>
     </div>
     <div class="title">${r.nombre}</div>
@@ -600,16 +617,24 @@ function printFicha(id){
     ${r.pasos&&r.pasos.length?`<div class="section"><h4>Elaboración final</h4><ol class="steps">${r.pasos.map((p,i)=>`<li><div class="step-num">${i+1}</div><div>${p}</div></li>`).join('')}</ol></div>`:''}
     ${(r.alergenos||[]).length?`<div class="section"><h4>Alérgenos</h4>${(r.alergenos||[]).map(a=>`<span class="alergen">${a}</span>`).join('')}</div>`:''}
     ${r.notas?`<div class="notice"><strong>Notas:</strong> ${r.notas}</div>`:''}
+    <div class="qr-block">
+      <img src="${qrURL}" alt="QR ficha">
+      <div class="qr-text">
+        <strong>Escanea para ver la ficha digital</strong>
+        Abre directamente esta receta en la intranet OBA.<br>
+        ${recetaURL}
+      </div>
+    </div>
   </body></html>`;
   const w=window.open('','_blank');
   w.document.write(html);
   w.document.close();
-  setTimeout(()=>w.print(),500);
+  setTimeout(()=>w.print(),800);
 }
 
 function cRD(){
   document.getElementById('rdet').classList.remove('open');
-  // Reset header
+  history.replaceState(null,'','#');
   document.querySelector('.rdh').innerHTML=`<h2 id="rdtit"></h2><button class="btn btn-s" onclick="cRD()">Cerrar</button>`;
 }
 
@@ -703,6 +728,21 @@ function dRec(id){if(!confirm('¿Eliminar este plato?'))return;D.recipes=D.recip
 
 // ── PEDIDOS ───────────────────────────────────────────────────────────────────
 let pedT='lista';
+let pedSort=false;
+function onPedSearch(){
+  if(pedT==='lista')rPedLista();
+  else if(pedT==='resumen')rPedRes();
+  else if(pedT==='prov')rPedProv();
+}
+function pedSearch(){return(document.getElementById('ped-search')?.value||'').toLowerCase().trim()}
+function toggleSort(){
+  pedSort=!pedSort;
+  const btn=document.getElementById('pt-sort');
+  if(btn){btn.className=pedSort?'btn btn-g':'btn btn-o';btn.textContent=pedSort?'A→Z ✓':'A→Z';}
+  if(pedT==='resumen')rPedRes();
+  if(pedT==='prov')rPedProv();
+  if(pedT==='lista')rPedLista();
+}
 function pedTab(t){
   pedT=t;
   ['lista','resumen','prov'].forEach(x=>{document.getElementById('pp-'+x).style.display=x===t?'block':'none';document.getElementById('pt-'+x).className='btn'+(x===t?'':' btn-o')});
@@ -710,21 +750,32 @@ function pedTab(t){
   if(t==='prov')rPedProv();
 }
 function rPedLista(){
-  document.getElementById('pp-lista').innerHTML=`<div class="tw"><table><thead><tr><th style="width:24%">Ingrediente</th><th style="width:22%">Platos</th><th style="width:14%">Cat.</th><th style="width:22%">Proveedor</th><th style="width:12%">Cantidad</th><th style="width:6%"></th></tr></thead><tbody>${D.ingredientes.map(i=>`<tr><td style="font-weight:700">${i.ing}</td><td style="font-size:11px;color:var(--grd)">${i.platos}</td><td>${bcat(i.cat)}</td><td>${D.proveedores.length?`<select onchange="uIng(${i.id},'prov',this.value)">${D.proveedores.map(p=>`<option value="${p.nombre}"${i.prov===p.nombre?' selected':''}>${p.nombre}</option>`).join('')}<option value=""${!i.prov?' selected':''}>—</option></select>`:`<input type="text" value="${i.prov||''}" onchange="uIng(${i.id},'prov',this.value)">`}</td><td><input type="text" value="${i.cant||''}" style="text-align:right" onchange="uIng(${i.id},'cant',this.value)"></td><td><button class="btn btn-s btn-d" onclick="dIng(${i.id})">×</button></td></tr>`).join('')}</tbody></table></div>`;
+  const q=pedSearch();
+  let items=q?D.ingredientes.filter(i=>i.ing.toLowerCase().includes(q)||(i.prov||'').toLowerCase().includes(q)||(i.platos||'').toLowerCase().includes(q)):D.ingredientes;
+  if(pedSort)items=[...items].sort((a,b)=>a.ing.localeCompare(b.ing,'es'));
+  document.getElementById('pp-lista').innerHTML=`<div class="tw"><table><thead><tr><th style="width:24%">Ingrediente</th><th style="width:22%">Platos</th><th style="width:14%">Cat.</th><th style="width:22%">Proveedor</th><th style="width:12%">Cantidad</th><th style="width:6%"></th></tr></thead><tbody>${items.map(i=>`<tr><td style="font-weight:700">${i.ing}</td><td style="font-size:11px;color:var(--grd)">${i.platos}</td><td>${bcat(i.cat)}</td><td>${D.proveedores.length?`<select onchange="uIng(${i.id},'prov',this.value)">${D.proveedores.map(p=>`<option value="${p.nombre}"${i.prov===p.nombre?' selected':''}>${p.nombre}</option>`).join('')}<option value=""${!i.prov?' selected':''}>—</option></select>`:`<input type="text" value="${i.prov||''}" onchange="uIng(${i.id},'prov',this.value)">`}</td><td><input type="text" value="${i.cant||''}" style="text-align:right" onchange="uIng(${i.id},'cant',this.value)"></td><td><button class="btn btn-s btn-d" onclick="dIng(${i.id})">×</button></td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--grd);padding:1rem">Sin resultados</td></tr>'}</tbody></table></div>`;
 }
 function uIng(id,f,v){const i=D.ingredientes.find(x=>x.id===id);if(i)i[f]=v;save('ingredientes')}
 function dIng(id){if(!confirm('¿Eliminar?'))return;D.ingredientes=D.ingredientes.filter(x=>x.id!==id);save('ingredientes');rPedLista()}
 function rPedRes(){
+  const q=pedSearch();
   const g={};D.ingredientes.forEach(i=>{if(i.prov){if(!g[i.prov])g[i.prov]=[];g[i.prov].push(i)}});
   const sp=D.ingredientes.filter(i=>!i.prov);
-  const fecha=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
   let html='';
   if(!Object.keys(g).length){html='<p style="color:var(--grd)">Asigna proveedores en la pestaña Lista.</p>'}
-  else{Object.entries(g).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([prov,items])=>{
-    const pi=D.proveedores.find(p=>p.nombre===prov);const tel=pi?.tel||'';
-    html+=`<div class="pb"><div class="pbh"><span>${prov}</span><div style="display:flex;gap:.5rem;align-items:center"><small>${items.length} producto${items.length!==1?'s':''}</small><button onclick="envWA('${prov.replace(/'/g,"\\'")}','${tel}')" style="background:#25D366;color:#fff;border:none;font-family:'Space Mono',monospace;font-size:10px;padding:4px 10px;cursor:pointer;text-transform:uppercase">✉ WhatsApp</button></div></div><div class="pi">${items.map(i=>`<div class="pr"><span style="font-weight:700">${i.ing}</span><span>${bcat(i.cat)}</span><span style="text-align:right;font-weight:700">${i.cant||'—'}</span></div>`).join('')}</div></div>`;
-  })}
-  if(sp.length)html+=`<div class="notice"><strong>${sp.length} sin proveedor:</strong> ${sp.map(i=>i.ing).join(', ')}</div>`;
+  else{
+    let entries=Object.entries(g);
+    if(q)entries=entries.filter(([prov,items])=>prov.toLowerCase().includes(q)||items.some(i=>i.ing.toLowerCase().includes(q)));
+    if(pedSort)entries.sort((a,b)=>a[0].localeCompare(b[0],'es'));
+    if(!entries.length){html=`<p style="color:var(--grd)">No se encontró ningún proveedor con "<strong>${q}</strong>"</p>`}
+    else{entries.forEach(([prov,items])=>{
+      let filtItems=q&&!prov.toLowerCase().includes(q)?items.filter(i=>i.ing.toLowerCase().includes(q)):items;
+      if(pedSort)filtItems=[...filtItems].sort((a,b)=>a.ing.localeCompare(b.ing,'es'));
+      const pi=D.proveedores.find(p=>p.nombre===prov);const tel=pi?.tel||'';
+      html+=`<div class="pb"><div class="pbh"><span>${prov}</span><div style="display:flex;gap:.5rem;align-items:center"><small>${filtItems.length} producto${filtItems.length!==1?'s':''}</small><button onclick="envWA('${prov.replace(/'/g,"\\'")}','${tel}')" style="background:#25D366;color:#fff;border:none;font-family:'Space Mono',monospace;font-size:10px;padding:4px 10px;cursor:pointer;text-transform:uppercase">✉ WhatsApp</button></div></div><div class="pi">${filtItems.map(i=>`<div class="pr"><span style="font-weight:700">${i.ing}</span><span>${bcat(i.cat)}</span><span style="text-align:right;font-weight:700">${i.cant||'—'}</span></div>`).join('')}</div></div>`;
+    })}
+  }
+  if(!q&&sp.length)html+=`<div class="notice"><strong>${sp.length} sin proveedor:</strong> ${sp.map(i=>i.ing).join(', ')}</div>`;
   document.getElementById('pp-resumen').innerHTML=html;
 }
 function envWA(prov,tel){
@@ -735,7 +786,10 @@ function envWA(prov,tel){
   window.open(url,'_blank');
 }
 function rPedProv(){
-  document.getElementById('pp-prov').innerHTML=`<button class="btn btn-g" style="margin-bottom:1rem" onclick="oPM('prov')">+ Proveedor</button>${!D.proveedores.length?'<p style="color:var(--grd)">No hay proveedores aún.</p>':D.proveedores.map((p,i)=>`<div class="pc"><div class="pt">${p.nombre}</div>${p.tel?`<div style="font-size:12px;color:var(--grd)">Tel: ${p.tel}</div>`:''} ${p.nota?`<div style="font-size:12px;margin-top:.4rem">${p.nota}</div>`:''}<div class="ca"><button class="btn btn-s btn-o" onclick="eProv(${i})">Editar</button><button class="btn btn-s btn-d" onclick="dProv(${i})">Eliminar</button></div></div>`).join('')}`;
+  const q=pedSearch();
+  let list=q?D.proveedores.filter(p=>p.nombre.toLowerCase().includes(q)||(p.tel||'').includes(q)):D.proveedores;
+  if(pedSort)list=[...list].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+  document.getElementById('pp-prov').innerHTML=`<button class="btn btn-g" style="margin-bottom:1rem" onclick="oPM('prov')">+ Proveedor</button>${!list.length?`<p style="color:var(--grd)">No se encontró "${q||''}"</p>`:list.map((p)=>{const i=D.proveedores.indexOf(p);return`<div class="pc"><div class="pt">${p.nombre}</div>${p.tel?`<div style="font-size:12px;color:var(--grd)">Tel: ${p.tel}</div>`:''} ${p.nota?`<div style="font-size:12px;margin-top:.4rem">${p.nota}</div>`:''}<div class="ca"><button class="btn btn-s btn-o" onclick="eProv(${i})">Editar</button><button class="btn btn-s btn-d" onclick="dProv(${i})">Eliminar</button></div></div>`}).join('')}`;
 }
 function oPM(type){
   if(type==='ing'){oModal(`<h3>Nuevo ingrediente</h3><div class="fr"><label>Nombre *</label><input id="in"></div><div class="fr"><label>Platos donde se usa</label><input id="ip"></div><div class="fr"><label>Categoría</label><select id="ic">${CATS.map(c=>`<option>${c}</option>`).join('')}</select></div><div class="fr"><label>Proveedor</label><select id="iv"><option value="">— sin asignar —</option>${D.proveedores.map(p=>`<option value="${p.nombre}">${p.nombre}</option>`).join('')}</select></div><div class="fr"><label>Cantidad/semana</label><input id="iq" placeholder="Ej: 2 kg"></div><div class="mf"><button class="btn btn-o" onclick="cModal()">Cancelar</button><button class="btn btn-g" onclick="sIng()">Guardar</button></div>`)}
