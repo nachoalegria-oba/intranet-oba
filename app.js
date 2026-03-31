@@ -573,13 +573,17 @@ function cRD() {
 }
 
 function ingredientItemHtml(item = {}) {
+  const qty = safeText(item.c || "—");
+  const unit = safeText(item.u || "");
   return `
     <div class="ingredient-item" data-i="${safeText(item.i || "")}" data-c="${safeText(item.c || "")}" data-u="${safeText(item.u || "")}">
       <div class="ingredient-item-main">
         <strong>${safeText(item.i || "Sin ingrediente")}</strong>
-        <span>${safeText(item.c || "—")} ${safeText(item.u || "")}</span>
+        <span class="ingredient-item-sep">·</span>
+        <span>${qty}</span>
+        <span>${unit}</span>
       </div>
-      <button class="btn btn-s btn-d ingredient-item-remove" type="button" onclick="removeIngredientItem(this)">×</button>
+      <button class="ingredient-item-remove" type="button" onclick="removeIngredientItem(this)" aria-label="Eliminar ingrediente">×</button>
     </div>`;
 }
 
