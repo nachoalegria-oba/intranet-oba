@@ -363,6 +363,7 @@ td select:focus{
   position:absolute;
   top:12px;
   right:12px;
+  z-index:2;
   width:34px;
   height:34px;
   border:none;
@@ -371,6 +372,10 @@ td select:focus{
   color:#fff;
   font-size:22px;
   line-height:1;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:auto;
 }
 .install-card-close:hover{
   background:rgba(255,255,255,.18);
