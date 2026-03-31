@@ -1613,9 +1613,8 @@ function setupMobileNavToggle() {
   const toggle = document.getElementById("mobile-nav-toggle");
   if (!nav || !toggle) return;
   const media = window.matchMedia("(max-width: 720px)");
-  const storageKey = "oba_mobile_nav_hidden_v1";
 
-  const syncVisibility = () => {
+  window.applyMobileNavState = () => {
     if (!media.matches) {
       nav.classList.remove("nav-hidden");
       toggle.hidden = true;
@@ -1623,20 +1622,19 @@ function setupMobileNavToggle() {
       return;
     }
     toggle.hidden = false;
-    const hidden = localStorage.getItem(storageKey) === "1";
+    const hidden = localStorage.getItem("oba_mobile_nav_hidden_v1") === "1";
     nav.classList.toggle("nav-hidden", hidden);
     toggle.setAttribute("aria-expanded", hidden ? "false" : "true");
   };
 
-  toggle.addEventListener("click", () => {
+  window.toggleMobileNav = () => {
     const hidden = !nav.classList.contains("nav-hidden");
-    nav.classList.toggle("nav-hidden", hidden);
-    localStorage.setItem(storageKey, hidden ? "1" : "0");
-    toggle.setAttribute("aria-expanded", hidden ? "false" : "true");
-  });
+    localStorage.setItem("oba_mobile_nav_hidden_v1", hidden ? "1" : "0");
+    window.applyMobileNavState();
+  };
 
-  window.addEventListener("resize", syncVisibility);
-  syncVisibility();
+  window.addEventListener("resize", window.applyMobileNavState);
+  window.applyMobileNavState();
 }
 
 document.addEventListener("DOMContentLoaded", () => {
