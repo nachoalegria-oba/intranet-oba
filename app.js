@@ -1408,8 +1408,9 @@ function installHelpMarkup() {
 
 function registerPWA() {
   const isLocalPreview = ["127.0.0.1", "localhost"].includes(location.hostname);
+  const disableServiceWorker = isLocalPreview || location.hostname.endsWith("github.io");
 
-  if (isLocalPreview && "serviceWorker" in navigator) {
+  if (disableServiceWorker && "serviceWorker" in navigator) {
     navigator.serviceWorker.getRegistrations().then((registrations) => {
       registrations.forEach((registration) => registration.unregister());
     });
