@@ -1135,6 +1135,13 @@ th,
     border-radius:24px;
     background:rgba(17,17,17,.9);
     backdrop-filter:blur(12px);
+    transition:transform .28s ease, opacity .22s ease;
+    will-change:transform, opacity;
+  }
+  .main-nav.nav-hidden{
+    transform:translateY(calc(100% + 24px + env(safe-area-inset-bottom, 0px)));
+    opacity:.01;
+    pointer-events:none;
   }
   .nav-btn{
     min-height:40px;

@@ -1608,6 +1608,44 @@ async function installApp() {
     </div>`);
 }
 
+function setupMobileNavAutoHide() {
+  const nav = document.querySelector(".main-nav");
+  if (!nav) return;
+  const media = window.matchMedia("(max-width: 720px)");
+  let lastScrollY = window.scrollY;
+  let ticking = false;
+
+  const syncVisibility = () => {
+    if (!media.matches) {
+      nav.classList.remove("nav-hidden");
+      lastScrollY = window.scrollY;
+      return;
+    }
+
+    const currentY = window.scrollY;
+    const delta = currentY - lastScrollY;
+
+    if (currentY < 24 || delta < -12) {
+      nav.classList.remove("nav-hidden");
+    } else if (delta > 12) {
+      nav.classList.add("nav-hidden");
+    }
+
+    lastScrollY = currentY;
+    ticking = false;
+  };
+
+  const onScroll = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(syncVisibility);
+  };
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", syncVisibility);
+  syncVisibility();
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("modal").addEventListener("click", (event) => {
     if (event.target.id === "modal") cModal();
@@ -1616,6 +1654,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (installCardClose) {
     installCardClose.onclick = dismissInstallHint;
   }
+  setupMobileNavAutoHide();
   registerPWA();
   initIA();
   initData().catch((error) => showError(error.message));
