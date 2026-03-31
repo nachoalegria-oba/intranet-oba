@@ -572,47 +572,91 @@ function cRD() {
   activeRecipeId = null;
 }
 
-function ingredientRowHtml(item = {}) {
+function ingredientItemHtml(item = {}) {
   return `
-    <div class="ingredient-row">
-      <input class="ingredient-name" type="text" placeholder="Ingrediente" value="${safeText(item.i || "")}">
-      <input class="ingredient-qty" type="text" placeholder="Cantidad" value="${safeText(item.c || "")}">
-      <input class="ingredient-unit" type="text" placeholder="Unidad" value="${safeText(item.u || "")}">
-      <button class="btn btn-s btn-d ingredient-row-remove" type="button" onclick="removeIngredientRow(this)">×</button>
+    <div class="ingredient-item" data-i="${safeText(item.i || "")}" data-c="${safeText(item.c || "")}" data-u="${safeText(item.u || "")}">
+      <div class="ingredient-item-main">
+        <strong>${safeText(item.i || "Sin ingrediente")}</strong>
+        <span>${safeText(item.c || "—")} ${safeText(item.u || "")}</span>
+      </div>
+      <button class="btn btn-s btn-d ingredient-item-remove" type="button" onclick="removeIngredientItem(this)">×</button>
     </div>`;
 }
 
-function ingredientRowsHtml(items = []) {
-  const rows = items.length ? items : [{}];
-  return rows.map((item) => ingredientRowHtml(item)).join("");
+function ingredientItemsHtml(items = []) {
+  if (!items.length) return `<div class="ingredient-empty">Todavía no has añadido ingredientes.</div>`;
+  return items.map((item) => ingredientItemHtml(item)).join("");
 }
 
-function addMainIngredientRow() {
-  document.getElementById("ri-rows")?.insertAdjacentHTML("beforeend", ingredientRowHtml());
+function ingredientComposerHtml(listId, addFnName) {
+  return `
+    <div class="ingredient-composer">
+      <div class="ingredient-composer-labels">
+        <span>Ingrediente</span>
+        <span>Cantidad</span>
+        <span>Unidad</span>
+      </div>
+      <div class="ingredient-composer-row">
+        <input id="${listId}-name" class="ingredient-name" type="text" placeholder="Ingrediente">
+        <input id="${listId}-qty" class="ingredient-qty" type="text" placeholder="Cantidad">
+        <input id="${listId}-unit" class="ingredient-unit" type="text" placeholder="Unidad">
+        <button class="secondary-btn ingredient-add-btn" type="button" onclick="${addFnName}('${listId}')">Añadir</button>
+      </div>
+    </div>`;
 }
 
-function addSubIngredientRow(index) {
-  document.getElementById(`si-rows-${index}`)?.insertAdjacentHTML("beforeend", ingredientRowHtml());
+function appendIngredientItem(listId, item) {
+  const list = document.getElementById(listId);
+  if (!list) return;
+  list.querySelector(".ingredient-empty")?.remove();
+  list.insertAdjacentHTML("beforeend", ingredientItemHtml(item));
 }
 
-function removeIngredientRow(button) {
-  const row = button?.closest(".ingredient-row");
-  const container = row?.parentElement;
-  row?.remove();
-  if (container && !container.querySelector(".ingredient-row")) {
-    container.insertAdjacentHTML("beforeend", ingredientRowHtml());
+function addIngredientFromComposer(listId) {
+  const nameInput = document.getElementById(`${listId}-name`);
+  const qtyInput = document.getElementById(`${listId}-qty`);
+  const unitInput = document.getElementById(`${listId}-unit`);
+  const item = {
+    i: nameInput?.value.trim() || "",
+    c: qtyInput?.value.trim() || "",
+    u: unitInput?.value.trim() || ""
+  };
+  if (!item.i) {
+    nameInput?.focus();
+    return;
+  }
+  appendIngredientItem(listId, item);
+  if (nameInput) nameInput.value = "";
+  if (qtyInput) qtyInput.value = "";
+  if (unitInput) unitInput.value = "";
+  nameInput?.focus();
+}
+
+function addMainIngredient(listId) {
+  addIngredientFromComposer(listId);
+}
+
+function addSubIngredient(listId) {
+  addIngredientFromComposer(listId);
+}
+
+function removeIngredientItem(button) {
+  const item = button?.closest(".ingredient-item");
+  const list = item?.parentElement;
+  item?.remove();
+  if (list && !list.querySelector(".ingredient-item")) {
+    list.innerHTML = `<div class="ingredient-empty">Todavía no has añadido ingredientes.</div>`;
   }
 }
 
-function collectIngredientRows(containerId) {
+function collectIngredientItems(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return [];
-  return Array.from(container.querySelectorAll(".ingredient-row")).map((row) => {
-    const i = row.querySelector(".ingredient-name")?.value.trim() || "";
-    const c = row.querySelector(".ingredient-qty")?.value.trim() || "";
-    const u = row.querySelector(".ingredient-unit")?.value.trim() || "";
-    return { i, c, u };
-  }).filter((item) => item.i || item.c || item.u);
+  return Array.from(container.querySelectorAll(".ingredient-item")).map((item) => ({
+    i: item.dataset.i || "",
+    c: item.dataset.c || "",
+    u: item.dataset.u || ""
+  })).filter((item) => item.i || item.c || item.u);
 }
 
 function oRM(id) {
@@ -636,8 +680,8 @@ function oRM(id) {
     </div>
     <div class="fr"><label>Ingredientes principales</label>
       <div class="ingredient-editor">
-        <div class="ingredient-rows" id="ri-rows">${ingredientRowsHtml(recipe?.ingredientes || [])}</div>
-        <button class="secondary-btn" type="button" onclick="addMainIngredientRow()">Añadir ingrediente</button>
+        <div class="ingredient-items" id="ri-rows">${ingredientItemsHtml(recipe?.ingredientes || [])}</div>
+        ${ingredientComposerHtml("ri-rows", "addMainIngredient")}
       </div>
     </div>
     <div class="fr"><label>Subrecetas</label>
@@ -663,8 +707,8 @@ function subEditorHtml(sub = {}, index) {
       <input id="sn_${index}" placeholder="Nombre" value="${safeText(sub.nombre || "")}" style="margin-bottom:8px">
       <textarea id="sd_${index}" placeholder="Descripción" style="margin-bottom:8px">${safeText(sub.descripcion || "")}</textarea>
       <div class="ingredient-editor" style="margin-bottom:8px">
-        <div class="ingredient-rows" id="si-rows-${index}">${ingredientRowsHtml(sub.ingredientes || [])}</div>
-        <button class="secondary-btn" type="button" onclick="addSubIngredientRow(${index})">Añadir ingrediente</button>
+        <div class="ingredient-items" id="si-rows-${index}">${ingredientItemsHtml(sub.ingredientes || [])}</div>
+        ${ingredientComposerHtml(`si-rows-${index}`, "addSubIngredient")}
       </div>
       <textarea id="sp_${index}" placeholder="Elaboración (un paso por línea)">${(sub.pasos || []).join("\n")}</textarea>
     </div>`;
@@ -692,7 +736,7 @@ function sRec(id) {
     subrecetas.push({
       nombre: subName,
       descripcion: document.getElementById(`sd_${idx}`)?.value || "",
-      ingredientes: collectIngredientRows(`si-rows-${idx}`),
+      ingredientes: collectIngredientItems(`si-rows-${idx}`),
       pasos: (document.getElementById(`sp_${idx}`)?.value || "").split("\n").filter(Boolean)
     });
   });
@@ -712,7 +756,7 @@ function sRec(id) {
       temperatura: document.getElementById("rtemp").value,
       foto: photoData,
       alergenos,
-      ingredientes: collectIngredientRows("ri-rows"),
+      ingredientes: collectIngredientItems("ri-rows"),
       subrecetas,
       pasos: document.getElementById("rp").value.split("\n").filter(Boolean),
       notas: document.getElementById("rno").value
