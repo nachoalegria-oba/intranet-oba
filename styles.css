@@ -723,6 +723,65 @@ tbody td:last-child{
   text-transform:uppercase;
 }
 .fr textarea{min-height:110px;resize:vertical}
+.allergen-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:8px;
+}
+.allergen-option{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  min-width:0;
+  padding:10px 12px;
+  border-radius:16px;
+  background:var(--surface);
+  box-shadow:inset 0 0 0 1px var(--line);
+  text-transform:none;
+  letter-spacing:0;
+  font-size:12px;
+  line-height:1.4;
+}
+.allergen-option input{
+  width:16px;
+  min-width:16px;
+  height:16px;
+  margin-top:1px;
+}
+.ingredient-editor{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.ingredient-rows{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.ingredient-row{
+  display:grid;
+  grid-template-columns:minmax(0,1.8fr) minmax(90px,.7fr) minmax(80px,.55fr) auto;
+  gap:8px;
+  align-items:center;
+}
+.ingredient-row-remove{
+  min-width:42px;
+  padding-inline:0;
+}
+.sub-block{
+  padding:12px;
+  border-radius:18px;
+  background:#fff;
+  margin-bottom:10px;
+  box-shadow:inset 0 0 0 1px #d7d0c5;
+}
+.sub-block-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:8px;
+}
 .mf{
   display:flex;
   justify-content:flex-end;
@@ -1042,6 +1101,17 @@ th,
   }
   .install-card .primary-btn{
     width:100%;
+  }
+  .allergen-grid,
+  .ingredient-row{
+    grid-template-columns:1fr;
+  }
+  .ingredient-row-remove{
+    width:100%;
+  }
+  .sub-block-head{
+    align-items:flex-start;
+    flex-direction:column;
   }
   .stats-grid,
   .shortcut-grid{

@@ -572,6 +572,49 @@ function cRD() {
   activeRecipeId = null;
 }
 
+function ingredientRowHtml(item = {}) {
+  return `
+    <div class="ingredient-row">
+      <input class="ingredient-name" type="text" placeholder="Ingrediente" value="${safeText(item.i || "")}">
+      <input class="ingredient-qty" type="text" placeholder="Cantidad" value="${safeText(item.c || "")}">
+      <input class="ingredient-unit" type="text" placeholder="Unidad" value="${safeText(item.u || "")}">
+      <button class="btn btn-s btn-d ingredient-row-remove" type="button" onclick="removeIngredientRow(this)">×</button>
+    </div>`;
+}
+
+function ingredientRowsHtml(items = []) {
+  const rows = items.length ? items : [{}];
+  return rows.map((item) => ingredientRowHtml(item)).join("");
+}
+
+function addMainIngredientRow() {
+  document.getElementById("ri-rows")?.insertAdjacentHTML("beforeend", ingredientRowHtml());
+}
+
+function addSubIngredientRow(index) {
+  document.getElementById(`si-rows-${index}`)?.insertAdjacentHTML("beforeend", ingredientRowHtml());
+}
+
+function removeIngredientRow(button) {
+  const row = button?.closest(".ingredient-row");
+  const container = row?.parentElement;
+  row?.remove();
+  if (container && !container.querySelector(".ingredient-row")) {
+    container.insertAdjacentHTML("beforeend", ingredientRowHtml());
+  }
+}
+
+function collectIngredientRows(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return [];
+  return Array.from(container.querySelectorAll(".ingredient-row")).map((row) => {
+    const i = row.querySelector(".ingredient-name")?.value.trim() || "";
+    const c = row.querySelector(".ingredient-qty")?.value.trim() || "";
+    const u = row.querySelector(".ingredient-unit")?.value.trim() || "";
+    return { i, c, u };
+  }).filter((item) => item.i || item.c || item.u);
+}
+
 function oRM(id) {
   const recipe = id ? D.recipes.find((item) => item.id === id) : null;
   const subs = recipe?.subrecetas || [];
@@ -587,11 +630,16 @@ function oRM(id) {
     <div class="fr"><label>Temperatura de servicio</label><input id="rtemp" value="${safeText(recipe?.temperatura || "")}" placeholder="Ej: 65°C"></div>
     <div class="fr"><label>Foto del plato</label><input type="file" id="rfoto-file" accept="image/*"></div>
     <div class="fr"><label>Alérgenos</label>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">
-        ${ALERGEN_LIST.map((item) => `<label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:12px"><input type="checkbox" id="al_${item.replace(/\s/g, "_")}" ${alerg.includes(item) ? "checked" : ""}> ${item}</label>`).join("")}
+      <div class="allergen-grid">
+        ${ALERGEN_LIST.map((item) => `<label class="allergen-option"><input type="checkbox" id="al_${item.replace(/\s/g, "_")}" ${alerg.includes(item) ? "checked" : ""}> <span>${item}</span></label>`).join("")}
       </div>
     </div>
-    <div class="fr"><label>Ingredientes principales (nombre|cantidad|unidad)</label><textarea id="ri">${recipe ? recipe.ingredientes.map((item) => `${item.i}|${item.c}|${item.u}`).join("\n") : ""}</textarea></div>
+    <div class="fr"><label>Ingredientes principales</label>
+      <div class="ingredient-editor">
+        <div class="ingredient-rows" id="ri-rows">${ingredientRowsHtml(recipe?.ingredientes || [])}</div>
+        <button class="secondary-btn" type="button" onclick="addMainIngredientRow()">Añadir ingrediente</button>
+      </div>
+    </div>
     <div class="fr"><label>Subrecetas</label>
       <div id="subs-container">${subs.map((sub, index) => subEditorHtml(sub, index)).join("")}</div>
       <button class="secondary-btn" type="button" onclick="addSub()">Añadir subreceta</button>
@@ -607,14 +655,17 @@ function oRM(id) {
 
 function subEditorHtml(sub = {}, index) {
   return `
-    <div class="sub-block" data-idx="${index}" style="padding:12px;border-radius:18px;background:#fff;margin-bottom:10px;box-shadow:inset 0 0 0 1px #d7d0c5">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <div class="sub-block" data-idx="${index}">
+      <div class="sub-block-head">
         <strong>Subreceta ${index + 1}</strong>
         <button class="btn btn-s btn-d" type="button" onclick="removeSub(${index})">Eliminar</button>
       </div>
       <input id="sn_${index}" placeholder="Nombre" value="${safeText(sub.nombre || "")}" style="margin-bottom:8px">
       <textarea id="sd_${index}" placeholder="Descripción" style="margin-bottom:8px">${safeText(sub.descripcion || "")}</textarea>
-      <textarea id="si_${index}" placeholder="Ingredientes (nombre|cant|unidad)" style="margin-bottom:8px">${(sub.ingredientes || []).map((item) => `${item.i}|${item.c}|${item.u}`).join("\n")}</textarea>
+      <div class="ingredient-editor" style="margin-bottom:8px">
+        <div class="ingredient-rows" id="si-rows-${index}">${ingredientRowsHtml(sub.ingredientes || [])}</div>
+        <button class="secondary-btn" type="button" onclick="addSubIngredientRow(${index})">Añadir ingrediente</button>
+      </div>
       <textarea id="sp_${index}" placeholder="Elaboración (un paso por línea)">${(sub.pasos || []).join("\n")}</textarea>
     </div>`;
 }
@@ -641,10 +692,7 @@ function sRec(id) {
     subrecetas.push({
       nombre: subName,
       descripcion: document.getElementById(`sd_${idx}`)?.value || "",
-      ingredientes: (document.getElementById(`si_${idx}`)?.value || "").split("\n").filter(Boolean).map((line) => {
-        const [i, c, u] = line.split("|");
-        return { i: i || "", c: c || "", u: u || "" };
-      }),
+      ingredientes: collectIngredientRows(`si-rows-${idx}`),
       pasos: (document.getElementById(`sp_${idx}`)?.value || "").split("\n").filter(Boolean)
     });
   });
@@ -664,10 +712,7 @@ function sRec(id) {
       temperatura: document.getElementById("rtemp").value,
       foto: photoData,
       alergenos,
-      ingredientes: document.getElementById("ri").value.split("\n").filter(Boolean).map((line) => {
-        const [i, c, u] = line.split("|");
-        return { i: i || "", c: c || "", u: u || "" };
-      }),
+      ingredientes: collectIngredientRows("ri-rows"),
       subrecetas,
       pasos: document.getElementById("rp").value.split("\n").filter(Boolean),
       notas: document.getElementById("rno").value
