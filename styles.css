@@ -969,12 +969,24 @@ th,
   .page{padding:14px 14px 120px}
   .page{padding-bottom:calc(120px + env(safe-area-inset-bottom, 0px))}
   .topbar{
+    flex-direction:row;
+    align-items:flex-end;
+    justify-content:space-between;
     padding:16px 14px 14px;
     padding-top:max(28px, calc(env(safe-area-inset-top, 0px) + 18px));
   }
-  .topbar-brand{width:100%}
+  .topbar-brand{
+    width:auto;
+    flex:1;
+    align-items:flex-end;
+  }
   .topbar-date{
     font-size:11px;
+  }
+  .topbar-actions{
+    width:auto;
+    align-self:flex-end;
+    margin-left:12px;
   }
   .main-nav{
     position:fixed;
