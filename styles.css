@@ -231,6 +231,12 @@ td select:focus{
   background:#111;
   color:#fff;
 }
+.ghost-btn-sm{
+  min-height:34px;
+  padding:7px 12px;
+  border-radius:12px;
+  font-size:11px;
+}
 .ghost-btn:hover,
 .btn:hover{
   transform:translateY(-1px);
@@ -281,7 +287,12 @@ td select:focus{
 }
 
 .topbar-date{color:var(--muted);font-size:12px}
-.topbar-actions{display:flex;align-items:center;gap:10px}
+.topbar-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-left:auto;
+}
 
 .main-nav{
   display:grid;
@@ -931,7 +942,10 @@ th,
   .page-hero,
   .section-head-lg,
   .topbar{flex-direction:column;align-items:flex-start}
-  .topbar-actions{width:100%}
+  .topbar-actions{
+    width:auto;
+    align-self:flex-end;
+  }
 }
 
 @media (max-width: 720px){
@@ -1002,8 +1016,7 @@ th,
   }
   .hero-actions .primary-btn,
   .hero-actions .secondary-btn,
-  .section-head-lg .primary-btn,
-  .topbar-actions .ghost-btn{
+  .section-head-lg .primary-btn{
     flex:1;
     justify-content:center;
   }

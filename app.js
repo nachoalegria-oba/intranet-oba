@@ -1428,7 +1428,6 @@ function registerPWA() {
   }
 
   const installCard = document.getElementById("install-card");
-  const installBtn = document.getElementById("install-btn");
   const isInstallBannerDismissed = () => localStorage.getItem(INSTALL_BANNER_DISMISSED_KEY) === "1";
   const hideInstallCardOnly = () => {
     if (!installCard) return;
@@ -1437,14 +1436,12 @@ function registerPWA() {
   };
   const hideInstallEverywhere = () => {
     hideInstallCardOnly();
-    if (installBtn) installBtn.hidden = true;
   };
   const showInstall = () => {
     if (isStandaloneMode()) {
       hideInstallEverywhere();
       return;
     }
-    if (installBtn) installBtn.hidden = false;
     if (installCard) {
       installCard.hidden = isInstallBannerDismissed();
       installCard.style.display = isInstallBannerDismissed() ? "none" : "";
@@ -1483,8 +1480,11 @@ function dismissInstallHint(event) {
 
 async function installApp() {
   if (isStandaloneMode()) {
-    document.getElementById("install-card").hidden = true;
-    document.getElementById("install-btn").hidden = true;
+    const installCard = document.getElementById("install-card");
+    if (installCard) {
+      installCard.hidden = true;
+      installCard.style.display = "none";
+    }
     return;
   }
   if (deferredPrompt) {
@@ -1492,8 +1492,11 @@ async function installApp() {
     await deferredPrompt.userChoice;
     deferredPrompt = null;
     localStorage.setItem(INSTALL_BANNER_DISMISSED_KEY, "1");
-    document.getElementById("install-card").hidden = true;
-    document.getElementById("install-btn").hidden = true;
+    const installCard = document.getElementById("install-card");
+    if (installCard) {
+      installCard.hidden = true;
+      installCard.style.display = "none";
+    }
     return;
   }
   oModal(`
