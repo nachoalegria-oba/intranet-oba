@@ -9,7 +9,7 @@ const FB = {
 };
 
 const SECS = ["Bienvenida", "Huerta", "Bosque", "Afluente", "Corral", "Acantilado", "Monte Bajo", "Llanura", "Rivera", "Postres"];
-const CATS = ["Bienvenida", "Huerta", "Bosque", "Afluente", "Corral", "Acantilado", "Monte Bajo", "Llanura", "Rivera", "Postres", "Base/Fermentos"];
+const CATS = ["Bienvenida", "Huerta", "Bosque", "Afluente", "Corral", "Acantilado", "Monte Bajo", "Llanura", "Rivera", "Fermentos"];
 const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 const DS = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"];
 const SKILLS = ["Mise en place", "Fondos y salsas", "Carnes", "Pescados", "Pastelería", "Fermentos", "Limpieza y orden", "Trabajo en equipo"];
@@ -119,9 +119,9 @@ const DI = [
   { id: 5, ing: "Acederas", platos: "Salsa de acederas", cat: "Huerta", prov: "", cant: "" },
   { id: 6, ing: "Colmenillas", platos: "Escabeche de colmenillas", cat: "Bosque", prov: "", cant: "" },
   { id: 7, ing: "Castañas", platos: "Cuajada de castañas", cat: "Bosque", prov: "", cant: "" },
-  { id: 8, ing: "Shio koji", platos: "Paloma torcaz · Entresijos", cat: "Base/Fermentos", prov: "", cant: "" },
-  { id: 9, ing: "Mantequilla", platos: "Beurre blanc · Holandesa", cat: "Base/Fermentos", prov: "", cant: "" },
-  { id: 10, ing: "Pectina", platos: "Pâté de fruit", cat: "Base/Fermentos", prov: "", cant: "" }
+  { id: 8, ing: "Shio koji", platos: "Paloma torcaz · Entresijos", cat: "Fermentos", prov: "", cant: "" },
+  { id: 9, ing: "Mantequilla", platos: "Beurre blanc · Holandesa", cat: "Fermentos", prov: "", cant: "" },
+  { id: 10, ing: "Pectina", platos: "Pâté de fruit", cat: "Fermentos", prov: "", cant: "" }
 ];
 
 const DEFAULTS = {
@@ -375,8 +375,13 @@ function bsec(section) {
 }
 
 function bcat(category) {
-  const map = { Bosque: "bosque", Afluente: "fluvial", Rivera: "fluvial", Corral: "corral", Caza: "caza", Acantilado: "caza", "Monte Bajo": "caza", Llanura: "corral", Postre: "postre", Postres: "postre", Huerta: "huerta", Bienvenida: "base", "Base/Fermentos": "base" };
-  return `<span class="badge b-${map[category] || "base"}">${safeText(category)}</span>`;
+  const normalized = normalizeIngredientCategory(category);
+  const map = { Bosque: "bosque", Afluente: "fluvial", Rivera: "fluvial", Corral: "corral", Caza: "caza", Acantilado: "caza", "Monte Bajo": "caza", Llanura: "corral", Postre: "postre", Postres: "postre", Huerta: "huerta", Bienvenida: "base", Fermentos: "base" };
+  return `<span class="badge b-${map[normalized] || "base"}">${safeText(normalized)}</span>`;
+}
+
+function normalizeIngredientCategory(category) {
+  return category === "Base/Fermentos" ? "Fermentos" : category;
 }
 
 function oModal(html) {
@@ -854,7 +859,7 @@ function rPedLista() {
 function uIng(id, field, value) {
   const ing = D.ingredientes.find((item) => item.id === id);
   if (!ing) return;
-  ing[field] = value;
+  ing[field] = field === "cat" ? normalizeIngredientCategory(value) : value;
   save("ingredientes");
 }
 
@@ -902,12 +907,16 @@ function rPedRes() {
 }
 
 function envWA(provider, phone) {
-  const items = D.ingredientes.filter((item) => item.prov === provider);
+  const items = D.ingredientes.filter((item) => item.prov === provider && String(item.cant || "").trim());
+  if (!items.length) {
+    alert("Solo se enviarán ingredientes con cantidad. Este proveedor aún no tiene cantidades asignadas.");
+    return;
+  }
   const message = encodeURIComponent([
     "Pedido OBA",
     formatLongDate(new Date()),
     "",
-    ...items.map((item) => `• ${item.ing}${item.cant ? " — " + item.cant : ""}`)
+    ...items.map((item) => `• ${item.ing} — ${item.cant}`)
   ].join("\n"));
   const number = String(phone || "").replace(/\s/g, "");
   window.open(number ? `https://wa.me/34${number}?text=${message}` : `https://wa.me/?text=${message}`, "_blank");
@@ -958,7 +967,7 @@ function sIng() {
     id: nid++,
     ing: name,
     platos: document.getElementById("ip").value || "Sin especificar",
-    cat: document.getElementById("ic").value,
+    cat: normalizeIngredientCategory(document.getElementById("ic").value),
     prov: document.getElementById("iv").value,
     cant: document.getElementById("iq").value
   });

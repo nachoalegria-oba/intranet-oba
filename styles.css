@@ -938,7 +938,10 @@ tbody td:last-child{
 .ce-esp{background:var(--brown)}
 .ce-urg{background:var(--red)}
 
-.pb{overflow:hidden}
+.pb{
+  overflow:hidden;
+  margin-bottom:18px;
+}
 .pbh{
   display:flex;
   align-items:center;
