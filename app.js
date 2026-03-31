@@ -16,6 +16,7 @@ const SKILLS = ["Mise en place", "Fondos y salsas", "Carnes", "Pescados", "Paste
 const ALERGEN_LIST = ["Gluten", "Crustáceos", "Huevos", "Pescado", "Cacahuetes", "Soja", "Lácteos", "Frutos de cáscara", "Apio", "Mostaza", "Sésamo", "Dióxido de azufre", "Altramuces", "Moluscos"];
 const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "eventos", "proveedores", "practicantes"];
 const LOCAL_KEY = "oba_intranet_v3";
+const INSTALL_HINT_DISMISSED_KEY = "oba_install_hint_dismissed_v1";
 const GROQ = "https://api.groq.com/openai/v1/chat/completions";
 const IASUGS = [
   "¿Qué platos tenemos en Bosque?",
@@ -1423,11 +1424,13 @@ function registerPWA() {
 
   const installCard = document.getElementById("install-card");
   const installBtn = document.getElementById("install-btn");
+  const isInstallHintDismissed = () => localStorage.getItem(INSTALL_HINT_DISMISSED_KEY) === "1";
   const hideInstall = () => {
     if (installCard) installCard.hidden = true;
     if (installBtn) installBtn.hidden = true;
   };
   const showInstall = () => {
+    if (isInstallHintDismissed()) return;
     if (installCard) installCard.hidden = false;
     if (installBtn) installBtn.hidden = false;
   };
@@ -1446,8 +1449,17 @@ function registerPWA() {
 
   window.addEventListener("appinstalled", () => {
     deferredPrompt = null;
+    localStorage.setItem(INSTALL_HINT_DISMISSED_KEY, "1");
     hideInstall();
   });
+}
+
+function dismissInstallHint() {
+  localStorage.setItem(INSTALL_HINT_DISMISSED_KEY, "1");
+  const installCard = document.getElementById("install-card");
+  const installBtn = document.getElementById("install-btn");
+  if (installCard) installCard.hidden = true;
+  if (installBtn) installBtn.hidden = true;
 }
 
 async function installApp() {
@@ -1455,6 +1467,7 @@ async function installApp() {
     deferredPrompt.prompt();
     await deferredPrompt.userChoice;
     deferredPrompt = null;
+    localStorage.setItem(INSTALL_HINT_DISMISSED_KEY, "1");
     document.getElementById("install-card").hidden = true;
     document.getElementById("install-btn").hidden = true;
     return;

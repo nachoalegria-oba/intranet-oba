@@ -268,7 +268,7 @@ td select:focus{
   justify-content:space-between;
   gap:20px;
   padding:18px 24px;
-  padding-top:max(18px, env(safe-area-inset-top, 0px));
+  padding-top:max(18px, calc(env(safe-area-inset-top, 0px) + 10px));
   background:rgba(250,246,239,.82);
   border-bottom:1px solid rgba(23,23,23,.06);
   backdrop-filter:blur(18px);
@@ -344,6 +344,7 @@ td select:focus{
 .hero-actions{display:flex;gap:10px;flex-wrap:wrap}
 
 .install-card{
+  position:relative;
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -354,7 +355,26 @@ td select:focus{
   background:linear-gradient(120deg, #111 0%, #1c2518 100%);
   color:#fff;
 }
+.install-card-copy{
+  padding-right:8px;
+}
 .install-card p{color:#d0d0cc}
+.install-card-close{
+  position:absolute;
+  top:12px;
+  right:12px;
+  width:34px;
+  height:34px;
+  border:none;
+  border-radius:999px;
+  background:rgba(255,255,255,.12);
+  color:#fff;
+  font-size:22px;
+  line-height:1;
+}
+.install-card-close:hover{
+  background:rgba(255,255,255,.18);
+}
 
 .stats-grid{
   display:grid;
@@ -929,8 +949,14 @@ th,
   }
   .page{padding:14px 14px 120px}
   .page{padding-bottom:calc(120px + env(safe-area-inset-bottom, 0px))}
-  .topbar{padding:14px}
+  .topbar{
+    padding:16px 14px 14px;
+    padding-top:max(28px, calc(env(safe-area-inset-top, 0px) + 18px));
+  }
   .topbar-brand{width:100%}
+  .topbar-date{
+    font-size:11px;
+  }
   .main-nav{
     position:fixed;
     left:12px;
@@ -975,6 +1001,17 @@ th,
   .topbar-actions .ghost-btn{
     flex:1;
     justify-content:center;
+  }
+  .install-card{
+    flex-direction:column;
+    align-items:stretch;
+    padding:20px 16px 16px;
+  }
+  .install-card-copy{
+    padding-right:24px;
+  }
+  .install-card .primary-btn{
+    width:100%;
   }
   .stats-grid,
   .shortcut-grid{
