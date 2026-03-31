@@ -1346,7 +1346,12 @@ function gAPIK() {
 }
 
 function isStandaloneMode() {
-  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+  return Boolean(
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.matchMedia("(display-mode: fullscreen)").matches ||
+    window.matchMedia("(display-mode: minimal-ui)").matches ||
+    window.navigator.standalone === true
+  );
 }
 
 function isIOS() {
@@ -1425,13 +1430,25 @@ function registerPWA() {
   const installCard = document.getElementById("install-card");
   const installBtn = document.getElementById("install-btn");
   const isInstallBannerDismissed = () => localStorage.getItem(INSTALL_BANNER_DISMISSED_KEY) === "1";
+  const hideInstallCardOnly = () => {
+    if (!installCard) return;
+    installCard.hidden = true;
+    installCard.style.display = "none";
+  };
   const hideInstallEverywhere = () => {
-    if (installCard) installCard.hidden = true;
+    hideInstallCardOnly();
     if (installBtn) installBtn.hidden = true;
   };
   const showInstall = () => {
+    if (isStandaloneMode()) {
+      hideInstallEverywhere();
+      return;
+    }
     if (installBtn) installBtn.hidden = false;
-    if (installCard) installCard.hidden = isInstallBannerDismissed();
+    if (installCard) {
+      installCard.hidden = isInstallBannerDismissed();
+      installCard.style.display = isInstallBannerDismissed() ? "none" : "";
+    }
   };
 
   if (isStandaloneMode()) {
@@ -1458,10 +1475,18 @@ function dismissInstallHint(event) {
   event?.stopPropagation?.();
   localStorage.setItem(INSTALL_BANNER_DISMISSED_KEY, "1");
   const installCard = document.getElementById("install-card");
-  if (installCard) installCard.hidden = true;
+  if (installCard) {
+    installCard.hidden = true;
+    installCard.style.display = "none";
+  }
 }
 
 async function installApp() {
+  if (isStandaloneMode()) {
+    document.getElementById("install-card").hidden = true;
+    document.getElementById("install-btn").hidden = true;
+    return;
+  }
   if (deferredPrompt) {
     deferredPrompt.prompt();
     await deferredPrompt.userChoice;
@@ -1482,7 +1507,10 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("modal").addEventListener("click", (event) => {
     if (event.target.id === "modal") cModal();
   });
-  document.getElementById("install-card-close")?.addEventListener("click", dismissInstallHint);
+  const installCardClose = document.getElementById("install-card-close");
+  if (installCardClose) {
+    installCardClose.onclick = dismissInstallHint;
+  }
   registerPWA();
   initIA();
   initData().catch((error) => showError(error.message));
