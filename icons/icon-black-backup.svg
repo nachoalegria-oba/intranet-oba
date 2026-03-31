@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" rx="240" fill="#050505"/>
+  <g transform="translate(120 275)">
+    <text x="0" y="250" fill="#f4f0e8" font-size="268" font-weight="900" font-family="Arial, Helvetica, sans-serif" letter-spacing="-18">oba</text>
+    <rect x="618" y="177" width="120" height="34" rx="17" fill="#6c9056"/>
+    <rect x="0" y="330" width="760" height="22" rx="11" fill="#171717"/>
+    <text x="5" y="412" fill="#8c887f" font-size="56" font-weight="700" font-family="Courier New, monospace" letter-spacing="8">INTRANET</text>
+  </g>
+</svg>

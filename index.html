@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#050505">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="OBA Intranet">
+  <meta name="description" content="Intranet de OBA para recetas, pedidos, avisos, calendario y proyectos.">
+  <title>OBA Intranet</title>
+  <link rel="manifest" href="./manifest.webmanifest?v=7">
+  <link rel="icon" href="./icons/icon-black.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@300;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css?v=7">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <div class="brand-lockup">
+        <img class="logo-mark logo-mark-hero" src="./icons/oba-logo-white.png" alt="OBA">
+      </div>
+      <div class="login-status" id="ls-sub">Conectando...</div>
+      <div class="login-form" id="lf" style="display:none">
+        <label class="sr-only" for="pwd">Contraseña</label>
+        <input class="login-input" type="password" id="pwd" placeholder="Contraseña" onkeydown="if(event.key==='Enter')login()">
+        <button class="primary-btn" onclick="login()">Entrar</button>
+        <div class="login-error" id="le"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="app" class="app-shell">
+    <header class="topbar">
+      <div class="topbar-brand">
+        <img class="logo-mark logo-mark-black logo-mark-topbar" src="./icons/oba-logo-white.png" alt="OBA">
+        <div>
+          <div class="eyebrow">Intranet del equipo</div>
+          <div class="topbar-date" id="hdate"></div>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="ghost-btn" id="install-btn" onclick="installApp()" hidden>Instalar en móvil</button>
+        <button class="ghost-btn" onclick="logout()">Salir</button>
+      </div>
+    </header>
+
+    <nav class="main-nav" aria-label="Secciones">
+      <button class="nav-btn active" data-panel="inicio" onclick="sp('inicio')">Inicio</button>
+      <button class="nav-btn" data-panel="recetario" onclick="sp('recetario')">Recetario</button>
+      <button class="nav-btn" data-panel="pedidos" onclick="sp('pedidos')">Pedidos</button>
+      <button class="nav-btn" data-panel="menu" onclick="sp('menu')">Menú</button>
+      <button class="nav-btn" data-panel="calendario" onclick="sp('calendario')">Calendario</button>
+      <button class="nav-btn" data-panel="practicantes" onclick="sp('practicantes')">Practicantes</button>
+      <button class="nav-btn" data-panel="proyectos" onclick="sp('proyectos')">Proyectos</button>
+      <button class="nav-btn" data-panel="avisos" onclick="sp('avisos')">Avisos</button>
+      <button class="nav-btn nav-btn-ai" data-panel="ia" onclick="sp('ia')">IA</button>
+    </nav>
+
+    <main class="page">
+      <section class="panel active" id="panel-inicio">
+        <div class="page-hero">
+          <div>
+            <div class="eyebrow">Centro de control</div>
+            <h1>Una intranet más clara para el día a día</h1>
+            <p id="ifecha"></p>
+          </div>
+          <div class="hero-actions">
+            <button class="primary-btn" onclick="oRM()">Nuevo plato</button>
+            <button class="secondary-btn" onclick="oCM()">Nuevo evento</button>
+          </div>
+        </div>
+
+        <div id="install-card" class="install-card" hidden>
+          <div>
+            <strong>Instala la intranet en tu móvil</strong>
+            <p>Añádela a la pantalla de inicio y se abrirá como app con su icono negro de OBA.</p>
+          </div>
+          <button class="primary-btn" onclick="installApp()">Cómo instalar</button>
+        </div>
+
+        <div class="stats-grid" id="icards"></div>
+
+        <div class="home-grid">
+          <div class="home-column">
+            <div class="section-head">
+              <h2>Atajos</h2>
+              <p>Lo que más se usa, a un clic.</p>
+            </div>
+            <div class="shortcut-grid">
+              <button class="shortcut-card" onclick="sp('recetario');oRM()">
+                <strong>Añadir plato</strong>
+                <span>Nueva ficha o subreceta.</span>
+              </button>
+              <button class="shortcut-card" onclick="sp('pedidos');oPM('ing')">
+                <strong>Añadir ingrediente</strong>
+                <span>Actualiza compras rápido.</span>
+              </button>
+              <button class="shortcut-card" onclick="sp('avisos');oAM()">
+                <strong>Publicar aviso</strong>
+                <span>Comunica algo al equipo.</span>
+              </button>
+              <button class="shortcut-card" onclick="sp('calendario');oCM()">
+                <strong>Nuevo evento</strong>
+                <span>Agenda y recordatorios.</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="home-column">
+            <div class="section-head">
+              <h2>Urgente</h2>
+              <p>Lo importante del día.</p>
+            </div>
+            <div id="iurg"></div>
+          </div>
+
+          <div class="home-column">
+            <div class="section-head">
+              <h2>Hoy en cocina</h2>
+              <p>Menú activo, próximos hitos y último aviso.</p>
+            </div>
+            <div id="today-feed"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-recetario">
+        <div class="section-head section-head-lg">
+          <div>
+            <div class="eyebrow">Recetario</div>
+            <h1>Fichas, subrecetas y técnicas</h1>
+            <p>Busca por nombre o filtra por sección.</p>
+          </div>
+          <button class="primary-btn" onclick="oRM()">Nuevo plato</button>
+        </div>
+        <div class="toolbar">
+          <input class="search-input" type="text" placeholder="Buscar plato..." id="rsearch" oninput="rRec()">
+          <select class="field-select" id="rcat" onchange="rRec()">
+            <option value="">Todas las secciones</option>
+            <option>Bienvenida</option>
+            <option>Huerta</option>
+            <option>Bosque</option>
+            <option>Afluente</option>
+            <option>Corral</option>
+            <option>Acantilado</option>
+            <option>Monte Bajo</option>
+            <option>Llanura</option>
+            <option>Rivera</option>
+            <option>Postres</option>
+          </select>
+        </div>
+        <div class="cards-grid" id="rcards"></div>
+      </section>
+
+      <section class="panel" id="panel-pedidos">
+        <div class="section-head section-head-lg">
+          <div>
+            <div class="eyebrow">Pedidos</div>
+            <h1>Compras e ingredientes</h1>
+            <p>Vista por lista, proveedor o resumen para WhatsApp.</p>
+          </div>
+          <button class="primary-btn" onclick="oPM('ing')">Añadir ingrediente</button>
+        </div>
+
+        <div class="segmented-bar">
+          <button class="segment-btn active" id="pt-lista" onclick="pedTab('lista')">Lista</button>
+          <button class="segment-btn" id="pt-resumen" onclick="pedTab('resumen')">Por proveedor</button>
+          <button class="segment-btn" id="pt-prov" onclick="pedTab('prov')">Proveedores</button>
+          <button class="secondary-btn sort-btn" id="pt-sort" onclick="toggleSort()">A→Z</button>
+        </div>
+
+        <div class="toolbar">
+          <input class="search-input" type="text" id="ped-search" placeholder="Buscar proveedor o ingrediente..." oninput="onPedSearch()">
+        </div>
+
+        <div id="pp-lista"></div>
+        <div id="pp-resumen" style="display:none"></div>
+        <div id="pp-prov" style="display:none"></div>
+      </section>
+
+      <section class="panel" id="panel-menu">
+        <div class="section-head section-head-lg">
+          <div>
+            <div class="eyebrow">Menú semanal</div>
+            <h1>Cambios y pase de huerta</h1>
+            <p>Deja visibles los movimientos de carta y pruebas.</p>
+          </div>
+          <button class="primary-btn" onclick="oMM()">Nuevo cambio</button>
+        </div>
+        <div id="mbody"></div>
+      </section>
+
+      <section class="panel" id="panel-calendario">
+        <div class="section-head section-head-lg">
+          <div>
+            <div class="eyebrow">Calendario</div>
+            <h1>Eventos y fechas importantes</h1>
+            <p>Con llegadas de practicantes integradas.</p>
+          </div>
+          <button class="primary-btn" onclick="oCM()">Nuevo evento</button>
+        </div>
+
+        <div class="calendar-toolbar">
+          <button class="secondary-btn" onclick="calNav(-1)">Anterior</button>
+          <div id="cal-title" class="calendar-title"></div>
+          <button class="secondary-btn" onclick="calNav(1)">Siguiente</button>
+        </div>
+
+        <div class="legend-row">
+          <span><i class="legend-dot dot-event"></i> Evento</span>
+          <span><i class="legend-dot dot-special"></i> Especial</span>
+          <span><i class="legend-dot dot-urgent"></i> Urgente</span>
+          <span><i class="legend-dot dot-prac"></i> Practicante</span>
+        </div>
+
+        <div class="calendar-grid heads" id="cheads"></div>
+        <div class="calendar-grid" id="cbody"></div>
+        <div id="clist" class="calendar-list"></div>
+      </section>
+
+      <section class="panel" id="panel-practicantes">
+        <div class="section-head section-head-lg">
+          <div>
+            <div class="eyebrow">Practicantes</div>
+            <h1>Seguimiento y evolución</h1>
+            <p>Fichas, estado, tutor y nivel por habilidades.</p>
+          </div>
+          <button class="primary-btn" onclick="oPracM()">Nuevo practicante</button>
+        </div>
+        <div class="toolbar">
+          <select class="field-select" id="pfilt" onchange="rPrac()">
+            <option value="">Todos</option>
+            <option value="activo">En activo</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="finalizado">Finalizados</option>
+          </select>
+        </div>
+        <div id="pracbody"></div>
+      </section>
+
+      <section class="panel" id="panel-proyectos">
+        <div class="section-head section-head-lg">
+          <div>
+            <div class="eyebrow">Proyectos</div>
+            <h1>I+D y desarrollo</h1>
+            <p>Ideas, pruebas, estados y responsables.</p>
+          </div>
+          <button class="primary-btn" onclick="oProjM()">Nuevo proyecto</button>
+        </div>
+        <div class="toolbar">
+          <select class="field-select" id="projfilt" onchange="rProj()">
+            <option value="">Todos</option>
+            <option value="activo">Activos</option>
+            <option value="testeo">En testeo</option>
+            <option value="listo">Listos</option>
+            <option value="pausado">Pausados</option>
+          </select>
+        </div>
+        <div id="projbody"></div>
+      </section>
+
+      <section class="panel" id="panel-avisos">
+        <div class="section-head section-head-lg">
+          <div>
+            <div class="eyebrow">Avisos</div>
+            <h1>Comunicados del equipo</h1>
+            <p>Mensajes rápidos, urgencias y recordatorios.</p>
+          </div>
+          <button class="primary-btn" onclick="oAM()">Nuevo aviso</button>
+        </div>
+        <div id="avbody"></div>
+      </section>
+
+      <section class="panel" id="panel-ia">
+        <div class="section-head section-head-lg">
+          <div>
+            <div class="eyebrow">Asistente IA</div>
+            <h1>Apoyo rápido para cocina y sala</h1>
+            <p>Redacción, ideas, recetas, traducciones y compras.</p>
+          </div>
+        </div>
+        <div class="ia-grid" id="iasugs"></div>
+        <div id="iachat" class="chat-box"></div>
+        <div class="chat-compose">
+          <input class="search-input" type="text" id="iainput" placeholder="Pregunta al asistente..." onkeydown="if(event.key==='Enter')iaEnv()">
+          <button class="primary-btn" onclick="iaEnv()">Enviar</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="detail-drawer" id="rdet">
+    <div class="drawer-head">
+      <h2 id="rdtit"></h2>
+      <div class="drawer-actions">
+        <button class="primary-btn" onclick="printFicha()">Imprimir</button>
+        <button class="secondary-btn" onclick="cRD()">Cerrar</button>
+      </div>
+    </div>
+    <div class="drawer-body" id="rdbody"></div>
+  </div>
+
+  <div class="detail-drawer" id="pfdet">
+    <div class="drawer-head">
+      <h2 id="pftit"></h2>
+      <div class="drawer-actions">
+        <button class="secondary-btn" onclick="cPF()">Volver</button>
+      </div>
+    </div>
+    <div class="drawer-body" id="pfbody"></div>
+  </div>
+
+  <div class="modal-bg" id="modal">
+    <div class="modal" id="mi"></div>
+  </div>
+
+  <script src="./app.js?v=7"></script>
+</body>
+</html>

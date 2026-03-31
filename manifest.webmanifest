@@ -1,0 +1,59 @@
+{
+  "name": "OBA Intranet",
+  "short_name": "OBA",
+  "id": "./",
+  "description": "Recetas, pedidos, calendario y avisos del equipo OBA.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "categories": ["business", "productivity", "food"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "./icons/icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "./icons/icon-black.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Recetario",
+      "short_name": "Recetario",
+      "url": "./index.html#panel-recetario"
+    },
+    {
+      "name": "Pedidos",
+      "short_name": "Pedidos",
+      "url": "./index.html#panel-pedidos"
+    }
+  ]
+}
