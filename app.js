@@ -1608,40 +1608,33 @@ async function installApp() {
     </div>`);
 }
 
-function setupMobileNavAutoHide() {
+function setupMobileNavToggle() {
   const nav = document.querySelector(".main-nav");
-  if (!nav) return;
+  const toggle = document.getElementById("mobile-nav-toggle");
+  if (!nav || !toggle) return;
   const media = window.matchMedia("(max-width: 720px)");
-  let lastScrollY = window.scrollY;
-  let ticking = false;
+  const storageKey = "oba_mobile_nav_hidden_v1";
 
   const syncVisibility = () => {
     if (!media.matches) {
       nav.classList.remove("nav-hidden");
-      lastScrollY = window.scrollY;
+      toggle.hidden = true;
+      toggle.setAttribute("aria-expanded", "true");
       return;
     }
-
-    const currentY = window.scrollY;
-    const delta = currentY - lastScrollY;
-
-    if (currentY < 24 || delta < -12) {
-      nav.classList.remove("nav-hidden");
-    } else if (delta > 12) {
-      nav.classList.add("nav-hidden");
-    }
-
-    lastScrollY = currentY;
-    ticking = false;
+    toggle.hidden = false;
+    const hidden = localStorage.getItem(storageKey) === "1";
+    nav.classList.toggle("nav-hidden", hidden);
+    toggle.setAttribute("aria-expanded", hidden ? "false" : "true");
   };
 
-  const onScroll = () => {
-    if (ticking) return;
-    ticking = true;
-    requestAnimationFrame(syncVisibility);
-  };
+  toggle.addEventListener("click", () => {
+    const hidden = !nav.classList.contains("nav-hidden");
+    nav.classList.toggle("nav-hidden", hidden);
+    localStorage.setItem(storageKey, hidden ? "1" : "0");
+    toggle.setAttribute("aria-expanded", hidden ? "false" : "true");
+  });
 
-  window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", syncVisibility);
   syncVisibility();
 }
@@ -1654,7 +1647,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (installCardClose) {
     installCardClose.onclick = dismissInstallHint;
   }
-  setupMobileNavAutoHide();
+  setupMobileNavToggle();
   registerPWA();
   initIA();
   initData().catch((error) => showError(error.message));

@@ -300,6 +300,9 @@ td select:focus{
   gap:10px;
   padding:14px 24px 0;
 }
+.mobile-nav-toggle{
+  display:none;
+}
 
 .nav-btn{
   min-height:46px;
@@ -1142,6 +1145,37 @@ th,
     transform:translateY(calc(100% + 24px + env(safe-area-inset-bottom, 0px)));
     opacity:.01;
     pointer-events:none;
+  }
+  .mobile-nav-toggle{
+    position:fixed;
+    left:50%;
+    bottom:calc(18px + env(safe-area-inset-bottom, 0px));
+    z-index:23;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:66px;
+    height:28px;
+    transform:translateX(-50%);
+    border:none;
+    border-radius:999px;
+    background:rgba(17,17,17,.82);
+    backdrop-filter:blur(12px);
+    box-shadow:0 10px 24px rgba(0,0,0,.18);
+    transition:transform .28s ease, opacity .22s ease, bottom .28s ease;
+  }
+  .mobile-nav-toggle-pill{
+    display:block;
+    width:26px;
+    height:4px;
+    border-radius:999px;
+    background:rgba(255,255,255,.82);
+  }
+  .main-nav:not(.nav-hidden) + .mobile-nav-toggle{
+    bottom:calc(88px + env(safe-area-inset-bottom, 0px));
+  }
+  .main-nav.nav-hidden + .mobile-nav-toggle{
+    opacity:.96;
   }
   .nav-btn{
     min-height:40px;
