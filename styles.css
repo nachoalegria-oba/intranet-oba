@@ -25,6 +25,7 @@ html{
   scroll-behavior:smooth;
   min-height:100%;
   background:#050505;
+  -webkit-text-size-adjust:100%;
 }
 body{
   min-height:100vh;
@@ -170,6 +171,7 @@ td select{
   background:var(--surface);
   border-radius:16px;
   padding:14px 16px;
+  font-size:16px;
   box-shadow:inset 0 0 0 1px var(--line);
 }
 
