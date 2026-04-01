@@ -24,10 +24,12 @@
 html{
   scroll-behavior:smooth;
   min-height:100%;
+  background:#050505;
 }
 body{
   min-height:100vh;
   min-height:100svh;
+  min-height:100dvh;
   background:
     radial-gradient(circle at top left, rgba(95,127,76,.14), transparent 28%),
     radial-gradient(circle at top right, rgba(11,11,11,.08), transparent 24%),
@@ -80,6 +82,7 @@ img{max-width:100%;display:block}
   inset:0;
   min-height:100vh;
   min-height:100svh;
+  min-height:100dvh;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -1089,11 +1092,15 @@ th,
 @media (max-width: 720px){
   .login-screen{
     padding:0;
+    min-height:100vh;
+    min-height:100svh;
+    min-height:100dvh;
   }
   .login-card{
     width:100%;
     min-height:100vh;
     min-height:100svh;
+    min-height:100dvh;
     padding:32px 22px calc(28px + env(safe-area-inset-bottom, 0px));
     border:none;
     border-radius:0;
