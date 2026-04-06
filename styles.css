@@ -692,10 +692,27 @@ td select:focus{
 .pedido-item-controls input,
 .pedido-item-controls select{
   min-height:46px;
+  padding:12px 14px;
+  border:none;
+  border-radius:16px;
+  -webkit-appearance:none;
+  appearance:none;
   color-scheme:light;
   color:var(--ink);
-  background:#f6f0e6;
+  background-color:#f6f0e6;
   box-shadow:inset 0 0 0 1px rgba(140,129,112,.18);
+}
+
+.pedido-item-controls select{
+  padding-right:42px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #6d7d5c 50%),
+    linear-gradient(135deg, #6d7d5c 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% - 2px),
+    calc(100% - 12px) calc(50% - 2px);
+  background-size:6px 6px, 6px 6px;
+  background-repeat:no-repeat;
 }
 
 .pedido-item-controls input::placeholder{
