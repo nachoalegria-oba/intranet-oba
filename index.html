@@ -11,7 +11,7 @@
   <meta name="color-scheme" content="dark light">
   <meta name="description" content="Intranet de OBA para recetas, pedidos, avisos, calendario y proyectos.">
   <title>OBA Intranet</title>
-  <link rel="manifest" href="./manifest.webmanifest?v=23">
+  <link rel="manifest" href="./manifest.webmanifest?v=24">
   <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
   <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@300;500;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=23">
+  <link rel="stylesheet" href="./styles.css?v=24">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
@@ -180,16 +180,20 @@
           <button class="segment-btn active" id="pt-lista" onclick="pedTab('lista')">Lista</button>
           <button class="segment-btn" id="pt-resumen" onclick="pedTab('resumen')">Por proveedor</button>
           <button class="segment-btn" id="pt-prov" onclick="pedTab('prov')">Proveedores</button>
+          <button class="segment-btn" id="pt-historial" onclick="pedTab('historial')">Histórico</button>
           <button class="secondary-btn sort-btn" id="pt-sort" onclick="toggleSort()">A→Z</button>
         </div>
 
-        <div class="toolbar">
+        <div class="toolbar pedido-toolbar">
           <input class="search-input" type="text" id="ped-search" placeholder="Buscar proveedor o ingrediente..." oninput="onPedSearch()">
+          <button class="secondary-btn" onclick="guardarPedidoActual()">Guardar pedido</button>
+          <button class="secondary-btn danger-soft" onclick="limpiarPedido()">Limpiar pedido</button>
         </div>
 
         <div id="pp-lista"></div>
         <div id="pp-resumen" style="display:none"></div>
         <div id="pp-prov" style="display:none"></div>
+        <div id="pp-historial" style="display:none"></div>
       </section>
 
       <section class="panel" id="panel-menu">
@@ -328,6 +332,6 @@
     <div class="modal" id="mi"></div>
   </div>
 
-  <script src="./app.js?v=23"></script>
+  <script src="./app.js?v=24"></script>
 </body>
 </html>

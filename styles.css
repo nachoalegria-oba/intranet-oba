@@ -231,6 +231,15 @@ td select:focus{
   background:#ebe5da;
 }
 
+.danger-soft{
+  color:var(--red);
+  box-shadow:inset 0 0 0 1px rgba(184,67,55,.18);
+}
+
+.danger-soft:hover{
+  background:rgba(184,67,55,.08);
+}
+
 .ghost-btn,
 .btn{
   background:#111;
@@ -521,6 +530,10 @@ td select:focus{
 .toolbar .search-input{flex:1;min-width:220px}
 .toolbar .field-select{min-width:220px}
 
+.pedido-toolbar .secondary-btn{
+  min-height:48px;
+}
+
 .segmented-bar{
   display:flex;
   flex-wrap:wrap;
@@ -547,6 +560,186 @@ td select:focus{
 .tw{
   overflow:auto;
   padding:8px;
+}
+
+.pedido-summary{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+  margin-bottom:14px;
+}
+
+.pedido-stat{
+  padding:16px 18px;
+  border-radius:20px;
+  background:rgba(255,255,255,.88);
+  border:1px solid rgba(23,23,23,.06);
+  box-shadow:var(--shadow);
+}
+
+.pedido-stat strong{
+  display:block;
+  margin-bottom:6px;
+  font-family:Arial, Helvetica, sans-serif;
+  font-size:1.6rem;
+  line-height:1;
+}
+
+.pedido-stat span{
+  color:var(--muted);
+  font-size:12px;
+}
+
+.pedido-list-groups,
+.pedido-history-list{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.pedido-group-card,
+.pedido-history-card{
+  border-radius:24px;
+  background:rgba(255,255,255,.88);
+  border:1px solid rgba(23,23,23,.06);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+
+.pedido-group-head,
+.pedido-history-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  padding:18px 20px;
+  border-bottom:1px solid rgba(23,23,23,.06);
+}
+
+.pedido-group-head strong,
+.pedido-history-head strong{
+  display:block;
+  font-family:Arial, Helvetica, sans-serif;
+  font-size:1rem;
+}
+
+.pedido-group-head span,
+.pedido-history-head span{
+  color:var(--muted);
+  font-size:12px;
+}
+
+.pedido-group-body,
+.pedido-history-body{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:12px;
+}
+
+.pedido-item-row{
+  display:grid;
+  grid-template-columns:minmax(0,1.1fr) minmax(300px,.9fr);
+  gap:14px;
+  align-items:center;
+  padding:14px;
+  border-radius:18px;
+  background:var(--surface);
+}
+
+.pedido-item-main{
+  min-width:0;
+}
+
+.pedido-item-title-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:4px;
+}
+
+.pedido-item-title-row strong{
+  font-size:14px;
+}
+
+.pedido-item-sub{
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.45;
+}
+
+.pedido-item-controls{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(130px,.55fr) auto;
+  gap:10px;
+  align-items:end;
+}
+
+.pedido-item-controls label{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.pedido-item-controls label span{
+  color:var(--muted);
+  font-size:10px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+
+.pedido-item-controls input,
+.pedido-item-controls select{
+  min-height:46px;
+}
+
+.danger-icon-btn{
+  width:32px;
+  height:32px;
+  padding:0;
+  border:none;
+  border-radius:999px;
+  align-self:center;
+  background:transparent;
+  color:var(--red);
+  font-size:15px;
+  line-height:1;
+}
+
+.danger-icon-btn:hover{
+  background:rgba(184,67,55,.08);
+}
+
+.pedido-history-provider{
+  padding:12px 14px;
+  border-radius:18px;
+  background:var(--surface);
+}
+
+.pedido-history-provider-title{
+  margin-bottom:8px;
+  font-family:Arial, Helvetica, sans-serif;
+  font-size:.95rem;
+}
+
+.pedido-history-provider-items{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.pedido-history-line{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  font-size:13px;
+}
+
+.pedido-history-line span{
+  color:var(--muted);
+  font-weight:700;
 }
 
 table{
@@ -1082,6 +1275,9 @@ th,
   .main-nav{grid-template-columns:repeat(3,minmax(0,1fr))}
   .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .home-grid{grid-template-columns:1fr}
+  .pedido-summary{grid-template-columns:1fr}
+  .pedido-item-row{grid-template-columns:1fr}
+  .pedido-item-controls{grid-template-columns:1fr}
   .page-hero,
   .section-head-lg,
   .topbar{flex-direction:column;align-items:flex-start}
@@ -1233,6 +1429,23 @@ th,
   .ingredient-composer-row{
     grid-template-columns:1fr;
   }
+  .pedido-toolbar .search-input{
+    min-width:100%;
+  }
+  .pedido-toolbar .secondary-btn{
+    flex:1 1 180px;
+  }
+  .pedido-group-head,
+  .pedido-history-head{
+    padding:16px;
+  }
+  .pedido-group-body,
+  .pedido-history-body{
+    padding:10px;
+  }
+  .pedido-item-row{
+    padding:12px;
+  }
   .ingredient-item{
     align-items:flex-start;
   }
@@ -1258,4 +1471,7 @@ th,
   .drawer-body{width:calc(100vw - 16px)}
   .drawer-body{padding:18px}
   .modal{padding:20px}
+  .danger-icon-btn{
+    justify-self:flex-end;
+  }
 }

@@ -14,7 +14,7 @@ const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "
 const DS = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"];
 const SKILLS = ["Mise en place", "Fondos y salsas", "Carnes", "Pescados", "Pastelería", "Fermentos", "Limpieza y orden", "Trabajo en equipo"];
 const ALERGEN_LIST = ["Gluten", "Crustáceos", "Huevos", "Pescado", "Cacahuetes", "Soja", "Lácteos", "Frutos de cáscara", "Apio", "Mostaza", "Sésamo", "Dióxido de azufre", "Altramuces", "Moluscos"];
-const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "eventos", "proveedores", "practicantes"];
+const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "eventos", "proveedores", "practicantes", "pedidosHistorial"];
 const LOCAL_KEY = "oba_intranet_v3";
 const INSTALL_BANNER_DISMISSED_KEY = "oba_install_banner_dismissed_v1";
 const GROQ = "https://api.groq.com/openai/v1/chat/completions";
@@ -135,7 +135,8 @@ const DEFAULTS = {
   ],
   eventos: [{ id: 1, titulo: "Inicio temporada", fecha: today(), tipo: "especial", urgente: false, nota: "" }],
   proveedores: [],
-  practicantes: []
+  practicantes: [],
+  pedidosHistorial: []
 };
 
 let db = null;
@@ -355,6 +356,7 @@ function renderAll() {
   rPedLista();
   if (pedT === "resumen") rPedRes();
   if (pedT === "prov") rPedProv();
+  if (pedT === "historial") rPedHistorial();
   rMenu();
   calRender();
   rPrac();
@@ -799,6 +801,7 @@ function onPedSearch() {
   if (pedT === "lista") rPedLista();
   if (pedT === "resumen") rPedRes();
   if (pedT === "prov") rPedProv();
+  if (pedT === "historial") rPedHistorial();
 }
 
 function toggleSort() {
@@ -810,11 +813,75 @@ function toggleSort() {
 
 function pedTab(tab) {
   pedT = tab;
-  ["lista", "resumen", "prov"].forEach((item) => {
+  ["lista", "resumen", "prov", "historial"].forEach((item) => {
     document.getElementById(`pp-${item}`).style.display = item === tab ? "block" : "none";
     document.getElementById(`pt-${item}`)?.classList.toggle("active", item === tab);
   });
   onPedSearch();
+}
+
+function pedidoProviderLabel(provider) {
+  return provider || "Sin proveedor";
+}
+
+function pedidoDateLabel(rawDate) {
+  if (!rawDate) return "Sin fecha";
+  const date = new Date(rawDate);
+  if (Number.isNaN(date.getTime())) return safeText(rawDate);
+  return new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "long", year: "numeric" }).format(date);
+}
+
+function getCurrentPedidoItems() {
+  return D.ingredientes
+    .filter((item) => String(item.cant || "").trim())
+    .map((item) => ({
+      ing: item.ing,
+      cant: String(item.cant || "").trim(),
+      cat: normalizeIngredientCategory(item.cat),
+      prov: item.prov || "",
+      platos: item.platos || ""
+    }));
+}
+
+function groupPedidoItems(items = []) {
+  const groups = {};
+  items.forEach((item) => {
+    const key = pedidoProviderLabel(item.prov);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(item);
+  });
+  let entries = Object.entries(groups);
+  if (pedSort) entries.sort((a, b) => a[0].localeCompare(b[0], "es"));
+  return entries;
+}
+
+function guardarPedidoActual() {
+  const items = getCurrentPedidoItems();
+  if (!items.length) {
+    alert("Añade al menos una cantidad antes de guardar el pedido.");
+    return;
+  }
+  D.pedidosHistorial.unshift({
+    id: nid++,
+    fecha: today(),
+    creado: new Date().toISOString(),
+    lineas: items
+  });
+  save("pedidosHistorial");
+  alert("Pedido guardado en el histórico.");
+}
+
+function limpiarPedido() {
+  const activeItems = D.ingredientes.filter((item) => String(item.cant || "").trim());
+  if (!activeItems.length) {
+    alert("No hay cantidades activas que limpiar.");
+    return;
+  }
+  if (!confirm("¿Quieres borrar las cantidades del pedido actual?")) return;
+  activeItems.forEach((item) => {
+    item.cant = "";
+  });
+  save("ingredientes");
 }
 
 function rPedLista() {
@@ -822,37 +889,71 @@ function rPedLista() {
   let items = q ? D.ingredientes.filter((item) => item.ing.toLowerCase().includes(q) || (item.prov || "").toLowerCase().includes(q) || (item.platos || "").toLowerCase().includes(q)) : D.ingredientes;
   if (pedSort) items = [...items].sort((a, b) => a.ing.localeCompare(b.ing, "es"));
 
+  const groups = {};
+  items.forEach((item) => {
+    const key = pedidoProviderLabel(item.prov);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(item);
+  });
+  let entries = Object.entries(groups);
+  if (pedSort) entries.sort((a, b) => a[0].localeCompare(b[0], "es"));
+
+  const activeCount = D.ingredientes.filter((item) => String(item.cant || "").trim()).length;
+  const activeProviders = new Set(D.ingredientes.filter((item) => String(item.cant || "").trim()).map((item) => pedidoProviderLabel(item.prov))).size;
+
   document.getElementById("pp-lista").innerHTML = `
-    <div class="table-shell">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:24%">Ingrediente</th>
-            <th style="width:22%">Platos</th>
-            <th style="width:14%">Categoría</th>
-            <th style="width:22%">Proveedor</th>
-            <th style="width:12%">Cantidad</th>
-            <th style="width:6%"></th>
-          </tr>
-        </thead>
-        <tbody>
-          ${items.map((item) => `
-            <tr>
-              <td style="font-weight:700">${safeText(item.ing)}</td>
-              <td>${safeText(item.platos || "")}</td>
-              <td>${bcat(item.cat)}</td>
-              <td>${D.proveedores.length ? `
-                <select onchange="uIng(${item.id},'prov',this.value)">
-                  ${D.proveedores.map((prov) => `<option value="${safeText(prov.nombre)}"${item.prov === prov.nombre ? " selected" : ""}>${safeText(prov.nombre)}</option>`).join("")}
-                  <option value=""${!item.prov ? " selected" : ""}>—</option>
-                </select>` :
-                `<input type="text" value="${safeText(item.prov || "")}" onchange="uIng(${item.id},'prov',this.value)">`}
-              </td>
-              <td><input type="text" value="${safeText(item.cant || "")}" onchange="uIng(${item.id},'cant',this.value)"></td>
-              <td><button class="btn btn-s btn-d" onclick="dIng(${item.id})">×</button></td>
-            </tr>`).join("") || `<tr><td colspan="6">Sin resultados</td></tr>`}
-        </tbody>
-      </table>
+    <div class="pedido-summary">
+      <div class="pedido-stat">
+        <strong>${activeCount}</strong>
+        <span>Líneas activas en el pedido</span>
+      </div>
+      <div class="pedido-stat">
+        <strong>${activeProviders}</strong>
+        <span>Proveedores implicados</span>
+      </div>
+      <div class="pedido-stat">
+        <strong>${entries.length}</strong>
+        <span>Bloques visibles en lista</span>
+      </div>
+    </div>
+    <div class="pedido-list-groups">
+      ${entries.length ? entries.map(([provider, providerItems]) => `
+        <div class="pedido-group-card">
+          <div class="pedido-group-head">
+            <div>
+              <strong>${safeText(provider)}</strong>
+              <span>${providerItems.length} ingrediente${providerItems.length === 1 ? "" : "s"}</span>
+            </div>
+          </div>
+          <div class="pedido-group-body">
+            ${providerItems.map((item) => `
+              <div class="pedido-item-row">
+                <div class="pedido-item-main">
+                  <div class="pedido-item-title-row">
+                    <strong>${safeText(item.ing)}</strong>
+                    ${bcat(item.cat)}
+                  </div>
+                  <div class="pedido-item-sub">${safeText(item.platos || "Sin plato asociado")}</div>
+                </div>
+                <div class="pedido-item-controls">
+                  <label>
+                    <span>Proveedor</span>
+                    ${D.proveedores.length ? `
+                      <select onchange="uIng(${item.id},'prov',this.value)">
+                        ${D.proveedores.map((prov) => `<option value="${safeText(prov.nombre)}"${item.prov === prov.nombre ? " selected" : ""}>${safeText(prov.nombre)}</option>`).join("")}
+                        <option value=""${!item.prov ? " selected" : ""}>Sin proveedor</option>
+                      </select>` :
+                      `<input type="text" value="${safeText(item.prov || "")}" onchange="uIng(${item.id},'prov',this.value)" placeholder="Proveedor">`}
+                  </label>
+                  <label class="pedido-qty-field">
+                    <span>Cantidad</span>
+                    <input type="text" value="${safeText(item.cant || "")}" onchange="uIng(${item.id},'cant',this.value)" placeholder="Ej: 2 kg">
+                  </label>
+                  <button class="danger-icon-btn" onclick="dIng(${item.id})" aria-label="Eliminar ingrediente">×</button>
+                </div>
+              </div>`).join("")}
+          </div>
+        </div>`).join("") : `<div class="notice"><strong>Sin resultados</strong><div>No hemos encontrado ingredientes con esa búsqueda.</div></div>`}
     </div>`;
 }
 
@@ -920,6 +1021,57 @@ function envWA(provider, phone) {
   ].join("\n"));
   const number = String(phone || "").replace(/\s/g, "");
   window.open(number ? `https://wa.me/34${number}?text=${message}` : `https://wa.me/?text=${message}`, "_blank");
+}
+
+function deletePedidoHistorial(id) {
+  if (!confirm("¿Eliminar este pedido guardado del histórico?")) return;
+  D.pedidosHistorial = D.pedidosHistorial.filter((item) => item.id !== id);
+  save("pedidosHistorial");
+}
+
+function rPedHistorial() {
+  const q = pedSearch();
+  let items = [...(D.pedidosHistorial || [])].sort((a, b) => new Date(b.creado || b.fecha || 0) - new Date(a.creado || a.fecha || 0));
+  if (q) {
+    items = items.filter((entry) => {
+      const dateLabel = pedidoDateLabel(entry.creado || entry.fecha).toLowerCase();
+      return dateLabel.includes(q) || (entry.lineas || []).some((line) =>
+        (line.ing || "").toLowerCase().includes(q) ||
+        (line.prov || "").toLowerCase().includes(q) ||
+        (line.cant || "").toLowerCase().includes(q)
+      );
+    });
+  }
+
+  document.getElementById("pp-historial").innerHTML = items.length ? `
+    <div class="pedido-history-list">
+      ${items.map((entry) => {
+        const groups = groupPedidoItems(entry.lineas || []);
+        return `
+          <div class="pedido-history-card">
+            <div class="pedido-history-head">
+              <div>
+                <strong>${pedidoDateLabel(entry.creado || entry.fecha)}</strong>
+                <span>${(entry.lineas || []).length} línea${(entry.lineas || []).length === 1 ? "" : "s"} guardada${(entry.lineas || []).length === 1 ? "" : "s"}</span>
+              </div>
+              <button class="danger-icon-btn" onclick="deletePedidoHistorial(${entry.id})" aria-label="Eliminar pedido guardado">×</button>
+            </div>
+            <div class="pedido-history-body">
+              ${groups.map(([provider, providerItems]) => `
+                <div class="pedido-history-provider">
+                  <div class="pedido-history-provider-title">${safeText(provider)}</div>
+                  <div class="pedido-history-provider-items">
+                    ${providerItems.map((item) => `
+                      <div class="pedido-history-line">
+                        <strong>${safeText(item.ing)}</strong>
+                        <span>${safeText(item.cant)}</span>
+                      </div>`).join("")}
+                  </div>
+                </div>`).join("")}
+            </div>
+          </div>`;
+      }).join("")}
+    </div>` : `<div class="notice"><strong>Sin pedidos guardados</strong><div>Guarda el pedido actual para consultar lo que se pidió la semana anterior.</div></div>`;
 }
 
 function rPedProv() {
