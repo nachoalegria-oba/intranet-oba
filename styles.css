@@ -41,6 +41,11 @@ body{
   line-height:1.6;
   padding-bottom:env(safe-area-inset-bottom, 0);
   overflow-x:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+
+body.overlay-open{
+  overflow:hidden;
 }
 
 button,input,select,textarea{font:inherit}
@@ -536,10 +541,14 @@ td select:focus{
 
 .segmented-bar{
   display:flex;
-  flex-wrap:wrap;
+  flex-wrap:nowrap;
   gap:10px;
   margin-bottom:14px;
+  overflow-x:auto;
+  padding-bottom:4px;
+  scrollbar-width:none;
 }
+.segmented-bar::-webkit-scrollbar{display:none}
 
 .segment-btn{
   min-height:44px;
@@ -549,6 +558,8 @@ td select:focus{
   background:var(--surface);
   color:var(--ink);
   box-shadow:inset 0 0 0 1px var(--line);
+  flex-shrink:0;
+  white-space:nowrap;
 }
 .segment-btn.active{
   background:#111;
@@ -843,7 +854,7 @@ tbody td:last-child{
 
 .drawer-head{
   position:sticky;
-  top:12px;
+  top:max(12px, calc(env(safe-area-inset-top, 0px) + 8px));
   z-index:2;
   display:flex;
   align-items:flex-start;
@@ -943,6 +954,7 @@ tbody td:last-child{
   border-radius:28px;
   background:#fbf8f2;
   box-shadow:0 30px 80px rgba(0,0,0,.28);
+  overscroll-behavior:contain;
 }
 .modal h3{
   margin-bottom:18px;
@@ -1097,6 +1109,11 @@ tbody td:last-child{
   justify-content:flex-end;
   gap:10px;
   margin-top:20px;
+  position:sticky;
+  bottom:-26px;
+  padding-top:12px;
+  padding-bottom:4px;
+  background:linear-gradient(180deg, rgba(251,248,242,0), #fbf8f2 28%);
 }
 
 .calendar-toolbar{
@@ -1305,6 +1322,14 @@ th,
 .chat-compose{
   display:flex;
   gap:10px;
+  position:sticky;
+  bottom:10px;
+  z-index:1;
+  padding:10px;
+  border-radius:22px;
+  background:rgba(242,240,234,.88);
+  backdrop-filter:blur(10px);
+  box-shadow:0 10px 28px rgba(11,11,11,.08);
 }
 
 @media (max-width: 1120px){
@@ -1314,6 +1339,7 @@ th,
   .pedido-summary{grid-template-columns:1fr}
   .pedido-item-row{grid-template-columns:1fr}
   .pedido-item-controls{grid-template-columns:1fr}
+  .segmented-bar{margin-right:-4px}
   .page-hero,
   .section-head-lg,
   .topbar{flex-direction:column;align-items:flex-start}
@@ -1506,7 +1532,10 @@ th,
   .drawer-head,
   .drawer-body{width:calc(100vw - 16px)}
   .drawer-body{padding:18px}
-  .modal{padding:20px}
+  .modal{
+    padding:20px;
+    max-height:calc(100vh - 14px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  }
   .danger-icon-btn{
     justify-self:flex-end;
   }

@@ -206,6 +206,11 @@ function showError(message) {
   }
 }
 
+function updateOverlayState() {
+  const hasOpenOverlay = ["modal", "rdet", "pfdet"].some((id) => document.getElementById(id)?.classList.contains("open"));
+  document.body.classList.toggle("overlay-open", hasOpenOverlay);
+}
+
 function showLoginForm() {
   updateStorageStatus();
   const form = document.getElementById("lf");
@@ -369,6 +374,7 @@ function sp(id) {
   document.querySelectorAll(".nav-btn").forEach((btn) => btn.classList.remove("active"));
   document.getElementById(`panel-${id}`)?.classList.add("active");
   document.querySelector(`.nav-btn[data-panel="${id}"]`)?.classList.add("active");
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function bsec(section) {
@@ -389,6 +395,7 @@ function normalizeIngredientCategory(category) {
 function oModal(html) {
   document.getElementById("mi").innerHTML = html;
   document.getElementById("modal").classList.add("open");
+  updateOverlayState();
   setTimeout(() => {
     document.querySelector("#mi input, #mi textarea, #mi select")?.focus();
   }, 60);
@@ -396,6 +403,7 @@ function oModal(html) {
 
 function cModal() {
   document.getElementById("modal").classList.remove("open");
+  updateOverlayState();
 }
 
 function rInicio() {
@@ -535,6 +543,7 @@ function oRD(id) {
   printRecipeMarkup = buildFichaHTML(recipe);
   document.getElementById("rdbody").innerHTML = printRecipeMarkup;
   document.getElementById("rdet").classList.add("open");
+  updateOverlayState();
 }
 
 function printFicha() {
@@ -586,6 +595,7 @@ function cRD() {
   document.getElementById("rdet").classList.remove("open");
   history.replaceState(null, "", "#");
   activeRecipeId = null;
+  updateOverlayState();
 }
 
 function ingredientItemHtml(item = {}) {
@@ -1357,10 +1367,28 @@ function oPF(id) {
       <button class="btn btn-d btn-s" onclick="dPrac(${id})">Eliminar</button>
     </div>`;
   document.getElementById("pfdet").classList.add("open");
+  updateOverlayState();
 }
 
 function cPF() {
   document.getElementById("pfdet").classList.remove("open");
+  updateOverlayState();
+}
+
+function closeTopOverlay() {
+  if (document.getElementById("modal")?.classList.contains("open")) {
+    cModal();
+    return true;
+  }
+  if (document.getElementById("rdet")?.classList.contains("open")) {
+    cRD();
+    return true;
+  }
+  if (document.getElementById("pfdet")?.classList.contains("open")) {
+    cPF();
+    return true;
+  }
+  return false;
 }
 
 function oPracM(id) {
@@ -1902,6 +1930,9 @@ function setupMobileNavToggle() {
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("modal").addEventListener("click", (event) => {
     if (event.target.id === "modal") cModal();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeTopOverlay();
   });
   const installCardClose = document.getElementById("install-card-close");
   if (installCardClose) {
