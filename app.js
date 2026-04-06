@@ -578,6 +578,10 @@ function printFicha() {
   setTimeout(() => w.print(), 250);
 }
 
+function saveFichaPdf() {
+  printFicha();
+}
+
 function cRD() {
   document.getElementById("rdet").classList.remove("open");
   history.replaceState(null, "", "#");
