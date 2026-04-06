@@ -871,9 +871,16 @@ tbody td:last-child{
   font-family:Arial, Helvetica, sans-serif;
   font-weight:700;
   font-size:1.2rem;
+  flex:1;
+  min-width:0;
 }
 
-.drawer-actions{display:flex;gap:10px;flex-wrap:wrap}
+.drawer-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
 
 .drawer-body{
   margin-top:12px;
@@ -1529,14 +1536,41 @@ th,
   .cd{min-height:72px;padding:8px}
   .ce,.ce-prac,.ce-esp,.ce-urg{display:none}
   .chat-compose{flex-direction:column}
-  .drawer-head,
-  .drawer-body{width:calc(100vw - 16px)}
-  .drawer-body{padding:18px}
+  .drawer-head{
+    position:fixed;
+    left:8px;
+    right:8px;
+    top:max(8px, calc(env(safe-area-inset-top, 0px) + 8px));
+    width:auto;
+    margin:0;
+    border-radius:22px;
+    padding:14px 16px;
+    box-shadow:0 18px 38px rgba(0,0,0,.24);
+  }
+  .drawer-body{
+    width:calc(100vw - 16px);
+    margin-top:112px;
+    padding:18px;
+  }
   .modal{
     padding:20px;
     max-height:calc(100vh - 14px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   }
   .danger-icon-btn{
     justify-self:flex-end;
+  }
+  .drawer-head h2{
+    font-size:1.02rem;
+    line-height:1.2;
+  }
+  .drawer-actions{
+    width:100%;
+    gap:8px;
+  }
+  .drawer-actions .primary-btn,
+  .drawer-actions .secondary-btn{
+    flex:1 1 auto;
+    min-height:40px;
+    padding:10px 12px;
   }
 }
