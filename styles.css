@@ -692,6 +692,25 @@ td select:focus{
 .pedido-item-controls input,
 .pedido-item-controls select{
   min-height:46px;
+  color-scheme:light;
+  color:var(--ink);
+  background:#f6f0e6;
+  box-shadow:inset 0 0 0 1px rgba(140,129,112,.18);
+}
+
+.pedido-item-controls input::placeholder{
+  color:#8e877d;
+}
+
+.pedido-item-controls input:focus,
+.pedido-item-controls select:focus{
+  background:#fbf7ef;
+  box-shadow:inset 0 0 0 2px var(--green);
+}
+
+.pedido-item-controls select option{
+  color:var(--ink);
+  background:#fbf8f2;
 }
 
 .danger-icon-btn{
