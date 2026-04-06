@@ -549,18 +549,23 @@ function printFicha() {
     <meta charset="UTF-8">
     <title>${safeText(recipe.nombre)}</title>
     <style>
-      body{font-family:Arial,sans-serif;padding:24px;line-height:1.5;color:#111}
-      h1{font-size:28px;margin-bottom:12px}
-      h4{font-size:12px;text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid #ddd;padding-bottom:8px;margin:18px 0 12px}
-      .notice{padding:12px 14px;border-left:4px solid #5f7f4c;background:#eef3ea}
-      .ig{display:grid;grid-template-columns:1fr auto auto;gap:8px 14px}
-      .sl{list-style:none;padding:0}
-      .sl li{display:flex;gap:10px;margin-bottom:10px;padding:10px;background:#f6f4ee}
-      .sn{font-weight:700;color:#405735}
+      @page{size:A4;margin:14mm 12mm 14mm 12mm}
+      body{font-family:Arial,sans-serif;padding:0;margin:0;line-height:1.32;color:#111;font-size:11px}
+      h1{font-size:22px;line-height:1.1;margin:0 0 10px}
+      h4{font-size:10px;text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid #ddd;padding-bottom:5px;margin:14px 0 8px}
+      p{margin:0 0 8px}
+      strong{font-size:inherit}
+      .notice{padding:10px 12px;border-left:4px solid #5f7f4c;background:#eef3ea;font-size:10.5px}
+      .ig{display:grid;grid-template-columns:minmax(0,1.6fr) auto auto;gap:5px 10px;align-items:baseline;font-size:10.5px}
+      .ih{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#726b61}
+      .sl{list-style:none;padding:0;margin:0}
+      .sl li{display:flex;gap:8px;margin-bottom:6px;padding:8px 9px;background:#f6f4ee;font-size:10.5px}
+      .sn{font-weight:700;color:#405735;min-width:14px}
       img{max-width:100%;display:block}
       .recipe-brand{display:none}
-      .print-brand{position:fixed;top:24px;right:24px}
-      .print-brand img{width:104px;height:auto;display:block;filter:invert(1);background:transparent;border:none;box-shadow:none}
+      .print-brand{position:fixed;top:10mm;right:12mm}
+      .print-brand img{width:78px;height:auto;display:block;filter:invert(1);background:transparent;border:none;box-shadow:none}
+      .rs{margin-bottom:12px}
     </style>
   </head>
   <body>
@@ -1523,13 +1528,107 @@ function iaCtx() {
   return `Eres el asistente del restaurante OBA en España. Recetario disponible: ${D.recipes.map((recipe) => `${recipe.nombre} (${recipe.seccion})`).join(", ")}. Ingredientes disponibles: ${D.ingredientes.slice(0, 20).map((item) => item.ing).join(", ")}. Responde en español, muy claro, práctico y útil para cocina y sala.`;
 }
 
+function normalizeText(value) {
+  return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+function findRecipeByPrompt(prompt) {
+  const normalizedPrompt = normalizeText(prompt);
+  return D.recipes.find((recipe) => normalizedPrompt.includes(normalizeText(recipe.nombre)));
+}
+
+function findSectionByPrompt(prompt) {
+  const normalizedPrompt = normalizeText(prompt);
+  return SECS.find((section) => normalizedPrompt.includes(normalizeText(section)));
+}
+
+function formatList(items) {
+  return items.map((item) => `• ${item}`).join("\n");
+}
+
+function localIAResponse(prompt) {
+  const normalizedPrompt = normalizeText(prompt);
+  const recipe = findRecipeByPrompt(prompt);
+  const section = findSectionByPrompt(prompt);
+
+  if (recipe && normalizedPrompt.includes("ingrediente")) {
+    const ingredients = (recipe.ingredientes || []).map((item) => `${item.i}${item.c ? ` — ${item.c}` : ""}${item.u ? ` ${item.u}` : ""}`);
+    return ingredients.length
+      ? `Ingredientes de ${recipe.nombre}:\n${formatList(ingredients)}`
+      : `La ficha de ${recipe.nombre} no tiene ingredientes cargados todavía.`;
+  }
+
+  if (recipe && (normalizedPrompt.includes("paso") || normalizedPrompt.includes("elaboracion") || normalizedPrompt.includes("hacer"))) {
+    const steps = (recipe.pasos || []).map((step, index) => `${index + 1}. ${step}`);
+    return steps.length
+      ? `Elaboración de ${recipe.nombre}:\n${steps.join("\n")}`
+      : `La ficha de ${recipe.nombre} no tiene pasos cargados todavía.`;
+  }
+
+  if (section || normalizedPrompt.includes("platos tenemos") || normalizedPrompt.includes("que platos")) {
+    const targetSection = section || SECS.find((item) => normalizeText(item) !== "bienvenida" && normalizedPrompt.includes(normalizeText(item)));
+    if (targetSection) {
+      const recipes = D.recipes.filter((item) => item.seccion === targetSection).map((item) => item.nombre);
+      return recipes.length
+        ? `Platos en ${targetSection}:\n${formatList(recipes)}`
+        : `Ahora mismo no hay platos cargados en la sección ${targetSection}.`;
+    }
+  }
+
+  if (normalizedPrompt.includes("pedido") || normalizedPrompt.includes("proveedor") || normalizedPrompt.includes("compra")) {
+    const activeItems = D.ingredientes.filter((item) => String(item.cant || "").trim());
+    if (!activeItems.length) {
+      return "Ahora mismo no hay cantidades activas en pedidos. Ve a Pedidos > Lista y añade cantidades para preparar el pedido.";
+    }
+    const grouped = {};
+    activeItems.forEach((item) => {
+      const key = item.prov || "Sin proveedor";
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(`${item.ing} — ${item.cant}`);
+    });
+    return `Pedido actual por proveedor:\n${Object.entries(grouped).map(([provider, lines]) => `${provider}:\n${formatList(lines)}`).join("\n\n")}`;
+  }
+
+  if (normalizedPrompt.includes("aviso")) {
+    const lastAvisos = [...D.avisos].slice(-3).reverse();
+    return lastAvisos.length
+      ? `Últimos avisos:\n${lastAvisos.map((item) => `• ${item.titulo} (${item.fecha})`).join("\n")}`
+      : "No hay avisos cargados ahora mismo.";
+  }
+
+  if (normalizedPrompt.includes("proyecto") || normalizedPrompt.includes("i+d")) {
+    const activeProjects = D.proyectos.filter((item) => item.estado === "activo" || item.estado === "testeo");
+    return activeProjects.length
+      ? `Proyectos activos o en testeo:\n${activeProjects.map((item) => `• ${item.nombre} — ${item.estado}`).join("\n")}`
+      : "No hay proyectos activos o en testeo ahora mismo.";
+  }
+
+  if (normalizedPrompt.includes("practicante")) {
+    const activePracs = D.practicantes.filter((item) => item.estado === "activo");
+    return activePracs.length
+      ? `Practicantes activos:\n${activePracs.map((item) => `• ${item.nombre}${item.partida ? ` — ${item.partida}` : ""}`).join("\n")}`
+      : "No hay practicantes activos cargados.";
+  }
+
+  return [
+    "Puedo ayudarte ya mismo con modo local dentro de la intranet.",
+    "Prueba a preguntarme cosas como:",
+    "• ¿Qué platos tenemos en Bosque?",
+    "• ¿Ingredientes para la Torcaz en Nabos?",
+    "• ¿Cómo va el pedido actual?",
+    "• ¿Qué avisos hay?",
+    "",
+    "Si quieres redacción libre, traducciones o ideas más creativas, activa también tu API key de Groq."
+  ].join("\n");
+}
+
 function initIA() {
   document.getElementById("iasugs").innerHTML = IASUGS.map((prompt) => `<button class="ia-sug" onclick="iaSug('${safeText(prompt).replace(/'/g, "\\'")}')">${safeText(prompt)}</button>`).join("");
   const chat = document.getElementById("iachat");
   if (!gKey()) {
-    chat.innerHTML = `<div class="ia-msg bot">Para activar la IA, añade tu API key de Groq. <button class="btn btn-s btn-g" onclick="pKey()">Configurar</button></div>`;
+    chat.innerHTML = `<div class="ia-msg bot">La IA ya puede ayudarte en modo local con recetas, pedidos, avisos y proyectos. Si quieres respuestas más abiertas, añade tu API key de Groq. <button class="btn btn-s btn-g" onclick="pKey()">Activar IA avanzada</button></div>`;
   } else {
-    chat.innerHTML = `<div class="ia-msg bot">Estoy lista para ayudarte con recetas, compras, avisos o traducciones.</div>`;
+    chat.innerHTML = `<div class="ia-msg bot">Estoy lista para ayudarte con recetas, compras, avisos o traducciones. La IA avanzada está activada.</div>`;
   }
 }
 
@@ -1540,10 +1639,6 @@ function iaSug(text) {
 
 async function iaEnv() {
   const key = gKey();
-  if (!key) {
-    pKey();
-    return;
-  }
   const input = document.getElementById("iainput");
   const text = input.value.trim();
   if (!text) return;
@@ -1553,6 +1648,14 @@ async function iaEnv() {
   chat.innerHTML += `<div class="ia-msg user">${safeText(text)}</div><div class="ia-msg loading" id="${loadingId}">Pensando...</div>`;
   chat.scrollTop = chat.scrollHeight;
   iaH.push({ role: "user", content: text });
+  if (!key) {
+    const reply = localIAResponse(text);
+    document.getElementById(loadingId)?.remove();
+    iaH.push({ role: "assistant", content: reply });
+    chat.innerHTML += `<div class="ia-msg bot">${safeText(reply).replace(/\n/g, "<br>")}</div>`;
+    chat.scrollTop = chat.scrollHeight;
+    return;
+  }
   try {
     const response = await fetch(GROQ, {
       method: "POST",
@@ -1569,8 +1672,9 @@ async function iaEnv() {
     });
     const data = await response.json();
     document.getElementById(loadingId)?.remove();
-    if (data.error) {
-      chat.innerHTML += `<div class="ia-msg bot">Error: ${safeText(data.error.message)} <button class="btn btn-s" onclick="pKey()">Cambiar key</button></div>`;
+    if (!response.ok || data.error) {
+      const message = data?.error?.message || `No he podido conectar con la IA avanzada (HTTP ${response.status}).`;
+      chat.innerHTML += `<div class="ia-msg bot">Error: ${safeText(message)} <button class="btn btn-s" onclick="pKey()">Cambiar key</button></div>`;
     } else {
       const reply = data.choices?.[0]?.message?.content || "Sin respuesta.";
       iaH.push({ role: "assistant", content: reply });
@@ -1578,7 +1682,9 @@ async function iaEnv() {
     }
   } catch (error) {
     document.getElementById(loadingId)?.remove();
-    chat.innerHTML += `<div class="ia-msg bot">Error de conexión. <button class="btn btn-s" onclick="pKey()">Revisar key</button></div>`;
+    const fallback = `${localIAResponse(text)}\n\nHe entrado en modo local porque la IA avanzada no ha respondido.`;
+    iaH.push({ role: "assistant", content: fallback });
+    chat.innerHTML += `<div class="ia-msg bot">${safeText(fallback).replace(/\n/g, "<br>")}<br><br><button class="btn btn-s" onclick="pKey()">Revisar key</button></div>`;
   }
   chat.scrollTop = chat.scrollHeight;
 }
