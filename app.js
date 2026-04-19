@@ -1035,6 +1035,7 @@ function envWA(provider, phone) {
   const message = encodeURIComponent([
     "Pedido OBA",
     formatLongDate(new Date()),
+    `Proveedor: ${provider}`,
     "",
     ...items.map((item) => `• ${item.ing} — ${item.cant}`)
   ].join("\n"));
