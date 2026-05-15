@@ -1370,30 +1370,67 @@ function setPracView(view) {
 function rPrac() {
   if (pracView === "centros") { rCentros(); return; }
   const all = D.practicantes;
-  document.getElementById("pracbody").innerHTML = `
-    <div class="pipeline-board">
-      ${PIPELINE_STAGES.map((stage) => {
-        const cards = all.filter((p) => getPipelineStage(p) === stage.key);
-        return `
-          <div class="pipeline-col">
-            <div class="pipeline-col-head ${stage.cls}">
-              <span>${stage.label}</span>
-              <span class="pipeline-count">${cards.length}</span>
-            </div>
-            <div class="pipeline-col-body">
-              ${cards.length ? cards.map((p) => `
-                <div class="pc" onclick="oPF(${p.id})">
-                  <div class="pt">${safeText(p.nombre)}</div>
-                  ${p.escuela ? `<div class="nd">${safeText(p.escuela)}</div>` : ""}
-                  ${p.fechaEntrada ? `<div class="nd">${safeText(p.fechaEntrada)}</div>` : ""}
-                  ${p.partida ? `<div class="ca" style="margin-top:8px"><span class="badge b-huerta">${safeText(p.partida)}</span></div>` : ""}
-                  ${(() => { const docs = p.docs || {}; const done = DOC_CHECKLIST.filter((d) => docs[d.key]).length; return done > 0 ? `<div class="nd" style="margin-top:6px">📄 ${done}/${DOC_CHECKLIST.length} docs</div>` : ""; })()}
-                </div>`).join("") : `<div class="pipeline-empty">Sin candidatos</div>`}
-            </div>
-          </div>`;
-      }).join("")}
-    </div>
-    ${!all.length ? `<div class="notice" style="margin-top:16px"><strong>Sin practicantes</strong><div>Añade el primero con el botón de arriba.</div></div>` : ""}`;
+  const isMobile = window.innerWidth <= 720;
+  if (!all.length) {
+    document.getElementById("pracbody").innerHTML = `<div class="notice"><strong>Sin practicantes</strong><div>Añade el primero con el botón de arriba.</div></div>`;
+    return;
+  }
+  if (isMobile) {
+    document.getElementById("pracbody").innerHTML = PIPELINE_STAGES.map((stage) => {
+      const cards = all.filter((p) => getPipelineStage(p) === stage.key);
+      if (!cards.length) return "";
+      return `
+        <div class="pipeline-mobile-group">
+          <div class="pipeline-mobile-head ${stage.cls}">
+            <span>${stage.label}</span><span class="pipeline-count">${cards.length}</span>
+          </div>
+          ${cards.map((p) => {
+            const docs = p.docs || {};
+            const done = DOC_CHECKLIST.filter((d) => docs[d.key]).length;
+            return `
+              <div class="pc" onclick="oPF(${p.id})">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+                  <div>
+                    <div class="pt">${safeText(p.nombre)}</div>
+                    ${p.escuela ? `<div class="nd">${safeText(p.escuela)}</div>` : ""}
+                    ${p.fechaEntrada ? `<div class="nd">${safeText(p.fechaEntrada)}${p.fechaSalida ? ` → ${safeText(p.fechaSalida)}` : ""}</div>` : ""}
+                  </div>
+                  ${done > 0 ? `<span class="nd" style="white-space:nowrap;flex-shrink:0">📄 ${done}/${DOC_CHECKLIST.length}</span>` : ""}
+                </div>
+                ${p.partida ? `<div class="ca" style="margin-top:8px"><span class="badge b-huerta">${safeText(p.partida)}</span></div>` : ""}
+              </div>`;
+          }).join("")}
+        </div>`;
+    }).join("");
+  } else {
+    document.getElementById("pracbody").innerHTML = `
+      <div class="pipeline-board">
+        ${PIPELINE_STAGES.map((stage) => {
+          const cards = all.filter((p) => getPipelineStage(p) === stage.key);
+          return `
+            <div class="pipeline-col">
+              <div class="pipeline-col-head ${stage.cls}">
+                <span>${stage.label}</span>
+                <span class="pipeline-count">${cards.length}</span>
+              </div>
+              <div class="pipeline-col-body">
+                ${cards.length ? cards.map((p) => {
+                  const docs = p.docs || {};
+                  const done = DOC_CHECKLIST.filter((d) => docs[d.key]).length;
+                  return `
+                    <div class="pc" onclick="oPF(${p.id})">
+                      <div class="pt">${safeText(p.nombre)}</div>
+                      ${p.escuela ? `<div class="nd">${safeText(p.escuela)}</div>` : ""}
+                      ${p.fechaEntrada ? `<div class="nd">${safeText(p.fechaEntrada)}</div>` : ""}
+                      ${p.partida ? `<div class="ca" style="margin-top:8px"><span class="badge b-huerta">${safeText(p.partida)}</span></div>` : ""}
+                      ${done > 0 ? `<div class="nd" style="margin-top:6px">📄 ${done}/${DOC_CHECKLIST.length} docs</div>` : ""}
+                    </div>`;
+                }).join("") : `<div class="pipeline-empty">Sin candidatos</div>`}
+              </div>
+            </div>`;
+        }).join("")}
+      </div>`;
+  }
 }
 
 function oPF(id) {

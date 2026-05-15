@@ -1595,10 +1595,11 @@ th,
   .pipeline-col-body .pc{
     margin-bottom:6px;
   }
-  /* Ocultar columnas vacías en móvil para ahorrar espacio */
-  .pipeline-col:has(.pipeline-empty){
-    display:none;
-  }
+  /* Pipeline móvil: lista agrupada por etapa */
+  .pipeline-mobile-group{margin-bottom:12px;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--line)}
+  .pipeline-mobile-head{padding:10px 14px;font-weight:600;font-size:12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}
+  .pipeline-mobile-group .pc{border-radius:0;border:none;border-bottom:1px solid var(--line);margin:0}
+  .pipeline-mobile-group .pc:last-child{border-bottom:none}
   /* Etapas pipeline en ficha: más compactas */
   .pipeline-nav{
     gap:5px;
