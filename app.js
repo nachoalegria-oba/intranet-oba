@@ -207,6 +207,12 @@ function today() {
   return now.toISOString().slice(0, 10);
 }
 
+function fmtDate(iso) {
+  if (!iso) return "";
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
+
 function formatLongDate(date = new Date()) {
   return new Intl.DateTimeFormat("es-ES", {
     weekday: "long",
@@ -1393,7 +1399,7 @@ function rPrac() {
                   <div>
                     <div class="pt">${safeText(p.nombre)}</div>
                     ${p.escuela ? `<div class="nd">${safeText(p.escuela)}</div>` : ""}
-                    ${p.fechaEntrada ? `<div class="nd">${safeText(p.fechaEntrada)}${p.fechaSalida ? ` → ${safeText(p.fechaSalida)}` : ""}</div>` : ""}
+                    ${p.fechaEntrada ? `<div class="nd">${fmtDate(p.fechaEntrada)}${p.fechaSalida ? ` → ${fmtDate(p.fechaSalida)}` : ""}</div>` : ""}
                   </div>
                   ${done > 0 ? `<span class="nd" style="white-space:nowrap;flex-shrink:0">📄 ${done}/${DOC_CHECKLIST.length}</span>` : ""}
                 </div>
@@ -1421,7 +1427,7 @@ function rPrac() {
                     <div class="pc" onclick="oPF(${p.id})">
                       <div class="pt">${safeText(p.nombre)}</div>
                       ${p.escuela ? `<div class="nd">${safeText(p.escuela)}</div>` : ""}
-                      ${p.fechaEntrada ? `<div class="nd">${safeText(p.fechaEntrada)}</div>` : ""}
+                      ${p.fechaEntrada ? `<div class="nd">${fmtDate(p.fechaEntrada)}</div>` : ""}
                       ${p.partida ? `<div class="ca" style="margin-top:8px"><span class="badge b-huerta">${safeText(p.partida)}</span></div>` : ""}
                       ${done > 0 ? `<div class="nd" style="margin-top:6px">📄 ${done}/${DOC_CHECKLIST.length} docs</div>` : ""}
                     </div>`;
@@ -1449,8 +1455,8 @@ function oPF(id) {
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:22px">
       <div><strong>Escuela:</strong> ${safeText(item.escuela || "—")}</div>
-      <div><strong>Entrada:</strong> ${safeText(item.fechaEntrada || "—")}</div>
-      <div><strong>Salida:</strong> ${safeText(item.fechaSalida || "—")}</div>
+      <div><strong>Entrada:</strong> ${item.fechaEntrada ? fmtDate(item.fechaEntrada) : "—"}</div>
+      <div><strong>Salida:</strong> ${item.fechaSalida ? fmtDate(item.fechaSalida) : "—"}</div>
       <div><strong>Partida:</strong> ${safeText(item.partida || "—")}</div>
       <div><strong>Tutor:</strong> ${safeText(item.tutor || "—")}</div>
       ${item.telefono ? `<div><strong>Tel:</strong> ${safeText(item.telefono)}</div>` : ""}

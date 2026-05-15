@@ -1654,7 +1654,7 @@ th,
 .pip-btn-active{background:var(--ink);color:var(--surface);border-color:var(--ink)!important}
 
 /* Tab buttons */
-.tab-btn{padding:8px 18px;border-radius:20px;border:1px solid var(--line);background:transparent;cursor:pointer;font-size:13px;font-weight:500;font-family:inherit;transition:background .15s,color .15s,border-color .15s}
+.tab-btn{padding:8px 18px;border-radius:20px;border:1px solid var(--line);background:transparent;cursor:pointer;font-size:13px;font-weight:500;font-family:inherit;color:var(--ink);transition:background .15s,color .15s,border-color .15s}
 .tab-btn:hover{border-color:var(--ink)}
 .tab-active{background:var(--ink);color:var(--surface);border-color:var(--ink)}
 

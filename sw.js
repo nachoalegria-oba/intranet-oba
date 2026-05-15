@@ -1,4 +1,4 @@
-const CACHE_NAME = "oba-intranet-v17";
+const CACHE_NAME = "oba-intranet-v18";
 const APP_SHELL = [
   "./",
   "./index.html",
