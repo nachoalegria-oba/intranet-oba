@@ -1578,6 +1578,54 @@ th,
     font-size:10px;
     letter-spacing:.02em;
   }
+  /* Pipeline móvil: columnas verticales apiladas */
+  .pipeline-board{
+    flex-direction:column;
+    overflow-x:visible;
+    gap:8px;
+  }
+  .pipeline-col{
+    min-width:0;
+    flex:none;
+    width:100%;
+  }
+  .pipeline-col-body{
+    min-height:0;
+  }
+  .pipeline-col-body .pc{
+    margin-bottom:6px;
+  }
+  /* Ocultar columnas vacías en móvil para ahorrar espacio */
+  .pipeline-col:has(.pipeline-empty){
+    display:none;
+  }
+  /* Etapas pipeline en ficha: más compactas */
+  .pipeline-nav{
+    gap:5px;
+  }
+  .pipeline-stage-btn{
+    padding:7px 10px;
+    font-size:11px;
+  }
+  /* Tabs full-width en móvil */
+  .tab-btn{
+    flex:1;
+    text-align:center;
+    padding:10px 12px;
+  }
+  .toolbar .ca{
+    width:100%;
+  }
+  /* Checklist: área táctil más grande */
+  .doc-check{
+    padding:13px 12px;
+  }
+  .doc-check-icon{
+    width:24px;
+    height:24px;
+    border-radius:7px;
+    font-size:14px;
+  }
 }
 
 /* ── Pipeline board ── */
