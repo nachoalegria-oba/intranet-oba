@@ -1664,3 +1664,25 @@ th,
 .doc-check-icon{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;background:var(--panel);color:var(--green-deep);font-weight:700;transition:background .15s,border-color .15s}
 .doc-check:hover .doc-check-icon{border-color:var(--ink)}
 .doc-done{text-decoration:line-through;color:var(--muted)}
+
+/* ── Habitaciones ── */
+.hab-resumen{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.hab-stat{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 20px;border-radius:var(--radius-sm);border:1px solid var(--line);min-width:80px;gap:2px}
+.hab-stat-n{font-size:1.6rem;font-weight:700;line-height:1}
+.hab-libre{background:var(--green-soft);border-color:var(--green);color:var(--green-deep)}
+.hab-ocupada{background:#fef3e2;border-color:#bd7a26;color:#7a4a10}
+.hab-mant{background:var(--surface-2);border-color:var(--line);color:var(--muted)}
+.hab-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.hab-card{background:var(--panel);border-radius:var(--radius-sm);border:2px solid var(--line);padding:16px}
+.hab-card-libre{border-color:var(--green)}
+.hab-card-ocupada{border-color:#bd7a26}
+.hab-card-mantenimiento{border-color:var(--line);opacity:.75}
+.hab-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
+.hab-ocupantes{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.hab-ocupante{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;background:var(--surface);border-radius:10px;cursor:pointer;font-size:13px;transition:background .15s}
+.hab-ocupante:hover{background:var(--surface-2)}
+@media(max-width:720px){
+  .hab-grid{grid-template-columns:1fr}
+  .hab-resumen{gap:8px}
+  .hab-stat{padding:12px 16px;min-width:70px}
+}

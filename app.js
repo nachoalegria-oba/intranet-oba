@@ -14,7 +14,7 @@ const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "
 const DS = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"];
 const SKILLS = ["Mise en place", "Fondos y salsas", "Carnes", "Pescados", "Pastelería", "Fermentos", "Limpieza y orden", "Trabajo en equipo"];
 const ALERGEN_LIST = ["Gluten", "Crustáceos", "Huevos", "Pescado", "Cacahuetes", "Soja", "Lácteos", "Frutos de cáscara", "Apio", "Mostaza", "Sésamo", "Dióxido de azufre", "Altramuces", "Moluscos"];
-const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "eventos", "proveedores", "practicantes", "centros", "pedidosHistorial"];
+const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "eventos", "proveedores", "practicantes", "centros", "habitaciones", "pedidosHistorial"];
 const LOCAL_KEY = "oba_intranet_v3";
 const PIPELINE_STAGES = [
   { key: "contactado",     label: "Contactado",      cls: "pip-contactado" },
@@ -158,6 +158,7 @@ const DEFAULTS = {
   proveedores: [],
   practicantes: [],
   centros: [],
+  habitaciones: [],
   pedidosHistorial: []
 };
 
@@ -1370,7 +1371,7 @@ let pracCalM = new Date().getMonth();
 
 function setPracView(view) {
   pracView = view;
-  ["pipeline", "centros", "calendario"].forEach((v) => {
+  ["pipeline", "centros", "calendario", "habitaciones"].forEach((v) => {
     document.getElementById(`tab-${v}`)?.classList.toggle("tab-active", v === view);
   });
   rPrac();
@@ -1490,6 +1491,7 @@ function rPracCal() {
 function rPrac() {
   if (pracView === "centros") { rCentros(); return; }
   if (pracView === "calendario") { rPracCal(); return; }
+  if (pracView === "habitaciones") { rHab(); return; }
   const all = D.practicantes;
   const isMobile = window.innerWidth <= 720;
   if (!all.length) {
@@ -1714,6 +1716,166 @@ function dPrac(id) {
   save("practicantes");
   cPF();
   rPrac();
+}
+
+function rHab() {
+  const habs = D.habitaciones;
+  const libres = habs.filter((h) => h.estado === "libre").length;
+  const ocupadas = habs.filter((h) => h.estado === "ocupada").length;
+  const mant = habs.filter((h) => h.estado === "mantenimiento").length;
+
+  const resumen = habs.length ? `
+    <div class="hab-resumen">
+      <div class="hab-stat hab-libre"><span class="hab-stat-n">${libres}</span><span>Libres</span></div>
+      <div class="hab-stat hab-ocupada"><span class="hab-stat-n">${ocupadas}</span><span>Ocupadas</span></div>
+      ${mant ? `<div class="hab-stat hab-mant"><span class="hab-stat-n">${mant}</span><span>Mantenimiento</span></div>` : ""}
+    </div>` : "";
+
+  const cards = habs.length ? habs.map((h) => {
+    const ocupantes = (h.ocupantes || []).map((pid) => D.practicantes.find((p) => p.id === pid)).filter(Boolean);
+    const libre = h.estado === "libre";
+    const mantenimiento = h.estado === "mantenimiento";
+    return `
+      <div class="hab-card hab-card-${h.estado}">
+        <div class="hab-card-head">
+          <div>
+            <div class="pt">${safeText(h.nombre)}</div>
+            <div class="nd">${h.capacidad} plaza${h.capacidad !== 1 ? "s" : ""}</div>
+          </div>
+          <span class="ps s-${h.estado === "libre" ? "activo" : h.estado === "mantenimiento" ? "finalizado" : "pendiente"}">${h.estado}</span>
+        </div>
+        ${ocupantes.length ? `
+          <div class="hab-ocupantes">
+            ${ocupantes.map((p) => `
+              <div class="hab-ocupante" onclick="oPF(${p.id})">
+                <span>👤 ${safeText(p.nombre)}</span>
+                <span class="nd">${p.fechaEntrada && p.fechaSalida ? `${fmtDate(p.fechaEntrada)} → ${fmtDate(p.fechaSalida)}` : ""}</span>
+              </div>`).join("")}
+          </div>` : ""}
+        ${h.notas ? `<div class="nd" style="margin-top:8px;font-style:italic">${safeText(h.notas)}</div>` : ""}
+        <div class="ca" style="margin-top:12px">
+          ${!mantenimiento && ocupantes.length < h.capacidad ? `<button class="btn btn-o" onclick="oAsignarPrac(${h.id})">Asignar practicante</button>` : ""}
+          ${ocupantes.length ? `<button class="btn btn-o" onclick="oDesasignarPrac(${h.id})">Liberar plaza</button>` : ""}
+          <button class="btn btn-o" onclick="oHabM(${h.id})">Editar</button>
+          <button class="btn btn-d btn-s" onclick="dHab(${h.id})">Eliminar</button>
+        </div>
+      </div>`;
+  }).join("") : `<div class="notice"><strong>Sin habitaciones</strong><div>Añade las habitaciones disponibles para los practicantes.</div></div>`;
+
+  document.getElementById("pracbody").innerHTML = `
+    <div style="margin-bottom:16px">
+      <button class="primary-btn" onclick="oHabM()">Nueva habitación</button>
+    </div>
+    ${resumen}
+    <div class="hab-grid">${cards}</div>`;
+}
+
+function oHabM(id) {
+  const h = id ? D.habitaciones.find((x) => x.id === id) : null;
+  oModal(`
+    <h3>${h ? "Editar habitación" : "Nueva habitación"}</h3>
+    <div class="fr"><label>Nombre o número *</label><input id="hnom" placeholder="Ej: Habitación 1, Hab. 3B" value="${safeText(h?.nombre || "")}"></div>
+    <div class="fr"><label>Plazas (camas)</label><input type="number" min="1" max="10" id="hcap" value="${h?.capacidad || 1}"></div>
+    <div class="fr"><label>Estado</label>
+      <select id="hest">
+        <option value="libre"${(!h || h.estado === "libre") ? " selected" : ""}>Libre</option>
+        <option value="ocupada"${h?.estado === "ocupada" ? " selected" : ""}>Ocupada</option>
+        <option value="mantenimiento"${h?.estado === "mantenimiento" ? " selected" : ""}>Mantenimiento</option>
+      </select>
+    </div>
+    <div class="fr"><label>Notas</label><textarea id="hnot">${safeText(h?.notas || "")}</textarea></div>
+    <div class="mf">
+      <button class="secondary-btn" onclick="cModal()">Cancelar</button>
+      <button class="primary-btn" onclick="sHab(${id || "null"})">Guardar</button>
+    </div>`);
+}
+
+function sHab(id) {
+  const nombre = document.getElementById("hnom").value.trim();
+  if (!nombre) return alert("El nombre es obligatorio");
+  const payload = {
+    nombre,
+    capacidad: Math.max(1, parseInt(document.getElementById("hcap").value) || 1),
+    estado: document.getElementById("hest").value,
+    notas: document.getElementById("hnot").value.trim()
+  };
+  if (id) {
+    Object.assign(D.habitaciones.find((x) => x.id === id), payload);
+  } else {
+    D.habitaciones.push({ id: nid++, ocupantes: [], ...payload });
+  }
+  save("habitaciones");
+  cModal();
+  rHab();
+}
+
+function dHab(id) {
+  if (!confirm("¿Eliminar esta habitación?")) return;
+  D.habitaciones = D.habitaciones.filter((x) => x.id !== id);
+  save("habitaciones");
+  rHab();
+}
+
+function oAsignarPrac(habId) {
+  const h = D.habitaciones.find((x) => x.id === habId);
+  if (!h) return;
+  const ocupados = D.habitaciones.flatMap((x) => x.ocupantes || []);
+  const disponibles = D.practicantes.filter((p) => !ocupados.includes(p.id));
+  if (!disponibles.length) {
+    oModal(`<h3>Sin practicantes disponibles</h3><p style="margin:16px 0;color:var(--muted)">Todos los practicantes ya tienen habitación asignada o no hay practicantes registrados.</p><div class="mf"><button class="secondary-btn" onclick="cModal()">Cerrar</button></div>`);
+    return;
+  }
+  oModal(`
+    <h3>Asignar a ${safeText(h.nombre)}</h3>
+    <div class="fr"><label>Practicante</label>
+      <select id="hprac">
+        ${disponibles.map((p) => `<option value="${p.id}">${safeText(p.nombre)}${p.escuela ? ` — ${safeText(p.escuela)}` : ""}</option>`).join("")}
+      </select>
+    </div>
+    <div class="mf">
+      <button class="secondary-btn" onclick="cModal()">Cancelar</button>
+      <button class="primary-btn" onclick="asignarPrac(${habId})">Asignar</button>
+    </div>`);
+}
+
+function asignarPrac(habId) {
+  const h = D.habitaciones.find((x) => x.id === habId);
+  if (!h) return;
+  const pracId = parseInt(document.getElementById("hprac").value);
+  if (!h.ocupantes) h.ocupantes = [];
+  if (!h.ocupantes.includes(pracId)) h.ocupantes.push(pracId);
+  h.estado = "ocupada";
+  save("habitaciones");
+  cModal();
+  rHab();
+}
+
+function oDesasignarPrac(habId) {
+  const h = D.habitaciones.find((x) => x.id === habId);
+  if (!h || !h.ocupantes?.length) return;
+  const ocupantes = h.ocupantes.map((pid) => D.practicantes.find((p) => p.id === pid)).filter(Boolean);
+  oModal(`
+    <h3>Liberar plaza en ${safeText(h.nombre)}</h3>
+    <div class="fr"><label>Practicante a liberar</label>
+      <select id="hdesasgn">
+        ${ocupantes.map((p) => `<option value="${p.id}">${safeText(p.nombre)}</option>`).join("")}
+      </select>
+    </div>
+    <div class="mf">
+      <button class="secondary-btn" onclick="cModal()">Cancelar</button>
+      <button class="primary-btn" onclick="desasignarPrac(${habId})">Liberar</button>
+    </div>`);
+}
+
+function desasignarPrac(habId) {
+  const h = D.habitaciones.find((x) => x.id === habId);
+  if (!h) return;
+  const pracId = parseInt(document.getElementById("hdesasgn").value);
+  h.ocupantes = (h.ocupantes || []).filter((id) => id !== pracId);
+  if (!h.ocupantes.length) h.estado = "libre";
+  save("habitaciones");
+  cModal();
+  rHab();
 }
 
 function rCentros() {
