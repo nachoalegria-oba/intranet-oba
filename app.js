@@ -14,8 +14,29 @@ const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "
 const DS = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"];
 const SKILLS = ["Mise en place", "Fondos y salsas", "Carnes", "Pescados", "Pastelería", "Fermentos", "Limpieza y orden", "Trabajo en equipo"];
 const ALERGEN_LIST = ["Gluten", "Crustáceos", "Huevos", "Pescado", "Cacahuetes", "Soja", "Lácteos", "Frutos de cáscara", "Apio", "Mostaza", "Sésamo", "Dióxido de azufre", "Altramuces", "Moluscos"];
-const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "eventos", "proveedores", "practicantes", "pedidosHistorial"];
+const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "eventos", "proveedores", "practicantes", "centros", "pedidosHistorial"];
 const LOCAL_KEY = "oba_intranet_v3";
+const PIPELINE_STAGES = [
+  { key: "contactado",     label: "Contactado",      cls: "pip-contactado" },
+  { key: "docs_enviados",  label: "Docs enviados",   cls: "pip-docs_enviados" },
+  { key: "docs_recibidos", label: "Docs recibidos",  cls: "pip-docs_recibidos" },
+  { key: "confirmado",     label: "Confirmado",      cls: "pip-confirmado" },
+  { key: "activo",         label: "En prácticas",    cls: "pip-activo" },
+  { key: "evaluado",       label: "Evaluado",        cls: "pip-evaluado" }
+];
+const DOC_CHECKLIST = [
+  { key: "convenio",    label: "Convenio firmado por el centro" },
+  { key: "seguro",      label: "Seguro de prácticas" },
+  { key: "solicitud",   label: "Formulario de solicitud recibido" },
+  { key: "bienvenida",  label: "Carta de bienvenida enviada" },
+  { key: "evaluacion",  label: "Evaluación final enviada al centro" }
+];
+const WA_PRAC_TEMPLATES = [
+  { label: "Confirmación", text: (n) => `Hola ${n}, confirmamos tu plaza de prácticas en OBA. ¡Estamos encantados de recibirte!` },
+  { label: "Docs pendientes", text: (n) => `Hola ${n}, tenemos documentación pendiente de tu parte. ¿Puedes enviárnosla lo antes posible? Gracias.` },
+  { label: "Bienvenida", text: (n) => `¡Hola ${n}! Mañana empieza tu etapa en OBA. Bienvenido al equipo, cualquier duda escríbenos.` },
+  { label: "Cierre", text: (n) => `Hola ${n}, ahora que terminan tus prácticas nos gustaría saber tu opinión sobre la experiencia. ¡Gracias por todo!` }
+];
 const INSTALL_BANNER_DISMISSED_KEY = "oba_install_banner_dismissed_v1";
 const GROQ = "https://api.groq.com/openai/v1/chat/completions";
 const IASUGS = [
@@ -136,6 +157,7 @@ const DEFAULTS = {
   eventos: [{ id: 1, titulo: "Inicio temporada", fecha: today(), tipo: "especial", urgente: false, nota: "" }],
   proveedores: [],
   practicantes: [],
+  centros: [],
   pedidosHistorial: []
 };
 
@@ -164,6 +186,19 @@ function safeText(value) {
     '"': "&quot;",
     "'": "&#39;"
   })[char]);
+}
+
+function getPipelineStage(item) {
+  if (item.pipeline) return item.pipeline;
+  if (item.estado === "activo") return "activo";
+  if (item.estado === "finalizado") return "evaluado";
+  return "contactado";
+}
+
+function setEstadoFromPipeline(pip) {
+  if (pip === "activo") return "activo";
+  if (pip === "evaluado") return "finalizado";
+  return "pendiente";
 }
 
 function today() {
@@ -1323,37 +1358,81 @@ function sEv() {
   cModal();
 }
 
+let pracView = "pipeline";
+
+function setPracView(view) {
+  pracView = view;
+  document.getElementById("tab-pipeline")?.classList.toggle("tab-active", view === "pipeline");
+  document.getElementById("tab-centros")?.classList.toggle("tab-active", view === "centros");
+  rPrac();
+}
+
 function rPrac() {
-  const filter = document.getElementById("pfilt")?.value || "";
-  const list = D.practicantes.filter((item) => !filter || item.estado === filter);
-  document.getElementById("pracbody").innerHTML = list.length ? list.map((item) => `
-    <div class="pc" style="cursor:pointer" onclick="oPF(${item.id})">
-      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
-        <div>
-          <div class="pt">${safeText(item.nombre)}</div>
-          <div class="nd">${safeText(item.fechaEntrada || "—")} → ${safeText(item.fechaSalida || "—")}</div>
-          ${item.escuela ? `<div class="nd">${safeText(item.escuela)}</div>` : ""}
-        </div>
-        <span class="ps s-${safeText(item.estado || "pendiente")}">${safeText(item.estado || "pendiente")}</span>
-      </div>
-      ${item.partida ? `<div class="ca" style="margin-top:10px"><span class="badge b-huerta">${safeText(item.partida)}</span></div>` : ""}
-    </div>`).join("") : `<div class="notice"><strong>Sin practicantes</strong><div>Añade el primero cuando tengas nuevas incorporaciones.</div></div>`;
+  if (pracView === "centros") { rCentros(); return; }
+  const all = D.practicantes;
+  document.getElementById("pracbody").innerHTML = `
+    <div class="pipeline-board">
+      ${PIPELINE_STAGES.map((stage) => {
+        const cards = all.filter((p) => getPipelineStage(p) === stage.key);
+        return `
+          <div class="pipeline-col">
+            <div class="pipeline-col-head ${stage.cls}">
+              <span>${stage.label}</span>
+              <span class="pipeline-count">${cards.length}</span>
+            </div>
+            <div class="pipeline-col-body">
+              ${cards.length ? cards.map((p) => `
+                <div class="pc" onclick="oPF(${p.id})">
+                  <div class="pt">${safeText(p.nombre)}</div>
+                  ${p.escuela ? `<div class="nd">${safeText(p.escuela)}</div>` : ""}
+                  ${p.fechaEntrada ? `<div class="nd">${safeText(p.fechaEntrada)}</div>` : ""}
+                  ${p.partida ? `<div class="ca" style="margin-top:8px"><span class="badge b-huerta">${safeText(p.partida)}</span></div>` : ""}
+                  ${(() => { const docs = p.docs || {}; const done = DOC_CHECKLIST.filter((d) => docs[d.key]).length; return done > 0 ? `<div class="nd" style="margin-top:6px">📄 ${done}/${DOC_CHECKLIST.length} docs</div>` : ""; })()}
+                </div>`).join("") : `<div class="pipeline-empty">Sin candidatos</div>`}
+            </div>
+          </div>`;
+      }).join("")}
+    </div>
+    ${!all.length ? `<div class="notice" style="margin-top:16px"><strong>Sin practicantes</strong><div>Añade el primero con el botón de arriba.</div></div>` : ""}`;
 }
 
 function oPF(id) {
   const item = D.practicantes.find((prac) => prac.id === id);
   if (!item) return;
-  document.getElementById("pftit").textContent = item.nombre;
+  const stage = getPipelineStage(item);
+  const docs = item.docs || {};
   const skills = item.habilidades || {};
+  document.getElementById("pftit").textContent = item.nombre;
   document.getElementById("pfbody").innerHTML = `
+    <div class="rs">
+      <h4>Etapa del proceso</h4>
+      <div class="pipeline-nav">
+        ${PIPELINE_STAGES.map((s) => `<button class="pipeline-stage-btn${s.key === stage ? " pip-btn-active" : ""}" onclick="moverPipeline(${id},'${s.key}')">${s.label}</button>`).join("")}
+      </div>
+    </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:22px">
       <div><strong>Escuela:</strong> ${safeText(item.escuela || "—")}</div>
-      <div><strong>Estado:</strong> ${safeText(item.estado || "—")}</div>
       <div><strong>Entrada:</strong> ${safeText(item.fechaEntrada || "—")}</div>
       <div><strong>Salida:</strong> ${safeText(item.fechaSalida || "—")}</div>
       <div><strong>Partida:</strong> ${safeText(item.partida || "—")}</div>
       <div><strong>Tutor:</strong> ${safeText(item.tutor || "—")}</div>
+      ${item.telefono ? `<div><strong>Tel:</strong> ${safeText(item.telefono)}</div>` : ""}
     </div>
+    <div class="rs">
+      <h4>Documentación</h4>
+      ${DOC_CHECKLIST.map((d) => `
+        <div class="doc-check" onclick="tDocPrac(${id},'${d.key}')">
+          <span class="doc-check-icon">${docs[d.key] ? "✓" : ""}</span>
+          <span class="${docs[d.key] ? "doc-done" : ""}">${d.label}</span>
+        </div>`).join("")}
+    </div>
+    ${item.telefono ? `
+    <div class="rs">
+      <h4>Enviar WhatsApp</h4>
+      <div class="ca">
+        ${WA_PRAC_TEMPLATES.map((t, i) => `<button class="btn btn-o" onclick="waPrac(${id},${i})">${t.label}</button>`).join("")}
+      </div>
+    </div>` : ""}
     ${item.descripcion ? `<div class="notice" style="margin-bottom:22px">${safeText(item.descripcion)}</div>` : ""}
     <div class="rs">
       <h4>Habilidades</h4>
@@ -1369,6 +1448,35 @@ function oPF(id) {
     </div>`;
   document.getElementById("pfdet").classList.add("open");
   updateOverlayState();
+}
+
+function moverPipeline(id, stage) {
+  const item = D.practicantes.find((p) => p.id === id);
+  if (!item) return;
+  item.pipeline = stage;
+  item.estado = setEstadoFromPipeline(stage);
+  save("practicantes");
+  oPF(id);
+  rPrac();
+}
+
+function tDocPrac(id, docKey) {
+  const item = D.practicantes.find((p) => p.id === id);
+  if (!item) return;
+  if (!item.docs) item.docs = {};
+  item.docs[docKey] = !item.docs[docKey];
+  save("practicantes");
+  oPF(id);
+  rPrac();
+}
+
+function waPrac(id, templateIdx) {
+  const item = D.practicantes.find((p) => p.id === id);
+  if (!item) return;
+  const template = WA_PRAC_TEMPLATES[templateIdx];
+  const text = template.text(item.nombre.split(" ")[0]);
+  const number = String(item.telefono || "").replace(/\s/g, "");
+  window.open(number ? `https://wa.me/34${number}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
 }
 
 function cPF() {
@@ -1395,15 +1503,17 @@ function closeTopOverlay() {
 function oPracM(id) {
   const item = id ? D.practicantes.find((prac) => prac.id === id) : null;
   const skills = item?.habilidades || {};
+  const stage = item ? getPipelineStage(item) : "contactado";
   oModal(`
     <h3>${item ? "Editar practicante" : "Nuevo practicante"}</h3>
     <div class="fr"><label>Nombre completo *</label><input id="prn" value="${safeText(item?.nombre || "")}"></div>
     <div class="fr"><label>Escuela</label><input id="pre" value="${safeText(item?.escuela || "")}"></div>
+    <div class="fr"><label>Teléfono</label><input id="prtel" type="tel" placeholder="612345678" value="${safeText(item?.telefono || "")}"></div>
+    <div class="fr"><label>Etapa del proceso</label><select id="prpip">${PIPELINE_STAGES.map((s) => `<option value="${s.key}"${stage === s.key ? " selected" : ""}>${s.label}</option>`).join("")}</select></div>
     <div class="fr"><label>Fecha de entrada</label><input type="date" id="pri" value="${safeText(item?.fechaEntrada || "")}"></div>
     <div class="fr"><label>Fecha de salida</label><input type="date" id="prs" value="${safeText(item?.fechaSalida || "")}"></div>
     <div class="fr"><label>Partida</label><select id="prp"><option value="">Sin asignar</option>${["Cocina fría", "Cocina caliente", "Pastelería", "Sala", "Todas"].map((partida) => `<option${item?.partida === partida ? " selected" : ""}>${partida}</option>`).join("")}</select></div>
     <div class="fr"><label>Tutor/a</label><input id="prt" value="${safeText(item?.tutor || "")}"></div>
-    <div class="fr"><label>Estado</label><select id="prst">${["activo", "pendiente", "finalizado"].map((state) => `<option${(item?.estado || "pendiente") === state ? " selected" : ""}>${state}</option>`).join("")}</select></div>
     <div class="fr"><label>Habilidades (0-5)</label>
       ${SKILLS.map((skill) => `<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px"><span>${skill}</span><input type="number" min="0" max="5" id="sk_${skill.replace(/[^a-zA-Z]/g, "_")}" value="${skills[skill] || 0}" style="width:70px"></div>`).join("")}
     </div>
@@ -1417,23 +1527,29 @@ function sPrac(id) {
   if (!name) return alert("El nombre es obligatorio");
   const skills = {};
   SKILLS.forEach((skill) => {
-    const value = Number(document.getElementById(`sk_${skill.replace(/[^a-zA-Z]/g, "_")}`)?.value || 0);
-    skills[skill] = value;
+    skills[skill] = Number(document.getElementById(`sk_${skill.replace(/[^a-zA-Z]/g, "_")}`)?.value || 0);
   });
+  const pipeline = document.getElementById("prpip").value;
   const payload = {
     nombre: name,
     escuela: document.getElementById("pre").value,
+    telefono: document.getElementById("prtel").value.trim(),
+    pipeline,
+    estado: setEstadoFromPipeline(pipeline),
     fechaEntrada: document.getElementById("pri").value,
     fechaSalida: document.getElementById("prs").value,
     partida: document.getElementById("prp").value,
     tutor: document.getElementById("prt").value,
-    estado: document.getElementById("prst").value,
     habilidades: skills,
     descripcion: document.getElementById("prd").value,
     notas: document.getElementById("prno").value
   };
-  if (id) Object.assign(D.practicantes.find((item) => item.id === id), payload);
-  else D.practicantes.push({ id: nid++, ...payload });
+  if (id) {
+    const existing = D.practicantes.find((item) => item.id === id);
+    if (existing) { Object.assign(existing, payload); if (!existing.docs) existing.docs = {}; }
+  } else {
+    D.practicantes.push({ id: nid++, docs: {}, ...payload });
+  }
   save("practicantes");
   cModal();
 }
@@ -1443,6 +1559,76 @@ function dPrac(id) {
   D.practicantes = D.practicantes.filter((item) => item.id !== id);
   save("practicantes");
   cPF();
+  rPrac();
+}
+
+function rCentros() {
+  document.getElementById("pracbody").innerHTML = `
+    <div style="margin-bottom:16px">
+      <button class="primary-btn" onclick="oCentroM()">Nuevo centro</button>
+    </div>
+    ${D.centros.length ? D.centros.map((c) => {
+      const count = D.practicantes.filter((p) => p.escuela === c.nombre).length;
+      return `
+        <div class="pc">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+            <div>
+              <div class="pt">${safeText(c.nombre)}</div>
+              ${c.contacto ? `<div class="nd">${safeText(c.contacto)}</div>` : ""}
+              ${c.email ? `<div class="nd">${safeText(c.email)}</div>` : ""}
+              ${c.telefono ? `<div class="nd">${safeText(c.telefono)}</div>` : ""}
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <span class="ps ${c.convenioVigente ? "s-activo" : "s-finalizado"}">${c.convenioVigente ? "Convenio vigente" : "Sin convenio"}</span>
+              <div class="nd" style="margin-top:6px">${count} practicante${count !== 1 ? "s" : ""}</div>
+            </div>
+          </div>
+          ${c.notas ? `<div class="nd" style="margin-top:8px">${safeText(c.notas)}</div>` : ""}
+          <div class="ca" style="margin-top:12px">
+            ${c.telefono ? `<button class="btn btn-o" onclick="envWA('${safeText(c.nombre).replace(/'/g, "\\'")}','${safeText(c.telefono)}')">WhatsApp</button>` : ""}
+            <button class="btn btn-o" onclick="oCentroM(${c.id})">Editar</button>
+            <button class="btn btn-d btn-s" onclick="dCentro(${c.id})">Eliminar</button>
+          </div>
+        </div>`;
+    }).join("") : `<div class="notice"><strong>Sin centros registrados</strong><div>Añade los centros educativos con los que colaboráis habitualmente.</div></div>`}`;
+}
+
+function oCentroM(id) {
+  const c = id ? D.centros.find((x) => x.id === id) : null;
+  oModal(`
+    <h3>${c ? "Editar centro" : "Nuevo centro educativo"}</h3>
+    <div class="fr"><label>Nombre del centro *</label><input id="cen" value="${safeText(c?.nombre || "")}"></div>
+    <div class="fr"><label>Persona de contacto</label><input id="cecon" value="${safeText(c?.contacto || "")}"></div>
+    <div class="fr"><label>Email</label><input type="email" id="cemail" value="${safeText(c?.email || "")}"></div>
+    <div class="fr"><label>Teléfono</label><input id="cetel" value="${safeText(c?.telefono || "")}"></div>
+    <div class="fr"><label>Convenio vigente</label><select id="ceconv"><option value="1"${c?.convenioVigente ? " selected" : ""}>Sí</option><option value="0"${!c?.convenioVigente ? " selected" : ""}>No</option></select></div>
+    <div class="fr"><label>Notas</label><textarea id="cenota">${safeText(c?.notas || "")}</textarea></div>
+    <div class="mf"><button class="secondary-btn" onclick="cModal()">Cancelar</button><button class="primary-btn" onclick="sCentro(${id || "null"})">Guardar</button></div>`);
+}
+
+function sCentro(id) {
+  const nombre = document.getElementById("cen").value.trim();
+  if (!nombre) return alert("El nombre del centro es obligatorio");
+  const payload = {
+    nombre,
+    contacto: document.getElementById("cecon").value.trim(),
+    email: document.getElementById("cemail").value.trim(),
+    telefono: document.getElementById("cetel").value.trim(),
+    convenioVigente: document.getElementById("ceconv").value === "1",
+    notas: document.getElementById("cenota").value.trim()
+  };
+  if (id) Object.assign(D.centros.find((x) => x.id === id), payload);
+  else D.centros.push({ id: nid++, ...payload });
+  save("centros");
+  cModal();
+  rCentros();
+}
+
+function dCentro(id) {
+  if (!confirm("¿Eliminar este centro?")) return;
+  D.centros = D.centros.filter((x) => x.id !== id);
+  save("centros");
+  rCentros();
 }
 
 function rProj() {
