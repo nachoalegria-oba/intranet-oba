@@ -159,12 +159,12 @@ const DEFAULTS = {
   practicantes: [],
   centros: [],
   habitaciones: [
-    { id: 601, casa: "Casa Vega",           nombre: "Habitación 1", capacidad: 2, literas: false, estado: "libre", ocupantes: [], notas: "" },
-    { id: 602, casa: "Casa Vega",           nombre: "Habitación 2", capacidad: 2, literas: false, estado: "libre", ocupantes: [], notas: "" },
-    { id: 603, casa: "Casa Vega",           nombre: "Habitación 3", capacidad: 2, literas: false, estado: "libre", ocupantes: [], notas: "" },
-    { id: 604, casa: "Casa Oba",            nombre: "Habitación 1", capacidad: 2, literas: false, estado: "libre", ocupantes: [], notas: "" },
-    { id: 605, casa: "Casa Oba",            nombre: "Habitación 2", capacidad: 1, literas: false, estado: "libre", ocupantes: [], notas: "" },
-    { id: 606, casa: "Apartamentos Paloma", nombre: "Apartamento",  capacidad: 4, literas: false, estado: "libre", ocupantes: [], notas: "" }
+    { id: 601, casa: "Casa Vega",           nombre: "Habitación 1", capacidad: 2, literas: false, estado: "libre", ocupantes: [], ocupantesCañitas: [], notas: "" },
+    { id: 602, casa: "Casa Vega",           nombre: "Habitación 2", capacidad: 2, literas: false, estado: "libre", ocupantes: [], ocupantesCañitas: [], notas: "" },
+    { id: 603, casa: "Casa Vega",           nombre: "Habitación 3", capacidad: 2, literas: false, estado: "libre", ocupantes: [], ocupantesCañitas: [], notas: "" },
+    { id: 604, casa: "Casa Oba",            nombre: "Habitación 1", capacidad: 2, literas: false, estado: "libre", ocupantes: [], ocupantesCañitas: [], notas: "" },
+    { id: 605, casa: "Casa Oba",            nombre: "Habitación 2", capacidad: 1, literas: false, estado: "libre", ocupantes: [], ocupantesCañitas: [], notas: "" },
+    { id: 606, casa: "Apartamentos Paloma", nombre: "Apartamento",  capacidad: 4, literas: false, estado: "libre", ocupantes: [], ocupantesCañitas: [], notas: "" }
   ],
   pedidosHistorial: []
 };
@@ -1740,9 +1740,9 @@ function habCapacidad(h) {
 function rHab() {
   const habs = D.habitaciones;
   const totalPlazas = habs.reduce((s, h) => s + habCapacidad(h), 0);
-  const plazasOcupadas = habs.reduce((s, h) => s + (h.ocupantes || []).length, 0);
-  const libres = habs.filter((h) => (h.ocupantes || []).length === 0 && h.estado !== "mantenimiento").length;
-  const ocupadas = habs.filter((h) => (h.ocupantes || []).length > 0).length;
+  const plazasOcupadas = habs.reduce((s, h) => s + (h.ocupantes || []).length + (h.ocupantesCañitas || []).length, 0);
+  const libres = habs.filter((h) => (h.ocupantes || []).length + (h.ocupantesCañitas || []).length === 0 && h.estado !== "mantenimiento").length;
+  const ocupadas = habs.filter((h) => (h.ocupantes || []).length + (h.ocupantesCañitas || []).length > 0).length;
   const mant = habs.filter((h) => h.estado === "mantenimiento").length;
 
   const resumen = habs.length ? `
@@ -1757,7 +1757,7 @@ function rHab() {
 
   const casasHtml = casas.map((casa) => {
     const rooms = habs.filter((h) => (h.casa || "Sin asignar") === casa);
-    const casaLibres = rooms.filter((h) => (h.ocupantes || []).length === 0 && h.estado !== "mantenimiento").length;
+    const casaLibres = rooms.filter((h) => (h.ocupantes || []).length + (h.ocupantesCañitas || []).length === 0 && h.estado !== "mantenimiento").length;
     const casaTotal = rooms.length;
     return `
       <div class="hab-casa">
@@ -1769,7 +1769,9 @@ function rHab() {
           ${rooms.map((h) => {
             const cap = habCapacidad(h);
             const ocupantes = (h.ocupantes || []).map((pid) => D.practicantes.find((p) => p.id === pid)).filter(Boolean);
-            const plazasLibres = cap - ocupantes.length;
+            const ocupantesCañitas = h.ocupantesCañitas || [];
+            const totalOcupados = ocupantes.length + ocupantesCañitas.length;
+            const plazasLibres = cap - totalOcupados;
             const mantenimiento = h.estado === "mantenimiento";
             const estadoCls = mantenimiento ? "finalizado" : plazasLibres === 0 ? "pendiente" : "activo";
             const estadoLabel = mantenimiento ? "Mantenim." : plazasLibres === 0 ? "Llena" : `${plazasLibres} libre${plazasLibres !== 1 ? "s" : ""}`;
@@ -1782,20 +1784,29 @@ function rHab() {
                   </div>
                   <span class="ps s-${estadoCls}">${estadoLabel}</span>
                 </div>
-                ${ocupantes.length ? `
+                ${(ocupantes.length || ocupantesCañitas.length) ? `
                   <div class="hab-ocupantes">
                     ${ocupantes.map((p) => `
                       <div class="hab-ocupante">
-                        <span onclick="oPF(${p.id})" style="cursor:pointer">👤 ${safeText(p.nombre)}</span>
+                        <span onclick="oPF(${p.id})" style="cursor:pointer">👤 ${safeText(p.nombre)} <span class="hab-tag-oba">OBA</span></span>
                         <div class="ca" style="gap:4px">
                           <button class="btn btn-o btn-s" onclick="oMoverPrac(${p.id},${h.id})">Mover</button>
                           <button class="btn btn-d btn-s" onclick="oDesasignarUno(${h.id},${p.id})">✕</button>
                         </div>
                       </div>`).join("")}
+                    ${ocupantesCañitas.map((c, i) => `
+                      <div class="hab-ocupante">
+                        <span>👤 ${safeText(c.nombre)} <span class="hab-tag-cañitas">Cañitas</span></span>
+                        <div class="ca" style="gap:4px">
+                          <button class="btn btn-o btn-s" onclick="oMoverCañitas(${i},${h.id})">Mover</button>
+                          <button class="btn btn-d btn-s" onclick="desasignarCañitas(${h.id},${i})">✕</button>
+                        </div>
+                      </div>`).join("")}
                   </div>` : ""}
                 ${h.notas ? `<div class="nd" style="margin-top:8px;font-style:italic">${safeText(h.notas)}</div>` : ""}
                 <div class="ca" style="margin-top:12px">
-                  ${!mantenimiento && plazasLibres > 0 ? `<button class="btn btn-o btn-s" onclick="oAsignarPrac(${h.id})">+ Asignar</button>` : ""}
+                  ${!mantenimiento && plazasLibres > 0 ? `<button class="btn btn-o btn-s" onclick="oAsignarPrac(${h.id})">+ OBA</button>` : ""}
+                  ${!mantenimiento && plazasLibres > 0 ? `<button class="btn btn-o btn-s hab-btn-cañitas" onclick="oAsignarCañitas(${h.id})">+ Cañitas</button>` : ""}
                   <button class="btn btn-o btn-s" onclick="oHabM(${h.id})">Editar</button>
                   <button class="btn btn-d btn-s" onclick="dHab(${h.id})">✕</button>
                 </div>
@@ -1984,6 +1995,91 @@ function moverPracHab(pracId, fromHabId) {
   if (!fromHab.ocupantes.length) fromHab.estado = "libre";
   if (!toHab.ocupantes) toHab.ocupantes = [];
   toHab.ocupantes.push(pracId);
+  toHab.estado = "ocupada";
+  save("habitaciones");
+  cModal();
+  rHab();
+}
+
+function oAsignarCañitas(habId) {
+  const h = D.habitaciones.find((x) => x.id === habId);
+  if (!h) return;
+  oModal(`
+    <h3>Añadir practicante de Cañitas</h3>
+    <p style="margin-bottom:14px;color:var(--muted)">${safeText(h.casa)} · ${safeText(h.nombre)}</p>
+    <div class="fr"><label>Nombre completo *</label><input id="cnom" placeholder="Nombre del practicante"></div>
+    <div class="mf">
+      <button class="secondary-btn" onclick="cModal()">Cancelar</button>
+      <button class="primary-btn hab-btn-cañitas" onclick="asignarCañitas(${habId})">Añadir</button>
+    </div>`);
+}
+
+function asignarCañitas(habId) {
+  const nombre = document.getElementById("cnom").value.trim();
+  if (!nombre) return alert("El nombre es obligatorio");
+  const h = D.habitaciones.find((x) => x.id === habId);
+  if (!h) return;
+  if (!h.ocupantesCañitas) h.ocupantesCañitas = [];
+  h.ocupantesCañitas.push({ nombre });
+  h.estado = "ocupada";
+  save("habitaciones");
+  cModal();
+  rHab();
+}
+
+function desasignarCañitas(habId, idx) {
+  const h = D.habitaciones.find((x) => x.id === habId);
+  if (!h) return;
+  const nombre = h.ocupantesCañitas?.[idx]?.nombre || "este practicante";
+  if (!confirm(`¿Liberar la plaza de ${nombre}?`)) return;
+  h.ocupantesCañitas.splice(idx, 1);
+  if (!(h.ocupantes || []).length && !h.ocupantesCañitas.length) h.estado = "libre";
+  save("habitaciones");
+  rHab();
+}
+
+function oMoverCañitas(idx, fromHabId) {
+  const fromHab = D.habitaciones.find((x) => x.id === fromHabId);
+  if (!fromHab) return;
+  const persona = fromHab.ocupantesCañitas?.[idx];
+  if (!persona) return;
+  const destinos = D.habitaciones.filter((h) => {
+    if (h.id === fromHabId) return false;
+    if (h.estado === "mantenimiento") return false;
+    const cap = habCapacidad(h);
+    return (h.ocupantes || []).length + (h.ocupantesCañitas || []).length < cap;
+  });
+  if (!destinos.length) {
+    oModal(`<h3>Sin plazas disponibles</h3><p style="margin:16px 0;color:var(--muted)">No hay otras habitaciones con plazas libres.</p><div class="mf"><button class="secondary-btn" onclick="cModal()">Cerrar</button></div>`);
+    return;
+  }
+  oModal(`
+    <h3>Mover a ${safeText(persona.nombre)}</h3>
+    <p style="margin-bottom:14px;color:var(--muted)">Actualmente en ${safeText(fromHab.casa)} · ${safeText(fromHab.nombre)}</p>
+    <div class="fr"><label>Mover a</label>
+      <select id="hmovercañ">
+        ${destinos.map((h) => {
+          const cap = habCapacidad(h);
+          const libres = cap - (h.ocupantes || []).length - (h.ocupantesCañitas || []).length;
+          return `<option value="${h.id}">${safeText(h.casa)} · ${safeText(h.nombre)} (${libres} plaza${libres !== 1 ? "s" : ""} libre${libres !== 1 ? "s" : ""})</option>`;
+        }).join("")}
+      </select>
+    </div>
+    <div class="mf">
+      <button class="secondary-btn" onclick="cModal()">Cancelar</button>
+      <button class="primary-btn hab-btn-cañitas" onclick="moverCañitas(${idx},${fromHabId})">Mover</button>
+    </div>`);
+}
+
+function moverCañitas(idx, fromHabId) {
+  const toHabId = parseInt(document.getElementById("hmovercañ").value);
+  const fromHab = D.habitaciones.find((x) => x.id === fromHabId);
+  const toHab = D.habitaciones.find((x) => x.id === toHabId);
+  if (!fromHab || !toHab) return;
+  const persona = fromHab.ocupantesCañitas.splice(idx, 1)[0];
+  if (!fromHab.ocupantes?.length && !fromHab.ocupantesCañitas.length) fromHab.estado = "libre";
+  if (!toHab.ocupantesCañitas) toHab.ocupantesCañitas = [];
+  toHab.ocupantesCañitas.push(persona);
   toHab.estado = "ocupada";
   save("habitaciones");
   cModal();
