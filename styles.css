@@ -1595,11 +1595,8 @@ th,
   .pipeline-col-body .pc{
     margin-bottom:6px;
   }
-  /* Pipeline móvil: lista agrupada por etapa */
-  .pipeline-mobile-group{margin-bottom:12px;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--line)}
-  .pipeline-mobile-head{padding:10px 14px;font-weight:600;font-size:12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}
-  .pipeline-mobile-group .pc{border-radius:0;border:none;border-bottom:1px solid var(--line);margin:0}
-  .pipeline-mobile-group .pc:last-child{border-bottom:none}
+  /* Pipeline móvil: lista plana */
+  .pip-tag{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0}
   /* Etapas pipeline en ficha: más compactas */
   .pipeline-nav{
     gap:5px;
