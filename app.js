@@ -1738,32 +1738,34 @@ function habCapacidad(h) {
 }
 
 function rHab() {
-  const habs = D.habitaciones;
+  const habs = D.habitaciones.filter((h) => h.estado !== "mantenimiento");
+  const habsMant = D.habitaciones.filter((h) => h.estado === "mantenimiento");
   const totalPlazas = habs.reduce((s, h) => s + habCapacidad(h), 0);
   const plazasOcupadas = habs.reduce((s, h) => s + (h.ocupantes || []).length + (h.ocupantesCañitas || []).length, 0);
-  const libres = habs.filter((h) => (h.ocupantes || []).length + (h.ocupantesCañitas || []).length === 0 && h.estado !== "mantenimiento").length;
-  const ocupadas = habs.filter((h) => (h.ocupantes || []).length + (h.ocupantesCañitas || []).length > 0).length;
-  const mant = habs.filter((h) => h.estado === "mantenimiento").length;
+  const plazasLibres = totalPlazas - plazasOcupadas;
 
-  const resumen = habs.length ? `
+  const resumen = D.habitaciones.length ? `
     <div class="hab-resumen">
-      <div class="hab-stat hab-libre"><span class="hab-stat-n">${libres}</span><span>Libres</span></div>
-      <div class="hab-stat hab-ocupada"><span class="hab-stat-n">${ocupadas}</span><span>Ocupadas</span></div>
-      <div class="hab-stat" style="background:var(--blue-soft);border-color:var(--blue);color:var(--blue)"><span class="hab-stat-n">${plazasOcupadas}/${totalPlazas}</span><span>Plazas</span></div>
-      ${mant ? `<div class="hab-stat hab-mant"><span class="hab-stat-n">${mant}</span><span>Mantenim.</span></div>` : ""}
-    </div>` : "";
+      <div class="hab-stat hab-libre"><span class="hab-stat-n">${plazasLibres}</span><span>Plazas libres</span></div>
+      <div class="hab-stat hab-ocupada"><span class="hab-stat-n">${plazasOcupadas}</span><span>Plazas ocupadas</span></div>
+      <div class="hab-stat" style="background:var(--blue-soft);border-color:var(--blue);color:var(--blue)"><span class="hab-stat-n">${totalPlazas}</span><span>Total plazas</span></div>
+      ${habsMant.length ? `<div class="hab-stat hab-mant"><span class="hab-stat-n">${habsMant.length}</span><span>Mantenim.</span></div>` : ""}
+    </div>
+    <div class="nd" style="margin-bottom:16px;text-align:right">${plazasLibres + plazasOcupadas === totalPlazas ? `✓ ${plazasLibres} libres + ${plazasOcupadas} ocupadas = ${totalPlazas} total` : ""}</div>` : "";
 
-  const casas = [...new Set(habs.map((h) => h.casa || "Sin asignar"))];
+  const todasHabs = D.habitaciones;
+  const casas = [...new Set(todasHabs.map((h) => h.casa || "Sin asignar"))];
 
   const casasHtml = casas.map((casa) => {
-    const rooms = habs.filter((h) => (h.casa || "Sin asignar") === casa);
-    const casaLibres = rooms.filter((h) => (h.ocupantes || []).length + (h.ocupantesCañitas || []).length === 0 && h.estado !== "mantenimiento").length;
-    const casaTotal = rooms.length;
+    const rooms = todasHabs.filter((h) => (h.casa || "Sin asignar") === casa);
+    const casaTotalPlazas = rooms.filter((h) => h.estado !== "mantenimiento").reduce((s, h) => s + habCapacidad(h), 0);
+    const casaOcupadas = rooms.reduce((s, h) => s + (h.ocupantes || []).length + (h.ocupantesCañitas || []).length, 0);
+    const casaLibres = casaTotalPlazas - casaOcupadas;
     return `
       <div class="hab-casa">
         <div class="hab-casa-head">
           <span class="pt">${safeText(casa)}</span>
-          <span class="nd">${casaLibres}/${casaTotal} hab. libres</span>
+          <span class="nd">${casaLibres} plaza${casaLibres !== 1 ? "s" : ""} libre${casaLibres !== 1 ? "s" : ""} de ${casaTotalPlazas}</span>
         </div>
         <div class="hab-grid">
           ${rooms.map((h) => {
