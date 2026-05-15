@@ -14,7 +14,7 @@ const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "
 const DS = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"];
 const SKILLS = ["Mise en place", "Fondos y salsas", "Carnes", "Pescados", "Pastelería", "Fermentos", "Limpieza y orden", "Trabajo en equipo"];
 const ALERGEN_LIST = ["Gluten", "Crustáceos", "Huevos", "Pescado", "Cacahuetes", "Soja", "Lácteos", "Frutos de cáscara", "Apio", "Mostaza", "Sésamo", "Dióxido de azufre", "Altramuces", "Moluscos"];
-const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "eventos", "proveedores", "practicantes", "centros", "habitaciones", "pedidosHistorial"];
+const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "eventos", "proveedores", "practicantes", "centros", "habitaciones", "pedidosHistorial", "descargables"];
 const LOCAL_KEY = "oba_intranet_v3";
 const PIPELINE_STAGES = [
   { key: "contactado",     label: "Contactado",      cls: "pip-contactado" },
@@ -166,7 +166,8 @@ const DEFAULTS = {
     { id: 605, casa: "Casa Oba",            nombre: "Habitación 2", capacidad: 1, literas: false, estado: "libre", ocupantes: [], ocupantesCañitas: [], notas: "" },
     { id: 606, casa: "Apartamentos Paloma", nombre: "Apartamento",  capacidad: 4, literas: false, estado: "libre", ocupantes: [], ocupantesCañitas: [], notas: "" }
   ],
-  pedidosHistorial: []
+  pedidosHistorial: [],
+  descargables: []
 };
 
 let db = null;
@@ -1386,7 +1387,7 @@ let pracCalM = new Date().getMonth();
 
 function setPracView(view) {
   pracView = view;
-  ["pipeline", "centros", "calendario", "habitaciones"].forEach((v) => {
+  ["pipeline", "centros", "calendario", "habitaciones", "descargables"].forEach((v) => {
     document.getElementById(`tab-${v}`)?.classList.toggle("tab-active", v === view);
   });
   rPrac();
@@ -1507,6 +1508,7 @@ function rPrac() {
   if (pracView === "centros") { rCentros(); return; }
   if (pracView === "calendario") { rPracCal(); return; }
   if (pracView === "habitaciones") { rHab(); return; }
+  if (pracView === "descargables") { rDescargables(); return; }
   const all = D.practicantes;
   const isMobile = window.innerWidth <= 720;
   if (!all.length) {
@@ -2086,6 +2088,135 @@ function moverCañitas(idx, fromHabId) {
   save("habitaciones");
   cModal();
   rHab();
+}
+
+/* ── Descargables ── */
+const DESC_CATS = ["Normativa", "Cómo llegar", "Qué traer", "Información general"];
+
+function rDescargables() {
+  const docs = D.descargables;
+  const byCat = {};
+  DESC_CATS.forEach((c) => { byCat[c] = []; });
+  docs.forEach((d) => { (byCat[d.categoria] || (byCat["Información general"] = byCat["Información general"] || [])).push(d); });
+
+  const cards = DESC_CATS.map((cat) => {
+    const items = byCat[cat] || [];
+    return `
+      <div class="desc-cat">
+        <div class="desc-cat-head">
+          <span class="desc-cat-label">${cat}</span>
+          <button class="ghost-btn ghost-btn-sm" onclick="oDescargableM(null,'${cat}')">+ Añadir</button>
+        </div>
+        ${items.length ? items.map((d) => `
+          <div class="desc-card">
+            <div class="desc-card-main">
+              <div class="desc-card-icon">${descIcon(d)}</div>
+              <div class="desc-card-info">
+                <div class="desc-card-title">${safeText(d.titulo)}</div>
+                ${d.descripcion ? `<div class="desc-card-sub">${safeText(d.descripcion)}</div>` : ""}
+                ${d.url ? `<div class="desc-card-url">${safeText(d.url.length > 50 ? d.url.slice(0, 50) + "…" : d.url)}</div>` : ""}
+              </div>
+            </div>
+            <div class="desc-card-actions">
+              <button class="desc-share-btn desc-share-wa" title="Enviar por WhatsApp" onclick="compartirDesc(${d.id},'wa')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.125.557 4.122 1.528 5.855L0 24l6.335-1.502A11.957 11.957 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 0 1-5.018-1.374l-.36-.213-3.757.89.946-3.658-.234-.376A9.818 9.818 0 1 1 12 21.818z"/></svg>
+              </button>
+              <button class="desc-share-btn desc-share-mail" title="Enviar por email" onclick="compartirDesc(${d.id},'email')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+              </button>
+              <button class="desc-share-btn desc-share-copy" title="Copiar enlace" onclick="compartirDesc(${d.id},'copy')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+              <button class="desc-share-btn desc-share-edit" title="Editar" onclick="oDescargableM(${d.id})">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+            </div>
+          </div>`).join("") : `<div class="desc-empty">Sin documentos en esta categoría.</div>`}
+      </div>`;
+  }).join("");
+
+  document.getElementById("pracbody").innerHTML = `
+    <div class="desc-intro">
+      <p>Sube aquí los documentos que deben conocer los practicantes antes de llegar. Compártelos por WhatsApp, email o copia el enlace directamente.</p>
+    </div>
+    <div class="desc-grid">${cards}</div>`;
+}
+
+function descIcon(d) {
+  if (d.url && d.url.match(/\.(pdf)$/i)) return "📄";
+  if (d.url && d.url.match(/\.(png|jpg|jpeg|gif|webp)$/i)) return "🖼";
+  if (d.url && d.url.match(/^https?:\/\//)) return "🔗";
+  return "📋";
+}
+
+function oDescargableM(id, catPreset) {
+  const d = id ? D.descargables.find((x) => x.id === id) : null;
+  oModal(`
+    <h3>${d ? "Editar documento" : "Añadir documento"}</h3>
+    <div class="fr"><label>Título *</label><input id="dtit" value="${safeText(d?.titulo || "")}"></div>
+    <div class="fr"><label>Descripción corta</label><input id="ddesc" value="${safeText(d?.descripcion || "")}"></div>
+    <div class="fr"><label>Categoría</label><select id="dcat">
+      ${DESC_CATS.map((c) => `<option${(d?.categoria || catPreset || DESC_CATS[0]) === c ? " selected" : ""}>${c}</option>`).join("")}
+    </select></div>
+    <div class="fr">
+      <label>Enlace al documento</label>
+      <input id="durl" type="url" placeholder="https://drive.google.com/..." value="${safeText(d?.url || "")}">
+      <div class="field-hint">Pega el enlace público del PDF (Google Drive, Dropbox, etc.)</div>
+    </div>
+    <div class="mf">
+      ${d ? `<button class="btn btn-d btn-s" onclick="dDescargable(${id})">Eliminar</button>` : ""}
+      <button class="secondary-btn" onclick="cModal()">Cancelar</button>
+      <button class="primary-btn" onclick="sDescargable(${id || "null"})">Guardar</button>
+    </div>`);
+}
+
+function sDescargable(id) {
+  const titulo = document.getElementById("dtit").value.trim();
+  if (!titulo) return alert("El título es obligatorio");
+  const payload = {
+    titulo,
+    descripcion: document.getElementById("ddesc").value.trim(),
+    categoria: document.getElementById("dcat").value,
+    url: document.getElementById("durl").value.trim(),
+    fechaSubida: id ? (D.descargables.find((x) => x.id === id)?.fechaSubida || today()) : today()
+  };
+  if (id) Object.assign(D.descargables.find((x) => x.id === id), payload);
+  else D.descargables.push({ id: nid++, ...payload });
+  save("descargables");
+  cModal();
+  rDescargables();
+}
+
+function dDescargable(id) {
+  if (!confirm("¿Eliminar este documento?")) return;
+  D.descargables = D.descargables.filter((x) => x.id !== id);
+  save("descargables");
+  cModal();
+  rDescargables();
+}
+
+function compartirDesc(id, method) {
+  const d = D.descargables.find((x) => x.id === id);
+  if (!d) return;
+  if (!d.url) return alert("Este documento no tiene enlace. Edítalo y añade una URL.");
+  const titulo = d.titulo;
+  const url = d.url;
+  const texto = `*${titulo}*\n${d.descripcion ? d.descripcion + "\n" : ""}${url}`;
+  if (method === "wa") {
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, "_blank");
+  } else if (method === "email") {
+    window.location.href = `mailto:?subject=${encodeURIComponent(titulo)}&body=${encodeURIComponent(texto)}`;
+  } else if (method === "copy") {
+    navigator.clipboard.writeText(url).then(() => {
+      const btn = event.currentTarget;
+      const orig = btn.innerHTML;
+      btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
+      btn.style.color = "var(--green-deep)";
+      setTimeout(() => { btn.innerHTML = orig; btn.style.color = ""; }, 1500);
+    }).catch(() => {
+      prompt("Copia este enlace:", url);
+    });
+  }
 }
 
 function rCentros() {
