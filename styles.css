@@ -1626,6 +1626,8 @@ th,
   }
 }
 
+.prac-sal{font-size:10px;background:#fdf3e8;color:var(--brown);border-radius:4px;padding:1px 4px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+
 /* ── Pipeline board ── */
 .pipeline-board{display:flex;gap:12px;overflow-x:auto;padding-bottom:16px;align-items:flex-start;margin-top:4px}
 .pipeline-col{min-width:190px;flex:0 0 190px;background:var(--surface);border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--line)}

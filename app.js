@@ -1365,16 +1365,81 @@ function sEv() {
 }
 
 let pracView = "pipeline";
+let pracCalY = new Date().getFullYear();
+let pracCalM = new Date().getMonth();
 
 function setPracView(view) {
   pracView = view;
-  document.getElementById("tab-pipeline")?.classList.toggle("tab-active", view === "pipeline");
-  document.getElementById("tab-centros")?.classList.toggle("tab-active", view === "centros");
+  ["pipeline", "centros", "calendario"].forEach((v) => {
+    document.getElementById(`tab-${v}`)?.classList.toggle("tab-active", v === view);
+  });
   rPrac();
+}
+
+function pracCalNav(delta) {
+  pracCalM += delta;
+  if (pracCalM > 11) { pracCalM = 0; pracCalY += 1; }
+  if (pracCalM < 0) { pracCalM = 11; pracCalY -= 1; }
+  rPracCal();
+}
+
+function rPracCal() {
+  const monthStr = `${pracCalY}-${String(pracCalM + 1).padStart(2, "0")}`;
+  const all = D.practicantes;
+
+  const first = new Date(pracCalY, pracCalM, 1);
+  const last = new Date(pracCalY, pracCalM + 1, 0);
+  const startDay = (first.getDay() + 6) % 7;
+
+  let grid = DS.map((d) => `<div class="ch">${d}</div>`).join("");
+
+  for (let i = 0; i < startDay; i++) {
+    const d = new Date(pracCalY, pracCalM, -(startDay - i - 1));
+    grid += `<div class="cd om"><div class="cdn">${d.getDate()}</div></div>`;
+  }
+
+  for (let day = 1; day <= last.getDate(); day++) {
+    const dateStr = `${pracCalY}-${String(pracCalM + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const entradas = all.filter((p) => p.fechaEntrada === dateStr);
+    const salidas = all.filter((p) => p.fechaSalida === dateStr);
+    let content = entradas.map((p) => `<div class="ce-prac" onclick="event.stopPropagation();oPF(${p.id})" title="Entrada: ${safeText(p.nombre)}">▶ ${safeText(p.nombre.split(" ")[0])}</div>`).join("");
+    content += salidas.map((p) => `<div class="prac-sal" onclick="event.stopPropagation();oPF(${p.id})" title="Salida: ${safeText(p.nombre)}">◀ ${safeText(p.nombre.split(" ")[0])}</div>`).join("");
+    grid += `<div class="cd${dateStr === today() ? " today" : ""}"><div class="cdn">${day}</div>${content}</div>`;
+  }
+
+  const remaining = (7 - ((startDay + last.getDate()) % 7)) % 7;
+  for (let i = 1; i <= remaining; i++) grid += `<div class="cd om"><div class="cdn">${i}</div></div>`;
+
+  const entradasMes = all.filter((p) => p.fechaEntrada?.startsWith(monthStr));
+  const salidasMes = all.filter((p) => p.fechaSalida?.startsWith(monthStr));
+  const activosMes = all.filter((p) => {
+    if (!p.fechaEntrada || !p.fechaSalida) return false;
+    return p.fechaEntrada <= `${monthStr}-31` && p.fechaSalida >= `${monthStr}-01`;
+  });
+
+  let lista = "";
+  if (entradasMes.length) lista += `<div style="margin-bottom:8px"><strong style="font-size:12px;color:var(--green-deep)">▶ ENTRADAS</strong></div>` +
+    entradasMes.map((p) => `<div class="notice" style="border-left-color:var(--green);background:var(--green-soft);cursor:pointer;margin-bottom:6px" onclick="oPF(${p.id})"><strong>${safeText(p.nombre)}</strong><div>${safeText(p.escuela || "Sin escuela")} · ${safeText(p.partida || "Sin partida")}</div><div class="nd">Entrada: ${fmtDate(p.fechaEntrada)}</div></div>`).join("");
+  if (salidasMes.length) lista += `<div style="margin:14px 0 8px"><strong style="font-size:12px;color:var(--brown)">◀ SALIDAS</strong></div>` +
+    salidasMes.map((p) => `<div class="notice" style="border-left-color:var(--brown);background:#fdf3e8;cursor:pointer;margin-bottom:6px" onclick="oPF(${p.id})"><strong>${safeText(p.nombre)}</strong><div>${safeText(p.escuela || "Sin escuela")} · ${safeText(p.partida || "Sin partida")}</div><div class="nd">Salida: ${fmtDate(p.fechaSalida)}</div></div>`).join("");
+  if (!entradasMes.length && !salidasMes.length) lista = `<div class="notice"><strong>Mes sin movimientos</strong><div>No hay entradas ni salidas de practicantes este mes.</div></div>`;
+
+  if (activosMes.length) lista += `<div style="margin:14px 0 8px"><strong style="font-size:12px;color:var(--blue)">● EN PLANTILLA ESTE MES</strong></div>` +
+    activosMes.map((p) => `<div class="notice" style="border-left-color:var(--blue);background:var(--blue-soft);cursor:pointer;margin-bottom:6px" onclick="oPF(${p.id})"><strong>${safeText(p.nombre)}</strong><div>${safeText(p.partida || "Sin partida")}</div><div class="nd">${fmtDate(p.fechaEntrada)} → ${fmtDate(p.fechaSalida)}</div></div>`).join("");
+
+  document.getElementById("pracbody").innerHTML = `
+    <div class="calendar-toolbar">
+      <button class="secondary-btn" onclick="pracCalNav(-1)">‹</button>
+      <span class="calendar-title" id="prac-cal-title">${MESES[pracCalM]} ${pracCalY}</span>
+      <button class="secondary-btn" onclick="pracCalNav(1)">›</button>
+    </div>
+    <div class="calendar-grid" id="prac-cheads-body">${grid}</div>
+    <div style="margin-top:20px">${lista}</div>`;
 }
 
 function rPrac() {
   if (pracView === "centros") { rCentros(); return; }
+  if (pracView === "calendario") { rPracCal(); return; }
   const all = D.practicantes;
   const isMobile = window.innerWidth <= 720;
   if (!all.length) {
