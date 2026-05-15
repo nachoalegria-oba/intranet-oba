@@ -2040,7 +2040,17 @@ function registerPWA() {
   }
 
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js").catch((error) => console.warn("SW error:", error));
+    navigator.serviceWorker.register("./sw.js").then((reg) => {
+      reg.addEventListener("updatefound", () => {
+        const sw = reg.installing;
+        sw.addEventListener("statechange", () => {
+          if (sw.state === "installed" && navigator.serviceWorker.controller) {
+            sw.postMessage({ type: "SKIP_WAITING" });
+          }
+        });
+      });
+    }).catch((error) => console.warn("SW error:", error));
+    navigator.serviceWorker.addEventListener("controllerchange", () => window.location.reload());
   }
 
   const installCard = document.getElementById("install-card");

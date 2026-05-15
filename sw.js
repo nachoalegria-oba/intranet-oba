@@ -1,4 +1,4 @@
-const CACHE_NAME = "oba-intranet-v16";
+const CACHE_NAME = "oba-intranet-v17";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -24,6 +24,10 @@ self.addEventListener("activate", (event) => {
       keys.map((key) => caches.delete(key))
     )).then(() => self.clients.claim())
   );
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("fetch", (event) => {
