@@ -1376,6 +1376,55 @@ function setPracView(view) {
   rPrac();
 }
 
+function oDiaPrac(dateStr) {
+  const all = D.practicantes;
+  const entradas = all.filter((p) => p.fechaEntrada === dateStr);
+  const salidas = all.filter((p) => p.fechaSalida === dateStr);
+  const activos = all.filter((p) => p.fechaEntrada && p.fechaSalida && p.fechaEntrada <= dateStr && p.fechaSalida >= dateStr);
+  const [y, m, d] = dateStr.split("-");
+  const label = `${d} de ${MESES[parseInt(m) - 1]} de ${y}`;
+
+  let html = `<h3>${label}</h3>`;
+
+  if (!entradas.length && !salidas.length && !activos.length) {
+    html += `<div class="notice">Sin actividad de practicantes este día.</div>`;
+  }
+
+  if (entradas.length) {
+    html += `<div class="rs"><h4 style="color:var(--green-deep)">▶ Entran hoy</h4>` +
+      entradas.map((p) => `
+        <div class="notice" style="border-left-color:var(--green);background:var(--green-soft);cursor:pointer;margin-bottom:6px" onclick="cModal();oPF(${p.id})">
+          <strong>${safeText(p.nombre)}</strong>
+          <div>${safeText(p.escuela || "Sin escuela")} · ${safeText(p.partida || "Sin partida asignada")}</div>
+          ${p.tutor ? `<div class="nd">Tutor: ${safeText(p.tutor)}</div>` : ""}
+          ${p.fechaSalida ? `<div class="nd">Sale el ${fmtDate(p.fechaSalida)}</div>` : ""}
+        </div>`).join("") + `</div>`;
+  }
+
+  if (salidas.length) {
+    html += `<div class="rs"><h4 style="color:var(--brown)">◀ Salen hoy</h4>` +
+      salidas.map((p) => `
+        <div class="notice" style="border-left-color:var(--brown);background:#fdf3e8;cursor:pointer;margin-bottom:6px" onclick="cModal();oPF(${p.id})">
+          <strong>${safeText(p.nombre)}</strong>
+          <div>${safeText(p.escuela || "Sin escuela")} · ${safeText(p.partida || "Sin partida asignada")}</div>
+          ${p.fechaEntrada ? `<div class="nd">Entró el ${fmtDate(p.fechaEntrada)}</div>` : ""}
+        </div>`).join("") + `</div>`;
+  }
+
+  if (activos.length) {
+    html += `<div class="rs"><h4 style="color:var(--blue)">● En plantilla este día</h4>` +
+      activos.map((p) => `
+        <div class="notice" style="border-left-color:var(--blue);background:var(--blue-soft);cursor:pointer;margin-bottom:6px" onclick="cModal();oPF(${p.id})">
+          <strong>${safeText(p.nombre)}</strong>
+          <div>${safeText(p.partida || "Sin partida asignada")}</div>
+          <div class="nd">${fmtDate(p.fechaEntrada)} → ${fmtDate(p.fechaSalida)}</div>
+        </div>`).join("") + `</div>`;
+  }
+
+  html += `<div class="mf"><button class="secondary-btn" onclick="cModal()">Cerrar</button></div>`;
+  oModal(html);
+}
+
 function pracCalNav(delta) {
   pracCalM += delta;
   if (pracCalM > 11) { pracCalM = 0; pracCalY += 1; }
@@ -1404,7 +1453,8 @@ function rPracCal() {
     const salidas = all.filter((p) => p.fechaSalida === dateStr);
     let content = entradas.map((p) => `<div class="ce-prac" onclick="event.stopPropagation();oPF(${p.id})" title="Entrada: ${safeText(p.nombre)}">▶ ${safeText(p.nombre.split(" ")[0])}</div>`).join("");
     content += salidas.map((p) => `<div class="prac-sal" onclick="event.stopPropagation();oPF(${p.id})" title="Salida: ${safeText(p.nombre)}">◀ ${safeText(p.nombre.split(" ")[0])}</div>`).join("");
-    grid += `<div class="cd${dateStr === today() ? " today" : ""}"><div class="cdn">${day}</div>${content}</div>`;
+    const hasActivity = entradas.length || salidas.length;
+    grid += `<div class="cd${dateStr === today() ? " today" : ""}${hasActivity ? " cd-has-prac" : ""}" onclick="oDiaPrac('${dateStr}')"><div class="cdn">${day}</div>${content}</div>`;
   }
 
   const remaining = (7 - ((startDay + last.getDate()) % 7)) % 7;
