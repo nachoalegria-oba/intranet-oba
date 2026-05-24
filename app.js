@@ -3005,25 +3005,99 @@ function rEmpresaDetalle(id, tab) {
 
   } else if (restTab === "kpis") {
     const kpis = (D[`${col}_kpis`] || []).slice().sort((a, b) => b.fecha > a.fecha ? 1 : -1);
+    const kpiAuto = kpis.filter((k) => k.autor === "Google Reviews (auto)");
+    const kpiManual = kpis.filter((k) => k.autor !== "Google Reviews (auto)");
+    const ultimoAuto = kpiAuto[0];
+    const ultimoManual = kpiManual[0];
+
+    // métricas internas del restaurante
+    const recetas = (D[`${col}_recetas`] || []);
+    const menus = (D[`${col}_menus`] || []);
+    const ideas = (D[`${col}_ideas`] || []);
+    const ideasActivas = ideas.filter((i) => i.estado === "activo" || i.estado === "testeo");
+    const ideasListas = ideas.filter((i) => i.estado === "listo");
+
+    // mini barra visual para valoración (0-5 → 0-100%)
+    const notaBar = (n) => n ? `<div class="kpi-bar-wrap"><div class="kpi-bar" style="width:${(n/5*100).toFixed(0)}%"></div><span>${n}/5</span></div>` : "—";
+
+    // tendencia covers (últimos 5 manuales)
+    const coversRecientes = kpiManual.slice(0, 5).reverse();
+    const maxCovers = Math.max(...coversRecientes.map((k) => k.covers || 0), 1);
+
     bodyHtml = `
       <div class="rest-section-head">
-        <span>Historial de KPIs</span>
+        <span>Métricas y KPIs</span>
         <button class="primary-btn" onclick="oRestKpiM(${e.id})">+ Registrar KPI</button>
       </div>
+
+      <div class="kpi-summary-grid">
+        <div class="kpi-summary-card">
+          <div class="kpi-summary-label">⭐ Valoración Google</div>
+          <div class="kpi-summary-val">${ultimoAuto?.nota ? ultimoAuto.nota : "—"}</div>
+          ${ultimoAuto?.nota ? notaBar(ultimoAuto.nota) : ""}
+          <div class="kpi-summary-sub">${ultimoAuto?.total_resenas ? ultimoAuto.total_resenas + " reseñas" : "Sin datos automáticos"}</div>
+          <div class="kpi-summary-date">${ultimoAuto ? fmtDate(ultimoAuto.fecha) : ""}</div>
+        </div>
+        <div class="kpi-summary-card">
+          <div class="kpi-summary-label">🪑 Último covers</div>
+          <div class="kpi-summary-val">${ultimoManual?.covers || "—"}</div>
+          <div class="kpi-summary-sub">comensales</div>
+          <div class="kpi-summary-date">${ultimoManual ? fmtDate(ultimoManual.fecha) : ""}</div>
+        </div>
+        <div class="kpi-summary-card">
+          <div class="kpi-summary-label">💶 Ticket medio</div>
+          <div class="kpi-summary-val">${ultimoManual?.ticket ? ultimoManual.ticket + "€" : "—"}</div>
+          <div class="kpi-summary-sub">por comensal</div>
+          <div class="kpi-summary-date">${ultimoManual ? fmtDate(ultimoManual.fecha) : ""}</div>
+        </div>
+        <div class="kpi-summary-card">
+          <div class="kpi-summary-label">🍽 Recetas</div>
+          <div class="kpi-summary-val">${recetas.length}</div>
+          <div class="kpi-summary-sub">estandarizadas</div>
+        </div>
+        <div class="kpi-summary-card">
+          <div class="kpi-summary-label">📋 Carta activa</div>
+          <div class="kpi-summary-val">${menus.filter((m) => m.estado === "activo").length}</div>
+          <div class="kpi-summary-sub">cambios activos</div>
+        </div>
+        <div class="kpi-summary-card">
+          <div class="kpi-summary-label">💡 Ideas</div>
+          <div class="kpi-summary-val">${ideasActivas.length}</div>
+          <div class="kpi-summary-sub">${ideasListas.length} listas · ${ideas.filter((i) => i.estado === "descartada").length} descartadas</div>
+        </div>
+      </div>
+
+      ${coversRecientes.length > 1 ? `
+      <div class="kpi-chart-wrap">
+        <div class="kpi-chart-title">Tendencia covers (últimas ${coversRecientes.length} entradas)</div>
+        <div class="kpi-chart-bars">
+          ${coversRecientes.map((k) => `
+            <div class="kpi-chart-col">
+              <div class="kpi-chart-bar-outer">
+                <div class="kpi-chart-bar-inner" style="height:${((k.covers||0)/maxCovers*100).toFixed(0)}%"></div>
+              </div>
+              <div class="kpi-chart-bar-val">${k.covers || "—"}</div>
+              <div class="kpi-chart-bar-date">${fmtDate(k.fecha).slice(0,5)}</div>
+            </div>`).join("")}
+        </div>
+      </div>` : ""}
+
       ${kpis.length ? `
+      <div class="kpi-section-title">Historial completo</div>
       <div class="rest-kpi-table">
         <div class="rest-kpi-thead">
-          <span>Fecha</span><span>Covers</span><span>Ticket medio</span><span>Valoración</span><span>Autor</span>
+          <span>Fecha</span><span>Covers</span><span>Ticket</span><span>Valoración</span><span>Reseñas</span><span>Fuente</span>
         </div>
         ${kpis.map((k) => `
-          <div class="rest-kpi-row-data">
+          <div class="rest-kpi-row-data${k.autor === 'Google Reviews (auto)' ? ' kpi-row-auto' : ''}">
             <span>${fmtDate(k.fecha)}</span>
             <span>${k.covers || "—"}</span>
             <span>${k.ticket ? k.ticket + "€" : "—"}</span>
             <span>${k.nota ? "⭐ " + k.nota : "—"}</span>
-            <span class="nd">${safeText(k.autor || "—")}</span>
+            <span>${k.total_resenas || "—"}</span>
+            <span class="nd">${k.autor === "Google Reviews (auto)" ? "🤖 Auto" : safeText(k.autor || "—")}</span>
           </div>`).join("")}
-      </div>` : `<div class="notice">Sin KPIs aún. Usa /${col} kpi covers:X ticket:X nota:X desde WhatsApp.</div>`}`;
+      </div>` : `<div class="notice" style="margin-top:16px">Sin historial aún. Usa /${col} kpi covers:X ticket:X nota:X desde WhatsApp, o activa Google Reviews automático.</div>`}`;
   }
 
   document.getElementById("panel-grupo-body").innerHTML = `
