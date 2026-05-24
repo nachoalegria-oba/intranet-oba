@@ -1746,8 +1746,9 @@ th,
 /* Logos */
 .emp-logo-svg{display:block;width:100%;max-height:46px;object-fit:contain}
 .emp-logo-img{display:block;max-height:56px;max-width:100%;object-fit:contain}
-.emp-logo-img-oba{filter:invert(1) brightness(2)}
-.emp-logo-img-canitas{filter:invert(1) brightness(2)}
+.emp-logo-img-ene{max-height:52px}
+.emp-logo-img-candomo{max-height:60px}
+.emp-logo-img-canitas{max-height:44px;opacity:.92}
 
 /* OBA */
 .emp-logo-oba-wrap{display:flex;align-items:center;justify-content:center;gap:3px}

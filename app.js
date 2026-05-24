@@ -37,7 +37,7 @@ const EMPRESAS_SEED = [
     estado: "abierto",
     notaDia: "",
     theme: "ene",
-    logoFile: null   // set to "logo-ene.png" once file is in icons/
+    logoFile: "logo-ene.png"
   },
   {
     id: 3,
@@ -48,7 +48,7 @@ const EMPRESAS_SEED = [
     estado: "abierto",
     notaDia: "",
     theme: "candomo",
-    logoFile: null   // set to "logo-candomo.png" once file is in icons/
+    logoFile: "logo-candomo.webp"
   },
   {
     id: 4,
@@ -59,7 +59,7 @@ const EMPRESAS_SEED = [
     estado: "abierto",
     notaDia: "",
     theme: "canitas",
-    logoFile: null   // set to "logo-canitas.png" once file is in icons/
+    logoFile: "logo-canitas.png"
   }
 ];
 const LOCAL_KEY = "oba_intranet_v3";
@@ -446,6 +446,18 @@ function seedEmpresas() {
   if (!D.empresas || D.empresas.length === 0) {
     D.empresas = JSON.parse(JSON.stringify(EMPRESAS_SEED));
     save("empresas");
+  } else {
+    // Sync logoFile and theme from seed (in case they were updated)
+    let changed = false;
+    EMPRESAS_SEED.forEach((seed) => {
+      const emp = D.empresas.find((e) => e.id === seed.id);
+      if (emp) {
+        if (emp.logoFile !== seed.logoFile) { emp.logoFile = seed.logoFile; changed = true; }
+        if (emp.theme !== seed.theme) { emp.theme = seed.theme; changed = true; }
+        if (emp.subtitulo !== seed.subtitulo) { emp.subtitulo = seed.subtitulo; changed = true; }
+      }
+    });
+    if (changed) save("empresas");
   }
 }
 
