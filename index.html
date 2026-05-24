@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@300;500;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=33">
+  <link rel="stylesheet" href="./styles.css?v=34">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
@@ -63,6 +63,7 @@
       <button class="nav-btn" data-panel="practicantes" onclick="sp('practicantes')">Practicantes</button>
       <button class="nav-btn" data-panel="proyectos" onclick="sp('proyectos')">Proyectos</button>
       <button class="nav-btn" data-panel="avisos" onclick="sp('avisos')">Avisos</button>
+      <button class="nav-btn nav-btn-grupo" data-panel="grupo" onclick="sp('grupo')">Grupo</button>
       <button class="nav-btn nav-btn-ai" data-panel="ia" onclick="sp('ia')">IA</button>
     </nav>
     <button id="mobile-nav-toggle" class="mobile-nav-toggle" type="button" aria-label="Mostrar u ocultar navegación" aria-expanded="true" onclick="toggleMobileNav()">
@@ -290,6 +291,17 @@
         <div id="avbody"></div>
       </section>
 
+      <section class="panel" id="panel-grupo">
+        <div class="section-head section-head-lg">
+          <div>
+            <div class="eyebrow">Grupo</div>
+            <h1>Dashboard de empresas</h1>
+            <p>Estado en tiempo real de cada restaurante del grupo.</p>
+          </div>
+        </div>
+        <div id="panel-grupo-body"></div>
+      </section>
+
       <section class="panel" id="panel-ia">
         <div class="section-head section-head-lg">
           <div>
@@ -334,6 +346,6 @@
     <div class="modal" id="mi"></div>
   </div>
 
-  <script src="./app.js?v=34"></script>
+  <script src="./app.js?v=35"></script>
 </body>
 </html>
