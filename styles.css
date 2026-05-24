@@ -1744,13 +1744,28 @@ th,
 .emp-card-canitas{background:#1a1208;color:#f5f0e8;border-color:#3a2e1a}
 
 /* Logos */
-.emp-logo-svg{display:block;width:100%;max-height:52px;object-fit:contain}
-.emp-logo-oba{color:#f2f0ea}
-.emp-logo-ene{overflow:visible}
+.emp-logo-svg{display:block;width:100%;max-height:46px;object-fit:contain}
+.emp-logo-img{display:block;max-height:56px;max-width:100%;object-fit:contain}
+.emp-logo-img-oba{filter:invert(1) brightness(2)}
+.emp-logo-img-canitas{filter:invert(1) brightness(2)}
+
+/* OBA */
+.emp-logo-oba-wrap{display:flex;align-items:center;justify-content:center;gap:3px}
+.emp-logo-oba{color:#f2f0ea;flex:1;max-width:200px}
+.emp-logo-oba-dash{color:#f2f0ea;font-family:"Space Mono",monospace;font-size:1.6rem;font-weight:400;line-height:1;margin-top:2px;opacity:.7}
+
+/* eñe */
+.emp-logo-ene{font-family:"Comfortaa",cursive;font-size:2.8rem;font-weight:700;color:#7a3e28;text-align:center;line-height:1;letter-spacing:-.02em;padding:4px 0}
+
+/* CAN DOMO */
 .emp-logo-candomo{text-align:center}
-.emp-logo-candomo-main{font-family:"Unbounded",sans-serif;font-size:1.5rem;font-weight:300;letter-spacing:.1em;line-height:1}
-.emp-logo-candomo-sub{font-size:11px;letter-spacing:.25em;text-transform:uppercase;color:#666;margin-top:4px}
-.emp-logo-canitas{font-family:"Unbounded",sans-serif;font-size:1.2rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#f5f0e8;text-align:center;padding:8px 0}
+.emp-logo-candomo-main{font-family:"Cormorant Garamond",Georgia,serif;font-size:2rem;font-weight:600;letter-spacing:.12em;line-height:1;color:#0b0b0b}
+.emp-logo-candomo-sub{font-family:"Cormorant Garamond",Georgia,serif;font-size:.85rem;font-weight:300;letter-spacing:.3em;color:#555;margin-top:5px}
+
+/* CAÑITAS */
+.emp-logo-canitas{text-align:center}
+.emp-logo-canitas-main{font-family:"Cormorant Garamond",Georgia,serif;font-size:1.7rem;font-weight:600;letter-spacing:.18em;color:#f5f0e8;line-height:1}
+.emp-logo-canitas-sub{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(245,240,232,.5);margin-top:6px;font-family:"Space Mono",monospace}
 
 .emp-card-logo{min-height:60px;display:flex;align-items:center;justify-content:center;padding:4px 0}
 .emp-card-meta{display:flex;flex-direction:column;gap:3px}
