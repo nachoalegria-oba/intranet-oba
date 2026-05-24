@@ -80,7 +80,7 @@ const EMPRESAS_SEED = [
     googleSearch: "CEBO restaurante Hotel Urban Madrid"
   }
 ];
-const LOCAL_KEY = "oba_intranet_v3";
+const LOCAL_KEY = "oba_intranet_v4";
 const PIPELINE_STAGES = [
   { key: "contactado",     label: "Contactado",      cls: "pip-contactado" },
   { key: "docs_enviados",  label: "Docs enviados",   cls: "pip-docs_enviados" },
@@ -2799,7 +2799,7 @@ function logoEmpresa(e) {
 }
 
 function rGrupo() {
-  const empresas = D.empresas || [];
+  const empresas = (D.empresas || []).slice().sort((a, b) => a.id - b.id);
   if (!empresas.length) {
     document.getElementById("panel-grupo-body").innerHTML = `<div class="notice">Sin empresas configuradas.</div>`;
     return;
