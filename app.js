@@ -14,7 +14,9 @@ const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "
 const DS = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"];
 const SKILLS = ["Mise en place", "Fondos y salsas", "Carnes", "Pescados", "Pastelería", "Fermentos", "Limpieza y orden", "Trabajo en equipo"];
 const ALERGEN_LIST = ["Gluten", "Crustáceos", "Huevos", "Pescado", "Cacahuetes", "Soja", "Lácteos", "Frutos de cáscara", "Apio", "Mostaza", "Sésamo", "Dióxido de azufre", "Altramuces", "Moluscos"];
-const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "eventos", "proveedores", "practicantes", "centros", "habitaciones", "pedidosHistorial", "descargables", "empresas"];
+const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "eventos", "proveedores", "practicantes", "centros", "habitaciones", "pedidosHistorial", "descargables", "empresas", "oba_recetas", "oba_menus", "oba_ideas", "oba_kpis", "ene_recetas", "ene_menus", "ene_ideas", "ene_kpis", "candomo_recetas", "candomo_menus", "candomo_ideas", "candomo_kpis", "canitas_recetas", "canitas_menus", "canitas_ideas", "canitas_kpis"];
+
+const REST_COL_MAP = { oba: "oba", ene: "ene", candomo: "candomo", canitas: "canitas" };
 
 const EMPRESAS_SEED = [
   {
@@ -215,7 +217,11 @@ const DEFAULTS = {
   ],
   pedidosHistorial: [],
   descargables: [],
-  empresas: []
+  empresas: [],
+  oba_recetas: [], oba_menus: [], oba_ideas: [], oba_kpis: [],
+  ene_recetas: [], ene_menus: [], ene_ideas: [], ene_kpis: [],
+  candomo_recetas: [], candomo_menus: [], candomo_ideas: [], candomo_kpis: [],
+  canitas_recetas: [], canitas_menus: [], canitas_ideas: [], canitas_kpis: []
 };
 
 let db = null;
@@ -2799,29 +2805,203 @@ function rGrupo() {
   document.getElementById("panel-grupo-body").innerHTML = `<div class="emp-grid">${cards}</div>`;
 }
 
-let grupoView = "dashboard"; // "dashboard" | empresa id
+let grupoView = "dashboard";
+let restTab = "resumen"; // "resumen" | "recetario" | "menu" | "ideas" | "kpis"
 
-function rEmpresaDetalle(id) {
+function rEmpresaDetalle(id, tab) {
   const e = (D.empresas || []).find((x) => x.id === id);
   if (!e) return;
   grupoView = id;
+  if (tab) restTab = tab;
 
+  const col = REST_COL_MAP[e.theme] || e.theme;
   const est = ESTADO_LABELS[e.estado] || ESTADO_LABELS.abierto;
   const estadoOpts = Object.entries(ESTADO_LABELS).map(([k, v]) =>
     `<option value="${k}"${e.estado === k ? " selected" : ""}>${v.label}</option>`
   ).join("");
 
-  const pracActivos = e.nombre === "OBA–"
-    ? D.practicantes.filter((p) => getPipelineStage(p) === "activo")
-    : [];
+  const tabs = ["resumen", "recetario", "menu", "ideas", "kpis"];
+  const tabLabels = { resumen: "Resumen", recetario: "🍽 Recetario", menu: "📋 Menú", ideas: "💡 Ideas", kpis: "📊 KPIs" };
+  const tabsHtml = tabs.map((t) =>
+    `<button class="tab-btn${restTab === t ? " tab-active" : ""}" onclick="rEmpresaDetalle(${e.id},'${t}')">${tabLabels[t]}</button>`
+  ).join("");
 
-  const avisosRecientes = e.nombre === "OBA–"
-    ? D.avisos.slice(-3).reverse()
-    : [];
+  let bodyHtml = "";
 
-  const eventosProximos = e.nombre === "OBA–"
-    ? D.eventos.filter((ev) => ev.fecha >= today()).slice(0, 3)
-    : [];
+  if (restTab === "resumen") {
+    const recetas = (D[`${col}_recetas`] || []);
+    const menus = (D[`${col}_menus`] || []);
+    const ideas = (D[`${col}_ideas`] || []).filter((x) => x.estado !== "descartada");
+    const kpis = [...(D[`${col}_kpis`] || [])].sort((a, b) => b.fecha > a.fecha ? 1 : -1);
+    const ultimoKpi = kpis[0] || null;
+
+    const pracActivos = e.theme === "oba" ? D.practicantes.filter((p) => getPipelineStage(p) === "activo") : [];
+    const avisosRec = e.theme === "oba" ? D.avisos.slice(-3).reverse() : [];
+    const eventosProx = e.theme === "oba" ? D.eventos.filter((ev) => ev.fecha >= today()).slice(0, 3) : [];
+
+    bodyHtml = `
+      <div class="emp-detalle-grid">
+        <div class="emp-detalle-card">
+          <div class="emp-detalle-card-title">Estado hoy</div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+            <span class="emp-estado ${est.cls} emp-estado-lg">${est.label}</span>
+            <select class="field-select" onchange="setEstadoEmpresa(${e.id},this.value)" style="flex:1;min-width:120px">${estadoOpts}</select>
+          </div>
+          <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px">NOTA DEL DÍA</label>
+          <textarea id="nota-dia-${e.id}" class="field-area" rows="3" placeholder="Mensaje al equipo, incidencia, recordatorio...">${safeText(e.notaDia || "")}</textarea>
+          <button class="primary-btn" style="margin-top:8px;width:100%" onclick="saveNotaDia(${e.id})">Guardar nota</button>
+        </div>
+
+        <div class="emp-detalle-card">
+          <div class="emp-detalle-card-title">Este mes</div>
+          <div class="rest-stats-grid">
+            <div class="rest-stat" onclick="rEmpresaDetalle(${e.id},'recetario')">
+              <div class="rest-stat-val">${recetas.length}</div>
+              <div class="rest-stat-label">Recetas</div>
+            </div>
+            <div class="rest-stat" onclick="rEmpresaDetalle(${e.id},'menu')">
+              <div class="rest-stat-val">${menus.filter((m) => m.estado === "activo").length}</div>
+              <div class="rest-stat-label">Cambios activos</div>
+            </div>
+            <div class="rest-stat" onclick="rEmpresaDetalle(${e.id},'ideas')">
+              <div class="rest-stat-val">${ideas.length}</div>
+              <div class="rest-stat-label">Ideas</div>
+            </div>
+            <div class="rest-stat" onclick="rEmpresaDetalle(${e.id},'kpis')">
+              <div class="rest-stat-val">${ultimoKpi ? (ultimoKpi.nota ? "⭐" + ultimoKpi.nota : ultimoKpi.covers || "—") : "—"}</div>
+              <div class="rest-stat-label">Último KPI</div>
+            </div>
+          </div>
+        </div>
+
+        ${ultimoKpi ? `
+        <div class="emp-detalle-card">
+          <div class="emp-detalle-card-title">Último KPI registrado <span class="nd">${fmtDate(ultimoKpi.fecha)}</span></div>
+          <div class="rest-kpi-row">${ultimoKpi.covers ? `<span><strong>${ultimoKpi.covers}</strong> covers</span>` : ""}${ultimoKpi.ticket ? `<span><strong>${ultimoKpi.ticket}€</strong> ticket medio</span>` : ""}${ultimoKpi.nota ? `<span><strong>⭐ ${ultimoKpi.nota}</strong> valoración</span>` : ""}</div>
+          <button class="ghost-btn ghost-btn-sm" style="margin-top:10px" onclick="rEmpresaDetalle(${e.id},'kpis')">Ver histórico →</button>
+        </div>` : ""}
+
+        ${ideas.slice(0, 3).length ? `
+        <div class="emp-detalle-card">
+          <div class="emp-detalle-card-title">Ideas recientes</div>
+          ${ideas.slice(0, 3).map((i) => `
+            <div class="rest-item-row">
+              <span>💡 ${safeText(i.nombre)}</span>
+              <span class="nd">${fmtDate(i.fecha)}</span>
+            </div>`).join("")}
+          <button class="ghost-btn ghost-btn-sm" style="margin-top:10px" onclick="rEmpresaDetalle(${e.id},'ideas')">Ver todas →</button>
+        </div>` : ""}
+
+        ${e.theme === "oba" && pracActivos.length ? `
+        <div class="emp-detalle-card">
+          <div class="emp-detalle-card-title">Practicantes activos (${pracActivos.length})</div>
+          ${pracActivos.map((p) => `
+            <div class="hab-ocupante" onclick="sp('practicantes');oPF(${p.id})">
+              <div><div style="font-weight:600">${safeText(p.nombre)}</div>
+              <div class="nd">${safeText(p.partida || "Sin partida")} · ${fmtDate(p.fechaEntrada)} → ${fmtDate(p.fechaSalida)}</div></div>
+              <span style="color:var(--muted);font-size:18px">›</span>
+            </div>`).join("")}
+        </div>` : ""}
+
+        ${e.theme === "oba" && avisosRec.length ? `
+        <div class="emp-detalle-card">
+          <div class="emp-detalle-card-title">Últimos avisos</div>
+          ${avisosRec.map((a) => `
+            <div class="notice" style="margin-bottom:8px${a.urgente ? ";border-left-color:var(--red);background:var(--red-soft)" : ""}">
+              <strong>${safeText(a.titulo)}</strong>
+              <div class="nd">${safeText(a.texto.slice(0, 80))}${a.texto.length > 80 ? "…" : ""}</div>
+            </div>`).join("")}
+          <button class="ghost-btn ghost-btn-sm" onclick="sp('avisos')">Ver todos →</button>
+        </div>` : ""}
+      </div>`;
+
+  } else if (restTab === "recetario") {
+    const recetas = (D[`${col}_recetas`] || []).slice().reverse();
+    bodyHtml = `
+      <div class="rest-section-head">
+        <span>${recetas.length} receta${recetas.length !== 1 ? "s" : ""} estandarizada${recetas.length !== 1 ? "s" : ""}</span>
+        <button class="primary-btn" onclick="oRestItemM(${e.id},'recetario')">+ Nueva receta</button>
+      </div>
+      ${recetas.length ? recetas.map((r) => `
+        <div class="rest-item-card">
+          <div class="rest-item-main">
+            <div class="rest-item-name">${safeText(r.nombre)}</div>
+            ${r.descripcion ? `<div class="nd">${safeText(r.descripcion)}</div>` : ""}
+            ${r.notas ? `<div class="rest-item-notas">${safeText(r.notas)}</div>` : ""}
+          </div>
+          <div class="rest-item-meta">
+            <span class="nd">${fmtDate(r.fecha)}</span>
+            ${r.autor ? `<span class="nd">${safeText(r.autor)}</span>` : ""}
+            <button class="danger-soft ghost-btn ghost-btn-sm" onclick="dRestItem(${e.id},'recetario','oba_recetas',${r.id})">Eliminar</button>
+          </div>
+        </div>`).join("") : `<div class="notice">Sin recetas aún. Usa /ene receta [nombre] desde WhatsApp o el botón de arriba.</div>`}`;
+
+  } else if (restTab === "menu") {
+    const menus = (D[`${col}_menus`] || []).slice().reverse();
+    bodyHtml = `
+      <div class="rest-section-head">
+        <span>${menus.filter((m) => m.estado === "activo").length} cambio${menus.filter((m) => m.estado === "activo").length !== 1 ? "s" : ""} activo${menus.filter((m) => m.estado === "activo").length !== 1 ? "s" : ""}</span>
+        <button class="primary-btn" onclick="oRestItemM(${e.id},'menu')">+ Nuevo cambio</button>
+      </div>
+      ${menus.length ? menus.map((m) => `
+        <div class="rest-item-card${m.estado !== "activo" ? " rest-item-inactive" : ""}">
+          <div class="rest-item-main">
+            <div class="rest-item-name">${safeText(m.nombre)}</div>
+            ${m.descripcion ? `<div class="nd">${safeText(m.descripcion)}</div>` : ""}
+          </div>
+          <div class="rest-item-meta">
+            <span class="pip-tag pip-${m.estado === "activo" ? "activo" : "evaluado"}">${m.estado === "activo" ? "Activo" : "Retirado"}</span>
+            <span class="nd">${fmtDate(m.fecha)}</span>
+            <button class="ghost-btn ghost-btn-sm" onclick="toggleRestMenuEstado(${e.id},${m.id})">${m.estado === "activo" ? "Retirar" : "Reactivar"}</button>
+            <button class="danger-soft ghost-btn ghost-btn-sm" onclick="dRestItem(${e.id},'menu','${col}_menus',${m.id})">×</button>
+          </div>
+        </div>`).join("") : `<div class="notice">Sin cambios de menú. Usa /${col} menu [cambio] desde WhatsApp.</div>`}`;
+
+  } else if (restTab === "ideas") {
+    const ideas = (D[`${col}_ideas`] || []).slice().reverse();
+    const estadoIdea = { activo: "En curso", testeo: "Testeando", listo: "Lista", pausado: "Pausada", descartada: "Descartada" };
+    bodyHtml = `
+      <div class="rest-section-head">
+        <span>${ideas.filter((i) => i.estado !== "descartada").length} idea${ideas.filter((i) => i.estado !== "descartada").length !== 1 ? "s" : ""} activa${ideas.filter((i) => i.estado !== "descartada").length !== 1 ? "s" : ""}</span>
+        <button class="primary-btn" onclick="oRestItemM(${e.id},'ideas')">+ Nueva idea</button>
+      </div>
+      ${ideas.length ? ideas.map((i) => `
+        <div class="rest-item-card${i.estado === "descartada" ? " rest-item-inactive" : ""}">
+          <div class="rest-item-main">
+            <div class="rest-item-name">💡 ${safeText(i.nombre)}</div>
+            ${i.notas ? `<div class="rest-item-notas">${safeText(i.notas)}</div>` : ""}
+          </div>
+          <div class="rest-item-meta">
+            <select class="field-select" style="font-size:12px" onchange="setRestIdeaEstado(${e.id},${i.id},this.value,'${col}')">
+              ${Object.entries(estadoIdea).map(([k, v]) => `<option value="${k}"${i.estado === k ? " selected" : ""}>${v}</option>`).join("")}
+            </select>
+            <span class="nd">${fmtDate(i.fecha)}</span>
+            <button class="danger-soft ghost-btn ghost-btn-sm" onclick="dRestItem(${e.id},'ideas','${col}_ideas',${i.id})">×</button>
+          </div>
+        </div>`).join("") : `<div class="notice">Sin ideas aún. Usa /${col} idea [texto] desde WhatsApp.</div>`}`;
+
+  } else if (restTab === "kpis") {
+    const kpis = (D[`${col}_kpis`] || []).slice().sort((a, b) => b.fecha > a.fecha ? 1 : -1);
+    bodyHtml = `
+      <div class="rest-section-head">
+        <span>Historial de KPIs</span>
+        <button class="primary-btn" onclick="oRestKpiM(${e.id})">+ Registrar KPI</button>
+      </div>
+      ${kpis.length ? `
+      <div class="rest-kpi-table">
+        <div class="rest-kpi-thead">
+          <span>Fecha</span><span>Covers</span><span>Ticket medio</span><span>Valoración</span><span>Autor</span>
+        </div>
+        ${kpis.map((k) => `
+          <div class="rest-kpi-row-data">
+            <span>${fmtDate(k.fecha)}</span>
+            <span>${k.covers || "—"}</span>
+            <span>${k.ticket ? k.ticket + "€" : "—"}</span>
+            <span>${k.nota ? "⭐ " + k.nota : "—"}</span>
+            <span class="nd">${safeText(k.autor || "—")}</span>
+          </div>`).join("")}
+      </div>` : `<div class="notice">Sin KPIs aún. Usa /${col} kpi covers:X ticket:X nota:X desde WhatsApp.</div>`}`;
+  }
 
   document.getElementById("panel-grupo-body").innerHTML = `
     <div class="emp-detalle">
@@ -2836,77 +3016,106 @@ function rEmpresaDetalle(id) {
         </div>
       </div>
 
-      <div class="emp-detalle-grid">
-
-        <div class="emp-detalle-card">
-          <div class="emp-detalle-card-title">Estado hoy</div>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
-            <span class="emp-estado ${est.cls} emp-estado-lg">${est.label}</span>
-            <select class="field-select" onchange="setEstadoEmpresa(${e.id},this.value)" style="flex:1;min-width:120px">${estadoOpts}</select>
-          </div>
-          <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px">NOTA DEL DÍA</label>
-          <textarea id="nota-dia-${e.id}" class="field-area" rows="3" placeholder="Mensaje al equipo, incidencia, recordatorio...">${safeText(e.notaDia || "")}</textarea>
-          <button class="primary-btn" style="margin-top:8px;width:100%" onclick="saveNotaDia(${e.id})">Guardar nota</button>
-        </div>
-
-        ${pracActivos.length ? `
-        <div class="emp-detalle-card">
-          <div class="emp-detalle-card-title">Practicantes activos (${pracActivos.length})</div>
-          ${pracActivos.map((p) => `
-            <div class="hab-ocupante" onclick="sp('practicantes');oPF(${p.id})">
-              <div>
-                <div style="font-weight:600">${safeText(p.nombre)}</div>
-                <div class="nd">${safeText(p.partida || "Sin partida")} · ${fmtDate(p.fechaEntrada)} → ${fmtDate(p.fechaSalida)}</div>
-              </div>
-              <span style="color:var(--muted);font-size:18px">›</span>
-            </div>`).join("")}
-        </div>` : ""}
-
-        ${avisosRecientes.length ? `
-        <div class="emp-detalle-card">
-          <div class="emp-detalle-card-title">Últimos avisos</div>
-          ${avisosRecientes.map((a) => `
-            <div class="notice" style="margin-bottom:8px${a.urgente ? ";border-left-color:var(--red);background:var(--red-soft)" : ""}">
-              <strong>${safeText(a.titulo)}</strong>
-              <div class="nd">${safeText(a.texto.slice(0, 80))}${a.texto.length > 80 ? "…" : ""}</div>
-            </div>`).join("")}
-          <button class="ghost-btn ghost-btn-sm" onclick="sp('avisos')">Ver todos los avisos →</button>
-        </div>` : ""}
-
-        ${eventosProximos.length ? `
-        <div class="emp-detalle-card">
-          <div class="emp-detalle-card-title">Próximos eventos</div>
-          ${eventosProximos.map((ev) => `
-            <div class="notice" style="margin-bottom:8px">
-              <strong>${safeText(ev.titulo)}</strong>
-              <div class="nd">${fmtDate(ev.fecha)}</div>
-            </div>`).join("")}
-          <button class="ghost-btn ghost-btn-sm" onclick="sp('calendario')">Ver calendario →</button>
-        </div>` : ""}
-
-        ${e.nombre !== "OBA–" ? `
-        <div class="emp-detalle-card emp-coming-soon">
-          <div class="emp-detalle-card-title">Próximamente</div>
-          <p style="color:var(--muted);font-size:13px">Recetario, pedidos, practicantes y más para ${safeText(e.nombre)} están en desarrollo.</p>
-          <div class="emp-coming-list">
-            <span>📒 Recetario propio</span>
-            <span>🛒 Gestión de pedidos</span>
-            <span>👤 Practicantes</span>
-            <span>📅 Calendario</span>
-          </div>
-        </div>` : `
-        <div class="emp-detalle-card">
-          <div class="emp-detalle-card-title">Accesos directos</div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <button class="secondary-btn" onclick="sp('recetario')">📒 Ir al recetario</button>
-            <button class="secondary-btn" onclick="sp('pedidos')">🛒 Ir a pedidos</button>
-            <button class="secondary-btn" onclick="sp('practicantes')">👤 Ir a practicantes</button>
-            <button class="secondary-btn" onclick="sp('calendario')">📅 Ir al calendario</button>
-          </div>
-        </div>`}
-
+      <div class="toolbar" style="margin-bottom:16px">
+        <div class="ca">${tabsHtml}</div>
       </div>
+
+      ${bodyHtml}
     </div>`;
+}
+
+function oRestItemM(empId, tipo) {
+  const e = (D.empresas || []).find((x) => x.id === empId);
+  if (!e) return;
+  const col = REST_COL_MAP[e.theme] || e.theme;
+  const labels = { recetario: "receta", menu: "cambio de menú", ideas: "idea" };
+  const placeholders = { recetario: "Nombre de la receta estandarizada", menu: "Descripción del cambio de carta", ideas: "Nueva idea o propuesta" };
+  oM(`
+    <h2>Nueva ${labels[tipo] || tipo}</h2>
+    <label>Nombre / descripción</label>
+    <input class="field-input" id="ri-nombre" placeholder="${placeholders[tipo] || ""}" autofocus>
+    <label>Notas adicionales</label>
+    <textarea class="field-area" id="ri-notas" rows="3" placeholder="Elaboración, contexto, referencia..."></textarea>
+    <div class="form-actions">
+      <button class="secondary-btn" onclick="cM()">Cancelar</button>
+      <button class="primary-btn" onclick="sRestItem(${empId},'${tipo}','${col}')">Guardar</button>
+    </div>`);
+}
+
+function sRestItem(empId, tipo, col) {
+  const nombre = document.getElementById("ri-nombre")?.value.trim();
+  if (!nombre) { alert("Escribe un nombre."); return; }
+  const notas = document.getElementById("ri-notas")?.value.trim() || "";
+  const colKey = tipo === "menu" ? `${col}_menus` : `${col}_${tipo === "recetario" ? "recetas" : "ideas"}`;
+  const list = D[colKey] || [];
+  const id = list.length ? Math.max(...list.map((x) => x.id || 0)) + 1 : 1;
+  list.push({ id, nombre, notas, descripcion: "", estado: "activo", fecha: today(), autor: "Dirección" });
+  D[colKey] = list;
+  save(colKey);
+  cM();
+  rEmpresaDetalle(empId, tipo === "recetario" ? "recetario" : tipo);
+}
+
+function dRestItem(empId, tab, colKey, itemId) {
+  if (!confirm("¿Eliminar este elemento?")) return;
+  D[colKey] = (D[colKey] || []).filter((x) => x.id !== itemId);
+  save(colKey);
+  rEmpresaDetalle(empId, tab);
+}
+
+function toggleRestMenuEstado(empId, itemId) {
+  const e = (D.empresas || []).find((x) => x.id === empId);
+  if (!e) return;
+  const col = `${REST_COL_MAP[e.theme] || e.theme}_menus`;
+  const item = (D[col] || []).find((x) => x.id === itemId);
+  if (!item) return;
+  item.estado = item.estado === "activo" ? "retirado" : "activo";
+  save(col);
+  rEmpresaDetalle(empId, "menu");
+}
+
+function setRestIdeaEstado(empId, itemId, estado, colPrefix) {
+  const col = `${colPrefix}_ideas`;
+  const item = (D[col] || []).find((x) => x.id === itemId);
+  if (!item) return;
+  item.estado = estado;
+  save(col);
+}
+
+function oRestKpiM(empId) {
+  const e = (D.empresas || []).find((x) => x.id === empId);
+  if (!e) return;
+  const col = REST_COL_MAP[e.theme] || e.theme;
+  oM(`
+    <h2>Registrar KPI — ${safeText(e.nombre)}</h2>
+    <label>Covers (comensales)</label>
+    <input class="field-input" id="kpi-covers" type="number" placeholder="45">
+    <label>Ticket medio (€)</label>
+    <input class="field-input" id="kpi-ticket" type="number" step="0.1" placeholder="38.5">
+    <label>Valoración media (1-5)</label>
+    <input class="field-input" id="kpi-nota" type="number" step="0.1" min="1" max="5" placeholder="4.8">
+    <label>Fecha</label>
+    <input class="field-input" id="kpi-fecha" type="date" value="${today()}">
+    <div class="form-actions">
+      <button class="secondary-btn" onclick="cM()">Cancelar</button>
+      <button class="primary-btn" onclick="sRestKpi(${empId},'${col}')">Guardar</button>
+    </div>`);
+}
+
+function sRestKpi(empId, col) {
+  const covers = parseFloat(document.getElementById("kpi-covers")?.value) || null;
+  const ticket = parseFloat(document.getElementById("kpi-ticket")?.value) || null;
+  const nota = parseFloat(document.getElementById("kpi-nota")?.value) || null;
+  const fecha = document.getElementById("kpi-fecha")?.value || today();
+  if (!covers && !ticket && !nota) { alert("Rellena al menos un campo."); return; }
+  const colKey = `${col}_kpis`;
+  const list = D[colKey] || [];
+  const id = list.length ? Math.max(...list.map((x) => x.id || 0)) + 1 : 1;
+  list.push({ id, covers, ticket, nota, fecha, autor: "Dirección" });
+  D[colKey] = list;
+  save(colKey);
+  cM();
+  rEmpresaDetalle(empId, "kpis");
 }
 
 function setEstadoEmpresa(id, estado) {

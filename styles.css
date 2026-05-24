@@ -1862,14 +1862,38 @@ th,
 .field-area{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-family:inherit;font-size:13px;resize:vertical;color:var(--ink)}
 .field-area:focus{outline:none;border-color:var(--ink)}
 
-/* Coming soon */
-.emp-coming-soon{border-style:dashed}
-.emp-coming-list{display:flex;flex-direction:column;gap:6px;margin-top:12px}
-.emp-coming-list span{font-size:13px;color:var(--muted);padding:6px 10px;background:var(--surface);border-radius:8px}
+/* Restaurant stats summary */
+.rest-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.rest-stat{background:var(--surface);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;transition:background .15s}
+.rest-stat:hover{background:var(--line)}
+.rest-stat-val{font-size:22px;font-weight:700;line-height:1}
+.rest-stat-label{font-size:10px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.05em}
+.rest-kpi-row{display:flex;gap:20px;flex-wrap:wrap;font-size:14px}
+.rest-kpi-row span{color:var(--muted)}
+.rest-kpi-row strong{color:var(--ink)}
+
+/* Restaurant section items */
+.rest-section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.rest-item-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-sm);padding:16px 20px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.rest-item-card.rest-item-inactive{opacity:.5}
+.rest-item-main{flex:1;min-width:0}
+.rest-item-name{font-weight:600;font-size:14px;margin-bottom:4px}
+.rest-item-notas{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
+.rest-item-meta{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.rest-item-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+.rest-item-row:last-child{border-bottom:none}
+
+/* KPI table */
+.rest-kpi-table{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden}
+.rest-kpi-thead{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr 1fr;padding:10px 16px;background:var(--surface);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.rest-kpi-row-data{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr 1fr;padding:12px 16px;border-top:1px solid var(--line);font-size:13px}
 
 @media(max-width:720px){
   .emp-grid{grid-template-columns:1fr}
   .emp-detalle-header{padding:20px;gap:16px}
   .emp-detalle-logo{width:140px}
   .emp-detalle-grid{grid-template-columns:1fr}
+  .rest-stats-grid{grid-template-columns:repeat(2,1fr)}
+  .rest-kpi-thead,.rest-kpi-row-data{grid-template-columns:1fr 1fr 1fr}
+  .rest-kpi-thead span:nth-child(n+4),.rest-kpi-row-data span:nth-child(n+4){display:none}
 }
