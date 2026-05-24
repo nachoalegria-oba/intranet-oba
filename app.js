@@ -14,35 +14,49 @@ const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "
 const DS = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"];
 const SKILLS = ["Mise en place", "Fondos y salsas", "Carnes", "Pescados", "Pastelería", "Fermentos", "Limpieza y orden", "Trabajo en equipo"];
 const ALERGEN_LIST = ["Gluten", "Crustáceos", "Huevos", "Pescado", "Cacahuetes", "Soja", "Lácteos", "Frutos de cáscara", "Apio", "Mostaza", "Sésamo", "Dióxido de azufre", "Altramuces", "Moluscos"];
-const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "eventos", "proveedores", "practicantes", "centros", "habitaciones", "pedidosHistorial", "descargables", "empresas", "oba_recetas", "oba_menus", "oba_ideas", "oba_kpis", "ene_recetas", "ene_menus", "ene_ideas", "ene_kpis", "candomo_recetas", "candomo_menus", "candomo_ideas", "candomo_kpis", "canitas_recetas", "canitas_menus", "canitas_ideas", "canitas_kpis"];
+const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "eventos", "proveedores", "practicantes", "centros", "habitaciones", "pedidosHistorial", "descargables", "empresas", "oba_recetas", "oba_menus", "oba_ideas", "oba_kpis", "ene_recetas", "ene_menus", "ene_ideas", "ene_kpis", "candomo_recetas", "candomo_menus", "candomo_ideas", "candomo_kpis", "canitas_recetas", "canitas_menus", "canitas_ideas", "canitas_kpis", "cebo_recetas", "cebo_menus", "cebo_ideas", "cebo_kpis"];
 
-const REST_COL_MAP = { oba: "oba", ene: "ene", candomo: "candomo", canitas: "canitas" };
+const REST_COL_MAP = { oba: "oba", ene: "ene", candomo: "candomo", canitas: "canitas", cebo: "cebo" };
 
 const EMPRESAS_SEED = [
   {
     id: 1,
     nombre: "OBA–",
-    subtitulo: "Restaurante · Alta cocina",
+    subtitulo: "Consultora gastronómica",
     ubicacion: "Casas Ibáñez, Albacete",
     web: "https://intranet.obarestaurante.es",
     estado: "abierto",
     notaDia: "",
     theme: "oba",
-    logoFile: null
+    logoFile: null,
+    googleSearch: "OBA Restaurante Casas Ibáñez"
   },
   {
     id: 2,
+    nombre: "CEBO",
+    subtitulo: "Restaurante · Madrid",
+    ubicacion: "Madrid",
+    web: "",
+    estado: "abierto",
+    notaDia: "",
+    theme: "cebo",
+    logoFile: null,
+    googleSearch: "CEBO restaurante Madrid"
+  },
+  {
+    id: 3,
     nombre: "eñe",
-    subtitulo: "Restaurante",
-    ubicacion: "España",
+    subtitulo: "Restaurante · Albacete",
+    ubicacion: "Albacete",
     web: "",
     estado: "abierto",
     notaDia: "",
     theme: "ene",
-    logoFile: "logo-ene.png"
+    logoFile: "logo-ene.png",
+    googleSearch: "Eñe by Cañitas Albacete"
   },
   {
-    id: 3,
+    id: 4,
     nombre: "CAN DOMO",
     subtitulo: "Restaurante · Ibiza",
     ubicacion: "Ibiza",
@@ -50,18 +64,20 @@ const EMPRESAS_SEED = [
     estado: "abierto",
     notaDia: "",
     theme: "candomo",
-    logoFile: "logo-candomo.webp"
+    logoFile: "logo-candomo.webp",
+    googleSearch: "Can Domo restaurante Ibiza"
   },
   {
-    id: 4,
-    nombre: "Cañitas",
-    subtitulo: "Restaurante · Desde 1953",
-    ubicacion: "Casas Ibáñez, Albacete",
+    id: 5,
+    nombre: "Cañitas Maite",
+    subtitulo: "Restaurante · Málaga",
+    ubicacion: "Málaga",
     web: "",
     estado: "abierto",
     notaDia: "",
     theme: "canitas",
-    logoFile: "logo-canitas.png"
+    logoFile: "logo-canitas.png",
+    googleSearch: "Cañitas Maite Restaurante Málaga"
   }
 ];
 const LOCAL_KEY = "oba_intranet_v3";
@@ -221,7 +237,8 @@ const DEFAULTS = {
   oba_recetas: [], oba_menus: [], oba_ideas: [], oba_kpis: [],
   ene_recetas: [], ene_menus: [], ene_ideas: [], ene_kpis: [],
   candomo_recetas: [], candomo_menus: [], candomo_ideas: [], candomo_kpis: [],
-  canitas_recetas: [], canitas_menus: [], canitas_ideas: [], canitas_kpis: []
+  canitas_recetas: [], canitas_menus: [], canitas_ideas: [], canitas_kpis: [],
+  cebo_recetas: [], cebo_menus: [], cebo_ideas: [], cebo_kpis: []
 };
 
 let db = null;
@@ -2751,6 +2768,12 @@ function logoEmpresa(e) {
         <path d="M383.119 54.7708C383.132 39.781 388.675 26.1515 398.511 16.3229C382.077 25.5421 369.625 43.2493 369.602 63.5387C369.569 93.3734 394.857 117.638 424.479 117.668C439.208 117.688 452.416 111.789 462.098 102.112C454.419 106.499 445.514 108.607 436.153 108.594C406.531 108.561 383.078 84.6055 383.119 54.7708" fill="currentColor"/>
       </svg>
       <span class="emp-logo-oba-dash">–</span>
+    </div>`;
+  }
+  if (e.theme === "cebo") {
+    return `<div class="emp-logo-cebo">
+      <div class="emp-logo-cebo-main">CEBO</div>
+      <div class="emp-logo-cebo-sub">Madrid</div>
     </div>`;
   }
   if (e.theme === "ene") {

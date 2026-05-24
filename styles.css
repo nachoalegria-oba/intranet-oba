@@ -1790,6 +1790,7 @@ th,
 
 /* Per-brand card themes */
 .emp-card-oba{background:#0b0b0b;color:#f2f0ea;border-color:#2a2a2a}
+.emp-card-cebo{background:#1c1c2e;color:#e8e4f0;border-color:#2e2e4a}
 .emp-card-ene{background:#fdf5ef;color:#3d1a0a;border-color:#e8ccba}
 .emp-card-candomo{background:#fafaf8;color:#0b0b0b;border-color:#e0ddd8}
 .emp-card-canitas{background:#1a1208;color:#f5f0e8;border-color:#3a2e1a}
@@ -1805,6 +1806,12 @@ th,
 .emp-logo-oba-wrap{display:flex;align-items:center;justify-content:center;gap:3px}
 .emp-logo-oba{color:#f2f0ea;flex:1;max-width:200px}
 .emp-logo-oba-dash{color:#f2f0ea;font-family:"Space Mono",monospace;font-size:1.6rem;font-weight:400;line-height:1;margin-top:2px;opacity:.7}
+
+/* CEBO */
+.emp-logo-cebo{text-align:center}
+.emp-logo-cebo-main{font-family:"Unbounded",sans-serif;font-size:2.2rem;font-weight:700;letter-spacing:.18em;color:#e8e4f0;line-height:1}
+.emp-logo-cebo-sub{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:rgba(232,228,240,.45);margin-top:6px;font-family:"Space Mono",monospace}
+.emp-detalle-cebo{background:#1c1c2e;color:#e8e4f0}
 
 /* eñe */
 .emp-logo-ene{font-family:"Comfortaa",cursive;font-size:2.8rem;font-weight:700;color:#7a3e28;text-align:center;line-height:1;letter-spacing:-.02em;padding:4px 0}
