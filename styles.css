@@ -315,8 +315,8 @@ td select:focus{
 
 .main-nav{
   display:grid;
-  grid-template-columns:repeat(9,minmax(0,1fr));
-  gap:10px;
+  grid-template-columns:repeat(10,minmax(0,1fr));
+  gap:8px;
   padding:14px 24px 0;
 }
 .mobile-nav-toggle{
@@ -342,7 +342,7 @@ td select:focus{
 .nav-btn-ai{color:var(--green-deep)}
 .nav-btn-ai.active{background:linear-gradient(180deg, #2e3d26 0%, #111 100%)}
 
-.page{padding:22px 24px 32px}
+.page{padding:28px 32px 48px}
 .panel{display:none}
 .panel.active{display:block}
 
@@ -1339,21 +1339,72 @@ th,
   box-shadow:0 10px 28px rgba(11,11,11,.08);
 }
 
-@media (max-width: 1120px){
-  .main-nav{grid-template-columns:repeat(3,minmax(0,1fr))}
+/* ── Tablet landscape (≤1100px) ── */
+@media (max-width: 1100px){
+  .main-nav{grid-template-columns:repeat(5,minmax(0,1fr))}
   .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .home-grid{grid-template-columns:1fr 1fr}
+  .pedido-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* ── Tablet portrait (≤860px) ── */
+@media (max-width: 860px){
+  .main-nav{grid-template-columns:repeat(4,minmax(0,1fr))}
   .home-grid{grid-template-columns:1fr}
   .pedido-summary{grid-template-columns:1fr}
   .pedido-item-row{grid-template-columns:1fr}
   .pedido-item-controls{grid-template-columns:1fr}
-  .segmented-bar{margin-right:-4px}
   .page-hero,
-  .section-head-lg,
-  .topbar{flex-direction:column;align-items:flex-start}
-  .topbar-actions{
-    width:auto;
-    align-self:flex-end;
+  .section-head-lg{flex-direction:column;align-items:flex-start}
+  .topbar-actions{width:auto}
+}
+
+/* ── Desktop largo (≥1400px): max-width + mejoras ── */
+@media (min-width: 1400px){
+  .topbar{
+    padding-left: max(40px, calc((100vw - 1440px)/2 + 32px));
+    padding-right: max(40px, calc((100vw - 1440px)/2 + 32px));
   }
+  .main-nav{
+    max-width:1440px;
+    margin-left:auto;
+    margin-right:auto;
+    padding-left:32px;
+    padding-right:32px;
+    gap:10px;
+  }
+  .page{
+    max-width:1440px;
+    margin-left:auto;
+    margin-right:auto;
+    padding-left:32px;
+    padding-right:32px;
+  }
+  .stats-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .home-grid{grid-template-columns:1.1fr 1fr 1fr}
+  .section-head-lg h1{font-size:2.6rem}
+  .pipeline-col{min-width:230px;flex:0 0 230px}
+}
+
+/* ── Desktop estándar (≥1025px) ── */
+@media (min-width: 1025px){
+  .nav-btn{font-size:12px;padding:12px 8px}
+  .section-head-lg h1{font-size:2.2rem}
+  .modal{width:min(720px,100%)}
+  .pipeline-col{min-width:210px;flex:0 0 210px}
+  .emp-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .emp-detalle-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .desc-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .hab-grid{grid-template-columns:repeat(3,minmax(280px,1fr))}
+  .cards-grid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+}
+
+/* ── Mejoras tipografía en pantalla grande ── */
+@media (min-width: 1200px){
+  .page-hero h1{font-size:clamp(2.6rem,3.5vw,3.8rem)}
+  .topbar{padding-top:22px;padding-bottom:22px}
+  .topbar-brand{gap:18px}
+  .topbar-date{font-size:13px}
 }
 
 @media (max-width: 720px){
@@ -1378,7 +1429,7 @@ th,
   .logo-mark-hero{
     width:min(148px, 48vw);
   }
-  .page{padding:14px 14px 120px}
+  .page{padding:16px 14px 120px}
   .page{padding-bottom:calc(120px + env(safe-area-inset-bottom, 0px))}
   .topbar{
     flex-direction:row;
