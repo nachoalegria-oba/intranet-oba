@@ -33,18 +33,6 @@ const EMPRESAS_SEED = [
   },
   {
     id: 2,
-    nombre: "CEBO",
-    subtitulo: "Restaurante · Madrid",
-    ubicacion: "Madrid",
-    web: "",
-    estado: "abierto",
-    notaDia: "",
-    theme: "cebo",
-    logoFile: null,
-    googleSearch: "CEBO restaurante Madrid"
-  },
-  {
-    id: 3,
     nombre: "eñe",
     subtitulo: "Restaurante · Albacete",
     ubicacion: "Albacete",
@@ -53,10 +41,10 @@ const EMPRESAS_SEED = [
     notaDia: "",
     theme: "ene",
     logoFile: "logo-ene.png",
-    googleSearch: "Eñe by Cañitas Albacete"
+    googleSearch: "Eñe by Cañitas restaurante Albacete"
   },
   {
-    id: 4,
+    id: 3,
     nombre: "CAN DOMO",
     subtitulo: "Restaurante · Ibiza",
     ubicacion: "Ibiza",
@@ -68,7 +56,7 @@ const EMPRESAS_SEED = [
     googleSearch: "Can Domo restaurante Ibiza"
   },
   {
-    id: 5,
+    id: 4,
     nombre: "Cañitas Maite",
     subtitulo: "Restaurante · Málaga",
     ubicacion: "Málaga",
@@ -77,7 +65,19 @@ const EMPRESAS_SEED = [
     notaDia: "",
     theme: "canitas",
     logoFile: "logo-canitas.png",
-    googleSearch: "Cañitas Maite Restaurante Málaga"
+    googleSearch: "Cañitas Maite Málaga restaurante"
+  },
+  {
+    id: 5,
+    nombre: "CEBO",
+    subtitulo: "Restaurante · Madrid",
+    ubicacion: "Madrid",
+    web: "",
+    estado: "abierto",
+    notaDia: "",
+    theme: "cebo",
+    logoFile: null,
+    googleSearch: "CEBO restaurante Hotel Urban Madrid"
   }
 ];
 const LOCAL_KEY = "oba_intranet_v3";
@@ -470,14 +470,18 @@ function seedEmpresas() {
     D.empresas = JSON.parse(JSON.stringify(EMPRESAS_SEED));
     save("empresas");
   } else {
-    // Sync logoFile and theme from seed (in case they were updated)
     let changed = false;
     EMPRESAS_SEED.forEach((seed) => {
       const emp = D.empresas.find((e) => e.id === seed.id);
       if (emp) {
-        if (emp.logoFile !== seed.logoFile) { emp.logoFile = seed.logoFile; changed = true; }
-        if (emp.theme !== seed.theme) { emp.theme = seed.theme; changed = true; }
-        if (emp.subtitulo !== seed.subtitulo) { emp.subtitulo = seed.subtitulo; changed = true; }
+        // Sync fields that may have changed in seed
+        ["logoFile", "theme", "subtitulo", "ubicacion", "googleSearch"].forEach((k) => {
+          if (emp[k] !== seed[k]) { emp[k] = seed[k]; changed = true; }
+        });
+      } else {
+        // New restaurant added to seed — insert it
+        D.empresas.push(JSON.parse(JSON.stringify(seed)));
+        changed = true;
       }
     });
     if (changed) save("empresas");
