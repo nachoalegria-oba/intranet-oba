@@ -2776,8 +2776,8 @@ function logoEmpresa(e) {
   }
   if (e.theme === "cebo") {
     return `<div class="emp-logo-cebo">
-      <div class="emp-logo-cebo-main">CEBO</div>
-      <div class="emp-logo-cebo-sub">Madrid</div>
+      <img src="./icons/oba-logo-white.png" class="emp-logo-cebo-img" alt="CEBO">
+      <div class="emp-logo-cebo-sub">CEBO · Madrid</div>
     </div>`;
   }
   if (e.theme === "ene") {
