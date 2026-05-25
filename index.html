@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@300;500;700;900&family=Cormorant+Garamond:wght@300;400;600&family=Comfortaa:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=51">
+  <link rel="stylesheet" href="./styles.css?v=52">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
@@ -346,10 +346,21 @@
     <div class="drawer-body" id="pfbody"></div>
   </div>
 
+  <div class="detail-drawer" id="restdet">
+    <div class="drawer-head">
+      <h2 id="restdet-tit"></h2>
+      <div class="drawer-actions">
+        <button class="secondary-btn" onclick="printRestFicha()">Imprimir</button>
+        <button class="secondary-btn" onclick="closeRestRecipe()">Cerrar</button>
+      </div>
+    </div>
+    <div class="drawer-body" id="restdet-body"></div>
+  </div>
+
   <div class="modal-bg" id="modal">
     <div class="modal" id="mi"></div>
   </div>
 
-  <script src="./app.js?v=50"></script>
+  <script src="./app.js?v=51"></script>
 </body>
 </html>

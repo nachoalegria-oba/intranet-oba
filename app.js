@@ -9,6 +9,7 @@ const FB = {
 };
 
 const SECS = ["Bienvenida", "Huerta", "Bosque", "Afluente", "Corral", "Acantilado", "Monte Bajo", "Llanura", "Rivera", "Postres"];
+const REST_SECS = ["Entrantes", "Principales", "Postres", "Snacks", "Bebidas", "Bases y Técnicas"];
 const CATS = ["Bienvenida", "Huerta", "Bosque", "Afluente", "Corral", "Acantilado", "Monte Bajo", "Llanura", "Rivera", "Fermentos"];
 const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 const DS = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"];
@@ -242,6 +243,10 @@ let cM = new Date().getMonth();
 let pedT = "lista";
 let pedSort = false;
 let activeRecipeId = null;
+let activeRestRecipeId = null;
+let restRecipePrintMarkup = "";
+let restRecipeEmpId = null;
+let restRecipeCol = "";
 let iaH = [];
 let deferredPrompt = null;
 let printRecipeMarkup = "";
@@ -320,7 +325,7 @@ function showError(message) {
 }
 
 function updateOverlayState() {
-  const hasOpenOverlay = ["modal", "rdet", "pfdet"].some((id) => document.getElementById(id)?.classList.contains("open"));
+  const hasOpenOverlay = ["modal", "rdet", "pfdet", "restdet"].some((id) => document.getElementById(id)?.classList.contains("open"));
   document.body.classList.toggle("overlay-open", hasOpenOverlay);
 }
 
@@ -526,6 +531,11 @@ function sp(id) {
 
 function bsec(section) {
   const map = { Bosque: "bosque", Afluente: "fluvial", Rivera: "fluvial", Corral: "corral", Caza: "caza", Acantilado: "caza", "Monte Bajo": "caza", Llanura: "corral", Postres: "postre", Huerta: "huerta", Bienvenida: "base" };
+  return `<span class="badge b-${map[section] || "base"}">${safeText(section)}</span>`;
+}
+
+function brestSec(section) {
+  const map = { Entrantes: "huerta", Principales: "bosque", Postres: "postre", Snacks: "corral", Bebidas: "fluvial", "Bases y Técnicas": "base" };
   return `<span class="badge b-${map[section] || "base"}">${safeText(section)}</span>`;
 }
 
@@ -1757,6 +1767,10 @@ function closeTopOverlay() {
   }
   if (document.getElementById("pfdet")?.classList.contains("open")) {
     cPF();
+    return true;
+  }
+  if (document.getElementById("restdet")?.classList.contains("open")) {
+    closeRestRecipe();
     return true;
   }
   return false;
@@ -3391,25 +3405,22 @@ function rEmpresaDetalle(id, tab) {
       </div>`;
 
   } else if (restTab === "recetario") {
-    const recetas = (D[`${col}_recetas`] || []).slice().reverse();
+    const recetas = (D[`${col}_recetas`] || []);
     bodyHtml = `
       <div class="rest-section-head">
-        <span>${recetas.length} receta${recetas.length !== 1 ? "s" : ""} estandarizada${recetas.length !== 1 ? "s" : ""}</span>
-        <button class="primary-btn" onclick="oRestItemM(${e.id},'recetario')">+ Nueva receta</button>
+        <span>${recetas.length} receta${recetas.length !== 1 ? "s" : ""}</span>
+        <button class="primary-btn" onclick="oRestRM(${e.id},'${col}',null)">+ Nueva receta</button>
       </div>
-      ${recetas.length ? recetas.map((r) => `
-        <div class="rest-item-card">
-          <div class="rest-item-main">
-            <div class="rest-item-name">${safeText(r.nombre)}</div>
-            ${r.descripcion ? `<div class="nd">${safeText(r.descripcion)}</div>` : ""}
-            ${r.notas ? `<div class="rest-item-notas">${safeText(r.notas)}</div>` : ""}
-          </div>
-          <div class="rest-item-meta">
-            <span class="nd">${fmtDate(r.fecha)}</span>
-            ${r.autor ? `<span class="nd">${safeText(r.autor)}</span>` : ""}
-            <button class="danger-soft ghost-btn ghost-btn-sm" onclick="dRestItem(${e.id},'recetario','oba_recetas',${r.id})">Eliminar</button>
-          </div>
-        </div>`).join("") : `<div class="notice">Sin recetas aún. Usa /ene receta [nombre] desde WhatsApp o el botón de arriba.</div>`}`;
+      <div class="toolbar" style="margin-bottom:16px">
+        <input id="rest-rsearch-${e.id}" class="search-input" type="search" placeholder="Buscar receta…" oninput="rRestRecetario(${e.id},'${col}')">
+        <select id="rest-rcat-${e.id}" class="field-select" onchange="rRestRecetario(${e.id},'${col}')">
+          <option value="">Todas las secciones</option>
+          ${REST_SECS.map((s) => `<option value="${s}">${s}</option>`).join("")}
+        </select>
+      </div>
+      <div class="rest-rcards" id="rest-rcards-${e.id}"></div>`; // filled by rRestRecetario
+    // defer render to after bodyHtml is injected
+    setTimeout(() => rRestRecetario(e.id, col), 0);
 
   } else if (restTab === "menu") {
     const menus = (D[`${col}_menus`] || []).slice().reverse();
@@ -3577,16 +3588,16 @@ function oRestItemM(empId, tipo) {
   const e = (D.empresas || []).find((x) => x.id === empId);
   if (!e) return;
   const col = REST_COL_MAP[e.theme] || e.theme;
-  const labels = { recetario: "receta", menu: "cambio de menú", ideas: "idea" };
-  const placeholders = { recetario: "Nombre de la receta estandarizada", menu: "Descripción del cambio de carta", ideas: "Nueva idea o propuesta" };
-  oM(`
+  const labels = { menu: "cambio de menú", ideas: "idea" };
+  const placeholders = { menu: "Descripción del cambio de carta", ideas: "Nueva idea o propuesta" };
+  oModal(`
     <h2>Nueva ${labels[tipo] || tipo}</h2>
     <label>Nombre / descripción</label>
     <input class="field-input" id="ri-nombre" placeholder="${placeholders[tipo] || ""}" autofocus>
     <label>Notas adicionales</label>
     <textarea class="field-area" id="ri-notas" rows="3" placeholder="Elaboración, contexto, referencia..."></textarea>
     <div class="form-actions">
-      <button class="secondary-btn" onclick="cM()">Cancelar</button>
+      <button class="secondary-btn" onclick="cModal()">Cancelar</button>
       <button class="primary-btn" onclick="sRestItem(${empId},'${tipo}','${col}')">Guardar</button>
     </div>`);
 }
@@ -3595,14 +3606,14 @@ function sRestItem(empId, tipo, col) {
   const nombre = document.getElementById("ri-nombre")?.value.trim();
   if (!nombre) { alert("Escribe un nombre."); return; }
   const notas = document.getElementById("ri-notas")?.value.trim() || "";
-  const colKey = tipo === "menu" ? `${col}_menus` : `${col}_${tipo === "recetario" ? "recetas" : "ideas"}`;
+  const colKey = tipo === "menu" ? `${col}_menus` : `${col}_ideas`;
   const list = D[colKey] || [];
   const id = list.length ? Math.max(...list.map((x) => x.id || 0)) + 1 : 1;
   list.push({ id, nombre, notas, descripcion: "", estado: "activo", fecha: today(), autor: "Dirección" });
   D[colKey] = list;
   save(colKey);
-  cM();
-  rEmpresaDetalle(empId, tipo === "recetario" ? "recetario" : tipo);
+  cModal();
+  rEmpresaDetalle(empId, tipo);
 }
 
 function dRestItem(empId, tab, colKey, itemId) {
@@ -3611,6 +3622,271 @@ function dRestItem(empId, tab, colKey, itemId) {
   save(colKey);
   rEmpresaDetalle(empId, tab);
 }
+
+// ─── FULL RECIPE SYSTEM FOR GROUP RESTAURANTS ───────────────────────────────
+
+function rRestRecetario(empId, col) {
+  const q = (document.getElementById(`rest-rsearch-${empId}`)?.value || "").toLowerCase();
+  const sec = document.getElementById(`rest-rcat-${empId}`)?.value || "";
+  const all = D[`${col}_recetas`] || [];
+  const list = all.filter((r) => {
+    const ms = !q || (r.nombre || "").toLowerCase().includes(q) || (r.seccion || "").toLowerCase().includes(q) || (r.descripcion || "").toLowerCase().includes(q);
+    const mc = !sec || r.seccion === sec;
+    return ms && mc;
+  }).slice().reverse();
+  const container = document.getElementById(`rest-rcards-${empId}`);
+  if (!container) return;
+  container.innerHTML = list.length ? list.map((r) => `
+    <article class="card rest-rec-card">
+      ${brestSec(r.seccion || "Principales")}
+      <h3>${safeText(r.nombre)}</h3>
+      <p>${safeText(r.descripcion || "Sin descripción")}</p>
+      <div class="cmeta">
+        ${r.temporada ? `Temporada: ${safeText(r.temporada)}` : ""}
+        ${r.raciones ? ` · ${safeText(r.raciones)} raciones` : ""}
+        ${r.tiempoElaboracion ? ` · ${safeText(r.tiempoElaboracion)}` : ""}
+        ${(r.alergenos || []).length ? `<br>⚠ ${(r.alergenos || []).join(", ")}` : ""}
+      </div>
+      <div class="ca" style="margin-top:12px">
+        <button class="btn btn-s" onclick="openRestRecipe(${empId},'${col}',${r.id})">Ver ficha</button>
+        <button class="btn btn-o btn-s" onclick="oRestRM(${empId},'${col}',${r.id})">Editar</button>
+        <button class="btn btn-s btn-d" onclick="dRestRec(${empId},'${col}',${r.id})">Eliminar</button>
+      </div>
+    </article>`).join("") : `<div class="notice"><strong>Sin resultados</strong><div>No se encontraron recetas con ese filtro.</div></div>`;
+}
+
+function oRestRM(empId, col, id) {
+  const colKey = `${col}_recetas`;
+  const recipe = id ? (D[colKey] || []).find((r) => r.id === id) : null;
+  const alerg = recipe?.alergenos || [];
+  const subs = recipe?.subrecetas || [];
+  oModal(`
+    <h3>${recipe ? "Editar receta" : "Nueva receta"}</h3>
+    <div class="fr"><label>Nombre *</label><input id="rr-n" value="${safeText(recipe?.nombre || "")}"></div>
+    <div class="fr"><label>Sección</label>
+      <select id="rr-sec">${REST_SECS.map((s) => `<option${recipe?.seccion === s ? " selected" : ""}>${s}</option>`).join("")}</select>
+    </div>
+    <div class="fr"><label>Temporada</label><input id="rr-t" value="${safeText(recipe?.temporada || "")}" placeholder="Ej: Primavera-Verano"></div>
+    <div class="fr"><label>Descripción</label><textarea id="rr-d">${safeText(recipe?.descripcion || "")}</textarea></div>
+    <div class="fr"><label>Raciones</label><input id="rr-rac" value="${safeText(recipe?.raciones || "")}" placeholder="Ej: 4"></div>
+    <div class="fr"><label>Tiempo de elaboración</label><input id="rr-tiem" value="${safeText(recipe?.tiempoElaboracion || "")}" placeholder="Ej: 1h 30m"></div>
+    <div class="fr"><label>Temperatura de servicio</label><input id="rr-temp" value="${safeText(recipe?.temperatura || "")}" placeholder="Ej: 65°C"></div>
+    <div class="fr"><label>Alérgenos</label>
+      <div class="allergen-grid">
+        ${ALERGEN_LIST.map((a) => `<label class="allergen-option"><input type="checkbox" id="rral_${a.replace(/\s/g,"_")}" ${alerg.includes(a) ? "checked" : ""}> <span>${a}</span></label>`).join("")}
+      </div>
+    </div>
+    <div class="fr"><label>Ingredientes principales</label>
+      <div class="ingredient-editor">
+        <div class="ingredient-items" id="rr-ing-rows">${ingredientItemsHtml(recipe?.ingredientes || [])}</div>
+        ${ingredientComposerHtml("rr-ing-rows", "addMainIngredient")}
+      </div>
+    </div>
+    <div class="fr"><label>Subrecetas</label>
+      <div id="rr-subs-container">${subs.map((sub, i) => rrSubEditorHtml(sub, i)).join("")}</div>
+      <button class="secondary-btn" type="button" onclick="addRRSub()">Añadir subreceta</button>
+    </div>
+    <div class="fr"><label>Elaboración final (un paso por línea)</label><textarea id="rr-p">${(recipe?.pasos || []).join("\n")}</textarea></div>
+    <div class="fr"><label>Notas del chef</label><input id="rr-no" value="${safeText(recipe?.notas || "")}"></div>
+    <div class="mf">
+      <button class="secondary-btn" onclick="cModal()">Cancelar</button>
+      <button class="primary-btn" onclick="sRestRec(${empId},'${col}',${id || "null"})">Guardar</button>
+    </div>`);
+  window._rrSubCount = subs.length;
+}
+
+function rrSubEditorHtml(sub, index) {
+  return `
+    <div class="sub-block" data-idx="${index}">
+      <div class="sub-block-head">
+        <strong>Subreceta ${index + 1}</strong>
+        <button class="btn btn-s btn-d" type="button" onclick="removeRRSub(${index})">Eliminar</button>
+      </div>
+      <input id="rrsn_${index}" placeholder="Nombre" value="${safeText(sub.nombre || "")}" style="margin-bottom:8px">
+      <textarea id="rrsd_${index}" placeholder="Descripción" style="margin-bottom:8px">${safeText(sub.descripcion || "")}</textarea>
+      <div class="ingredient-editor" style="margin-bottom:8px">
+        <div class="ingredient-items" id="rrsi-rows-${index}">${ingredientItemsHtml(sub.ingredientes || [])}</div>
+        ${ingredientComposerHtml(`rrsi-rows-${index}`, "addSubIngredient")}
+      </div>
+      <textarea id="rrsp_${index}" placeholder="Elaboración (un paso por línea)">${(sub.pasos || []).join("\n")}</textarea>
+    </div>`;
+}
+
+function addRRSub() {
+  const index = window._rrSubCount || 0;
+  document.getElementById("rr-subs-container").insertAdjacentHTML("beforeend", rrSubEditorHtml({}, index));
+  window._rrSubCount = index + 1;
+}
+
+function removeRRSub(index) {
+  document.querySelector(`.sub-block[data-idx="${index}"]`)?.remove();
+}
+
+function sRestRec(empId, col, id) {
+  const nombre = document.getElementById("rr-n")?.value.trim();
+  if (!nombre) { alert("El nombre es obligatorio"); return; }
+  const alergenos = ALERGEN_LIST.filter((a) => document.getElementById(`rral_${a.replace(/\s/g,"_")}`)?.checked);
+  const subrecetas = [];
+  document.querySelectorAll("#rr-subs-container .sub-block").forEach((block) => {
+    const idx = block.dataset.idx;
+    const snom = document.getElementById(`rrsn_${idx}`)?.value.trim();
+    if (!snom) return;
+    subrecetas.push({
+      nombre: snom,
+      descripcion: document.getElementById(`rrsd_${idx}`)?.value || "",
+      ingredientes: collectIngredientItems(`rrsi-rows-${idx}`),
+      pasos: (document.getElementById(`rrsp_${idx}`)?.value || "").split("\n").filter(Boolean)
+    });
+  });
+  const colKey = `${col}_recetas`;
+  const list = D[colKey] || [];
+  const payload = {
+    nombre,
+    seccion: document.getElementById("rr-sec")?.value || REST_SECS[0],
+    temporada: document.getElementById("rr-t")?.value || "",
+    descripcion: document.getElementById("rr-d")?.value || "",
+    raciones: document.getElementById("rr-rac")?.value || "",
+    tiempoElaboracion: document.getElementById("rr-tiem")?.value || "",
+    temperatura: document.getElementById("rr-temp")?.value || "",
+    alergenos,
+    ingredientes: collectIngredientItems("rr-ing-rows"),
+    subrecetas,
+    pasos: (document.getElementById("rr-p")?.value || "").split("\n").filter(Boolean),
+    notas: document.getElementById("rr-no")?.value || "",
+    fecha: today(),
+    autor: "Dirección"
+  };
+  if (id) {
+    const existing = list.find((r) => r.id === id);
+    if (existing) Object.assign(existing, payload);
+  } else {
+    const newId = list.length ? Math.max(...list.map((r) => r.id || 0)) + 1 : 1;
+    list.push({ id: newId, ...payload });
+    D[colKey] = list;
+  }
+  save(colKey);
+  cModal();
+  rEmpresaDetalle(empId, "recetario");
+}
+
+function dRestRec(empId, col, id) {
+  if (!confirm("¿Eliminar esta receta?")) return;
+  const colKey = `${col}_recetas`;
+  D[colKey] = (D[colKey] || []).filter((r) => r.id !== id);
+  save(colKey);
+  rEmpresaDetalle(empId, "recetario");
+}
+
+function buildRestFichaHTML(recipe) {
+  const subs = recipe.subrecetas || [];
+  const alerg = recipe.alergenos || [];
+  const ingredients = (recipe.ingredientes || []).length ? `
+    <div class="rs">
+      <h4>Ingredientes principales</h4>
+      <div class="ig">
+        <div class="ih">Ingrediente</div><div class="ih">Cantidad</div><div class="ih">Unidad</div>
+        ${(recipe.ingredientes || []).map((item) => `<div>${safeText(item.i)}</div><div style="text-align:right">${safeText(item.c || "—")}</div><div>${safeText(item.u || "")}</div>`).join("")}
+      </div>
+    </div>` : "";
+  const subsHtml = subs.map((sub) => `
+    <div class="rs">
+      <h4>Subreceta · ${safeText(sub.nombre)}</h4>
+      ${sub.descripcion ? `<p style="margin-bottom:10px;color:#5e5a54">${safeText(sub.descripcion)}</p>` : ""}
+      ${(sub.ingredientes || []).length ? `
+        <div class="ig" style="margin-bottom:14px">
+          <div class="ih">Ingrediente</div><div class="ih">Cantidad</div><div class="ih">Unidad</div>
+          ${(sub.ingredientes || []).map((item) => `<div>${safeText(item.i)}</div><div style="text-align:right">${safeText(item.c || "—")}</div><div>${safeText(item.u || "")}</div>`).join("")}
+        </div>` : ""}
+      ${(sub.pasos || []).length ? `<ol class="sl">${sub.pasos.map((step, i) => `<li><div class="sn">${i+1}</div><div>${safeText(step)}</div></li>`).join("")}</ol>` : ""}
+    </div>`).join("");
+  const steps = (recipe.pasos || []).length ? `
+    <div class="rs">
+      <h4>Elaboración final</h4>
+      <ol class="sl">${recipe.pasos.map((step, i) => `<li><div class="sn">${i+1}</div><div>${safeText(step)}</div></li>`).join("")}</ol>
+    </div>` : "";
+  const alergHtml = alerg.length ? `
+    <div class="rs">
+      <h4>Alérgenos</h4>
+      <div class="ca">${alerg.map((a) => `<span class="badge" style="border-color:#b84337;color:#b84337">${safeText(a)}</span>`).join("")}</div>
+    </div>` : "";
+  return `
+    <div class="rs">
+      <h4>Información general</h4>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+        ${recipe.seccion ? `<div><strong>Sección:</strong> ${safeText(recipe.seccion)}</div>` : ""}
+        ${recipe.temporada ? `<div><strong>Temporada:</strong> ${safeText(recipe.temporada)}</div>` : ""}
+        ${recipe.raciones ? `<div><strong>Raciones:</strong> ${safeText(recipe.raciones)}</div>` : ""}
+        ${recipe.tiempoElaboracion ? `<div><strong>Tiempo:</strong> ${safeText(recipe.tiempoElaboracion)}</div>` : ""}
+        ${recipe.temperatura ? `<div><strong>Temperatura:</strong> ${safeText(recipe.temperatura)}</div>` : ""}
+      </div>
+      ${recipe.descripcion ? `<p style="margin-top:12px">${safeText(recipe.descripcion)}</p>` : ""}
+    </div>
+    ${ingredients}
+    ${subsHtml}
+    ${steps}
+    ${alergHtml}
+    ${recipe.notas ? `<div class="notice"><strong>Notas</strong><div>${safeText(recipe.notas)}</div></div>` : ""}`;
+}
+
+function openRestRecipe(empId, col, id) {
+  const colKey = `${col}_recetas`;
+  const recipe = (D[colKey] || []).find((r) => r.id === id);
+  if (!recipe) return;
+  activeRestRecipeId = id;
+  restRecipeEmpId = empId;
+  restRecipeCol = col;
+  document.getElementById("restdet-tit").textContent = recipe.nombre;
+  restRecipePrintMarkup = buildRestFichaHTML(recipe);
+  document.getElementById("restdet-body").innerHTML = restRecipePrintMarkup;
+  document.getElementById("restdet").classList.add("open");
+  updateOverlayState();
+}
+
+function closeRestRecipe() {
+  document.getElementById("restdet").classList.remove("open");
+  activeRestRecipeId = null;
+  restRecipeEmpId = null;
+  restRecipeCol = "";
+  updateOverlayState();
+}
+
+function printRestFicha() {
+  if (!activeRestRecipeId || !restRecipeCol) return;
+  const recipe = (D[`${restRecipeCol}_recetas`] || []).find((r) => r.id === activeRestRecipeId);
+  if (!recipe) return;
+  const w = window.open("", "_blank");
+  w.document.write(`<!DOCTYPE html>
+  <html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <title>${safeText(recipe.nombre)}</title>
+    <style>
+      @page{size:A4;margin:14mm 12mm 14mm 12mm}
+      body{font-family:Arial,sans-serif;padding:0;margin:0;line-height:1.32;color:#111;font-size:11px}
+      h1{font-size:22px;line-height:1.1;margin:0 0 10px}
+      h4{font-size:10px;text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid #ddd;padding-bottom:5px;margin:14px 0 8px}
+      p{margin:0 0 8px}
+      .notice{padding:10px 12px;border-left:4px solid #5f7f4c;background:#eef3ea;font-size:10.5px}
+      .ig{display:grid;grid-template-columns:minmax(0,1.6fr) auto auto;gap:5px 10px;align-items:baseline;font-size:10.5px}
+      .ih{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#726b61}
+      .sl{list-style:none;padding:0;margin:0}
+      .sl li{display:flex;gap:8px;margin-bottom:6px;padding:8px 9px;background:#f6f4ee;font-size:10.5px}
+      .sn{font-weight:700;color:#405735;min-width:14px}
+      .rs{margin-bottom:12px}
+      .ca{display:flex;gap:6px;flex-wrap:wrap}
+      .badge{border:1px solid #b84337;color:#b84337;padding:2px 7px;border-radius:4px;font-size:10px}
+    </style>
+  </head>
+  <body>
+    <h1>${safeText(recipe.nombre)}</h1>
+    ${restRecipePrintMarkup}
+  </body>
+  </html>`);
+  w.document.close();
+  setTimeout(() => w.print(), 250);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 function toggleRestMenuEstado(empId, itemId) {
   const e = (D.empresas || []).find((x) => x.id === empId);
@@ -3635,7 +3911,7 @@ function oRestKpiM(empId) {
   const e = (D.empresas || []).find((x) => x.id === empId);
   if (!e) return;
   const col = REST_COL_MAP[e.theme] || e.theme;
-  oM(`
+  oModal(`
     <h2>Registrar KPI — ${safeText(e.nombre)}</h2>
     <label>Covers (comensales)</label>
     <input class="field-input" id="kpi-covers" type="number" placeholder="45">
@@ -3646,7 +3922,7 @@ function oRestKpiM(empId) {
     <label>Fecha</label>
     <input class="field-input" id="kpi-fecha" type="date" value="${today()}">
     <div class="form-actions">
-      <button class="secondary-btn" onclick="cM()">Cancelar</button>
+      <button class="secondary-btn" onclick="cModal()">Cancelar</button>
       <button class="primary-btn" onclick="sRestKpi(${empId},'${col}')">Guardar</button>
     </div>`);
 }
@@ -3663,7 +3939,7 @@ function sRestKpi(empId, col) {
   list.push({ id, covers, ticket, nota, fecha, autor: "Dirección" });
   D[colKey] = list;
   save(colKey);
-  cM();
+  cModal();
   rEmpresaDetalle(empId, "kpis");
 }
 
