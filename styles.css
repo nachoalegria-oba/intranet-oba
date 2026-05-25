@@ -1793,7 +1793,8 @@ th,
 .desc-card-title{font-weight:700;font-size:13px;margin-bottom:2px}
 .desc-card-sub{font-size:12px;color:var(--muted);margin-bottom:2px}
 .desc-card-url{font-size:11px;color:var(--blue);word-break:break-all;opacity:.8}
-.desc-card-actions{display:flex;gap:6px;flex-wrap:wrap}
+.desc-card-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.desc-ver-btn{text-decoration:none;font-size:.8rem;min-height:36px;padding:0 12px;border-radius:10px}
 .desc-share-btn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:transparent;cursor:pointer;transition:background .15s,color .15s,border-color .15s;flex-shrink:0}
 .desc-share-btn:hover{border-color:var(--ink)}
 .desc-share-wa{color:#25d366}
