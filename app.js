@@ -14,7 +14,7 @@ const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "
 const DS = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"];
 const SKILLS = ["Mise en place", "Fondos y salsas", "Carnes", "Pescados", "Pastelería", "Fermentos", "Limpieza y orden", "Trabajo en equipo"];
 const ALERGEN_LIST = ["Gluten", "Crustáceos", "Huevos", "Pescado", "Cacahuetes", "Soja", "Lácteos", "Frutos de cáscara", "Apio", "Mostaza", "Sésamo", "Dióxido de azufre", "Altramuces", "Moluscos"];
-const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "eventos", "proveedores", "practicantes", "centros", "habitaciones", "pedidosHistorial", "descargables", "empresas", "oba_recetas", "oba_menus", "oba_ideas", "oba_kpis", "ene_recetas", "ene_menus", "ene_ideas", "ene_kpis", "candomo_recetas", "candomo_menus", "candomo_ideas", "candomo_kpis", "canitas_recetas", "canitas_menus", "canitas_ideas", "canitas_kpis", "cebo_recetas", "cebo_menus", "cebo_ideas", "cebo_kpis"];
+const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "eventos", "proveedores", "practicantes", "centros", "habitaciones", "pedidosHistorial", "descargables", "empresas", "grupo_descargables", "oba_recetas", "oba_menus", "oba_ideas", "oba_kpis", "ene_recetas", "ene_menus", "ene_ideas", "ene_kpis", "candomo_recetas", "candomo_menus", "candomo_ideas", "candomo_kpis", "canitas_recetas", "canitas_menus", "canitas_ideas", "canitas_kpis", "cebo_recetas", "cebo_menus", "cebo_ideas", "cebo_kpis"];
 
 const REST_COL_MAP = { oba: "oba", ene: "ene", candomo: "candomo", canitas: "canitas", cebo: "cebo" };
 
@@ -225,6 +225,7 @@ const DEFAULTS = {
   pedidosHistorial: [],
   descargables: [],
   empresas: [],
+  grupo_descargables: [],
   oba_recetas: [], oba_menus: [], oba_ideas: [], oba_kpis: [],
   ene_recetas: [], ene_menus: [], ene_ideas: [], ene_kpis: [],
   candomo_recetas: [], candomo_menus: [], candomo_ideas: [], candomo_kpis: [],
@@ -3094,10 +3095,20 @@ function logoEmpresa(e) {
   return `<div class="emp-logo-text">${safeText(e.nombre)}</div>`;
 }
 
+let grupoSection = "restaurantes"; // "restaurantes" | "descargables"
+
 function rGrupo() {
+  if (grupoSection === "descargables") { rGrupoDescargables(); return; }
+
   const empresas = (D.empresas || []).slice().sort((a, b) => a.id - b.id);
+  const tabBar = `
+    <div class="segmented-bar" style="margin-bottom:18px">
+      <button class="segment-btn${grupoSection === "restaurantes" ? " active" : ""}" onclick="grupoSection='restaurantes';rGrupo()">Restaurantes</button>
+      <button class="segment-btn${grupoSection === "descargables" ? " active" : ""}" onclick="grupoSection='descargables';rGrupo()">📁 Kit de apertura</button>
+    </div>`;
+
   if (!empresas.length) {
-    document.getElementById("panel-grupo-body").innerHTML = `<div class="notice">Sin empresas configuradas.</div>`;
+    document.getElementById("panel-grupo-body").innerHTML = tabBar + `<div class="notice">Sin empresas configuradas.</div>`;
     return;
   }
 
@@ -3125,7 +3136,147 @@ function rGrupo() {
       </div>`;
   }).join("");
 
-  document.getElementById("panel-grupo-body").innerHTML = `<div class="emp-grid">${cards}</div>`;
+  document.getElementById("panel-grupo-body").innerHTML = tabBar + `<div class="emp-grid">${cards}</div>`;
+}
+
+// ── Kit de apertura / Descargables del grupo ──────────────────────────
+
+const GRUPO_DESC_CATS = [
+  { key: "identidad",   label: "Identidad de marca",      icon: "🎨" },
+  { key: "operativo",   label: "Manual operativo",         icon: "📋" },
+  { key: "carta",       label: "Carta y recetario base",   icon: "🍽" },
+  { key: "formacion",   label: "Formación del equipo",     icon: "🎓" },
+  { key: "proveedores", label: "Proveedores homologados",  icon: "🚚" },
+  { key: "rrhh",        label: "RRHH y contratos",         icon: "👥" },
+  { key: "legal",       label: "Legal y permisos",         icon: "⚖️" },
+  { key: "diseno",      label: "Diseño y arquitectura",    icon: "🏗" },
+  { key: "otro",        label: "Otros",                    icon: "📂" }
+];
+
+const GRUPO_DESC_TIPOS = [
+  { key: "pdf",    label: "PDF",         icon: "📄" },
+  { key: "doc",    label: "Google Doc",  icon: "📝" },
+  { key: "sheet",  label: "Hoja de cálculo", icon: "📊" },
+  { key: "folder", label: "Carpeta",     icon: "📁" },
+  { key: "imagen", label: "Imagen",      icon: "🖼" },
+  { key: "link",   label: "Enlace",      icon: "🔗" }
+];
+
+function tipoIcon(tipo) {
+  return (GRUPO_DESC_TIPOS.find((t) => t.key === tipo) || GRUPO_DESC_TIPOS.find((t) => t.key === "link")).icon;
+}
+
+function rGrupoDescargables() {
+  const docs = D.grupo_descargables || [];
+  const tabBar = `
+    <div class="segmented-bar" style="margin-bottom:18px">
+      <button class="segment-btn" onclick="grupoSection='restaurantes';rGrupo()">Restaurantes</button>
+      <button class="segment-btn active">📁 Kit de apertura</button>
+    </div>`;
+
+  const intro = `
+    <div class="grupo-desc-intro">
+      <p>Documentos, plantillas y recursos para estandarizar la apertura de futuros restaurantes del grupo.</p>
+      <button class="primary-btn" onclick="oGrupoDescM()">+ Añadir documento</button>
+    </div>`;
+
+  if (!docs.length) {
+    document.getElementById("panel-grupo-body").innerHTML = tabBar + intro + `<div class="notice" style="margin-top:24px">Aún no hay documentos. Añade manuales, plantillas o enlaces de Google Drive.</div>`;
+    return;
+  }
+
+  // Agrupar por categoría
+  const porCat = {};
+  GRUPO_DESC_CATS.forEach((c) => { porCat[c.key] = []; });
+  docs.forEach((d) => { (porCat[d.categoria] = porCat[d.categoria] || []).push(d); });
+
+  let html = tabBar + intro;
+  GRUPO_DESC_CATS.forEach((cat) => {
+    const lista = porCat[cat.key] || [];
+    if (!lista.length) return;
+    html += `
+      <div class="grupo-desc-section">
+        <div class="grupo-desc-cat-head">
+          <span>${cat.icon} ${cat.label}</span>
+          <button class="ghost-btn ghost-btn-sm" onclick="oGrupoDescM(null,'${cat.key}')">+ Añadir</button>
+        </div>
+        <div class="grupo-desc-grid">
+          ${lista.map((d) => `
+            <div class="grupo-desc-card">
+              <div class="grupo-desc-card-top">
+                <span class="grupo-desc-tipo">${tipoIcon(d.tipo)} ${safeText(d.tipo || "link")}</span>
+                <div class="grupo-desc-card-actions">
+                  <button class="btn btn-s btn-o" onclick="oGrupoDescM(${d.id})">Editar</button>
+                  ${d.url ? `<a class="btn btn-s btn-g" href="${safeText(d.url)}" target="_blank" rel="noopener">Abrir ↗</a>` : ""}
+                </div>
+              </div>
+              <div class="grupo-desc-card-title">${safeText(d.titulo)}</div>
+              ${d.descripcion ? `<div class="grupo-desc-card-desc">${safeText(d.descripcion)}</div>` : ""}
+              <div class="grupo-desc-card-meta">${d.fecha || ""}</div>
+            </div>`).join("")}
+        </div>
+      </div>`;
+  });
+
+  document.getElementById("panel-grupo-body").innerHTML = html;
+}
+
+function oGrupoDescM(id, catPreset) {
+  const d = id ? (D.grupo_descargables || []).find((x) => x.id === id) : null;
+  const catOpts = GRUPO_DESC_CATS.map((c) =>
+    `<option value="${c.key}"${(d ? d.categoria : catPreset) === c.key ? " selected" : ""}>${c.icon} ${c.label}</option>`
+  ).join("");
+  const tipoOpts = GRUPO_DESC_TIPOS.map((t) =>
+    `<option value="${t.key}"${(d?.tipo || "link") === t.key ? " selected" : ""}>${t.icon} ${t.label}</option>`
+  ).join("");
+  oM(`
+    <h2>${d ? "Editar documento" : "Nuevo documento"}</h2>
+    <label>Título</label>
+    <input class="field-input" id="gd-titulo" placeholder="Ej: Manual de identidad visual OBA" value="${safeText(d?.titulo || "")}" autofocus>
+    <label>Descripción</label>
+    <textarea class="field-area" id="gd-desc" rows="2" placeholder="Breve descripción del contenido...">${safeText(d?.descripcion || "")}</textarea>
+    <label>Categoría</label>
+    <select class="field-select" id="gd-cat">${catOpts}</select>
+    <label>Tipo de archivo</label>
+    <select class="field-select" id="gd-tipo">${tipoOpts}</select>
+    <label>Enlace (Google Drive, Dropbox, web...)</label>
+    <input class="field-input" id="gd-url" placeholder="https://..." value="${safeText(d?.url || "")}">
+    <div class="form-actions">
+      ${d ? `<button class="btn btn-d btn-s" onclick="dGrupoDesc(${id})">Eliminar</button>` : ""}
+      <button class="secondary-btn" onclick="cM()">Cancelar</button>
+      <button class="primary-btn" onclick="sGrupoDesc(${id || "null"})">Guardar</button>
+    </div>`);
+}
+
+function sGrupoDesc(id) {
+  const titulo = document.getElementById("gd-titulo")?.value.trim();
+  if (!titulo) { alert("Escribe un título."); return; }
+  const payload = {
+    titulo,
+    descripcion: document.getElementById("gd-desc")?.value.trim() || "",
+    categoria: document.getElementById("gd-cat")?.value || "otro",
+    tipo: document.getElementById("gd-tipo")?.value || "link",
+    url: document.getElementById("gd-url")?.value.trim() || "",
+    fecha: id ? ((D.grupo_descargables || []).find((x) => x.id === id)?.fecha || today()) : today()
+  };
+  if (!D.grupo_descargables) D.grupo_descargables = [];
+  if (id) {
+    Object.assign(D.grupo_descargables.find((x) => x.id === id), payload);
+  } else {
+    const nid = D.grupo_descargables.length ? Math.max(...D.grupo_descargables.map((x) => x.id || 0)) + 1 : 1;
+    D.grupo_descargables.push({ id: nid, ...payload });
+  }
+  save("grupo_descargables");
+  cM();
+  rGrupoDescargables();
+}
+
+function dGrupoDesc(id) {
+  if (!confirm("¿Eliminar este documento?")) return;
+  D.grupo_descargables = (D.grupo_descargables || []).filter((x) => x.id !== id);
+  save("grupo_descargables");
+  cM();
+  rGrupoDescargables();
 }
 
 let grupoView = "dashboard";
