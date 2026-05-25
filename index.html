@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@300;500;700;900&family=Cormorant+Garamond:wght@300;400;600&family=Comfortaa:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=45">
+  <link rel="stylesheet" href="./styles.css?v=46">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
@@ -307,7 +307,11 @@
           <div>
             <div class="eyebrow">Asistente IA</div>
             <h1>Apoyo rápido para cocina y sala</h1>
-            <p>Redacción, ideas, recetas, traducciones y compras.</p>
+            <p>Conoce toda la intranet en tiempo real. Puede crear avisos, pedidos, KPIs y mucho más.</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <button class="ghost-btn ghost-btn-sm" onclick="clearIA()">Limpiar chat</button>
+            <button class="secondary-btn" id="ia-key-btn" onclick="pKey()">Activar IA</button>
           </div>
         </div>
         <div class="ia-grid" id="iasugs"></div>
@@ -346,6 +350,6 @@
     <div class="modal" id="mi"></div>
   </div>
 
-  <script src="./app.js?v=45"></script>
+  <script src="./app.js?v=46"></script>
 </body>
 </html>

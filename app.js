@@ -104,16 +104,7 @@ const WA_PRAC_TEMPLATES = [
 ];
 const INSTALL_BANNER_DISMISSED_KEY = "oba_install_banner_dismissed_v1";
 const GROQ = "https://api.groq.com/openai/v1/chat/completions";
-const IASUGS = [
-  "¿Qué platos tenemos en Bosque?",
-  "Publica un aviso: mañana no hay servicio de comidas",
-  "Añade al pedido: 5kg de trucha arcoíris",
-  "¿Cómo van los KPIs de Can Domo este mes?",
-  "Crea una idea nueva para eñe: menú degustación vegano",
-  "¿Qué proyectos están activos ahora mismo?",
-  "Añade un cambio de menú en OBA: retiramos el calamar",
-  "Resume todo lo que está pasando en el grupo hoy"
-];
+// Las sugerencias se generan dinámicamente en iaSugsData()
 
 const DR = [
   {
@@ -2786,18 +2777,82 @@ function localIAResponse(prompt) {
   ].join("\n");
 }
 
+// ── Markdown ligero para respuestas IA ────────────────────────────────
+function iaMD(raw) {
+  let s = String(raw || "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  // Formato
+  s = s
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*([^*\n]+?)\*/g, "<em>$1</em>")
+    .replace(/`([^`\n]+?)`/g, "<code class='ia-code'>$1</code>")
+    .replace(/^#{1,3} (.+)$/gm, "<b class='ia-h'>$1</b>")
+    .replace(/^[-•] (.+)$/gm, "<span class='ia-li'>• $1</span>")
+    .replace(/\n{2,}/g, "<br><br>")
+    .replace(/\n/g, "<br>");
+  return s;
+}
+
+// ── Sugerencias dinámicas basadas en datos reales ─────────────────────
+function iaSugsData() {
+  const sugs = [];
+  const hoy = today();
+
+  // Urgentes activos
+  const urgentes = (D.avisos || []).filter((a) => a.urgente);
+  if (urgentes.length) sugs.push(`Resume los ${urgentes.length} avisos urgentes activos`);
+
+  // Pedidos pendientes
+  const pedPend = (D.ingredientes || []).filter((i) => i.pedido);
+  if (pedPend.length) sugs.push(`Prepara el pedido para WhatsApp (${pedPend.length} productos)`);
+
+  // Próximo evento
+  const proxEvento = [...(D.eventos || [])].filter((e) => e.fecha >= hoy).sort((a, b) => a.fecha > b.fecha ? 1 : -1)[0];
+  if (proxEvento) sugs.push(`¿Qué pasa esta semana? (próximo: ${proxEvento.titulo})`);
+
+  // Practicantes activos
+  const pracActivos = (D.practicantes || []).filter((p) => getPipelineStage(p) === "activo");
+  if (pracActivos.length) sugs.push(`¿Cómo van los ${pracActivos.length} practicantes activos?`);
+
+  // Proyectos en testeo
+  const enTesteo = (D.proyectos || []).filter((p) => p.estado === "testeo");
+  if (enTesteo.length) sugs.push(`Informe rápido de los proyectos en testeo`);
+
+  // Siempre disponibles
+  sugs.push("Resume todo lo que está pasando en el grupo hoy");
+  sugs.push("Publica un aviso para el equipo");
+  sugs.push("¿Cómo van los KPIs del grupo este mes?");
+  sugs.push("Dame ideas para el menú de esta semana");
+  sugs.push("Añade algo al pedido de esta semana");
+
+  // Máximo 6, priorizando los contextuales
+  return sugs.slice(0, 6);
+}
+
 function initIA() {
-  document.getElementById("iasugs").innerHTML = IASUGS.map((prompt) => `<button class="ia-sug" onclick="iaSug('${safeText(prompt).replace(/'/g, "\\'")}')">${safeText(prompt)}</button>`).join("");
+  const sugs = iaSugsData();
+  document.getElementById("iasugs").innerHTML = sugs.map((p) => `<button class="ia-sug" onclick="iaSug('${safeText(p).replace(/'/g, "\\'")}')">${safeText(p)}</button>`).join("");
   const chat = document.getElementById("iachat");
-  if (!gKey()) {
-    chat.innerHTML = `<div class="ia-msg bot">La IA ya puede ayudarte en modo local con recetas, pedidos, avisos y proyectos. Si quieres respuestas más abiertas, añade tu API key de Groq. <button class="btn btn-s btn-g" onclick="pKey()">Activar IA avanzada</button></div>`;
+  const platos = (D.recipes || []).length;
+  const rests = (D.empresas || []).length;
+  const keyActiva = !!gKey();
+  const btn = document.getElementById("ia-key-btn");
+  if (btn) btn.textContent = keyActiva ? "✓ IA activa" : "Activar IA gratis";
+  if (!keyActiva) {
+    chat.innerHTML = `<div class="ia-msg bot">Hola. Conozco <strong>${platos} platos</strong> del recetario, <strong>${rests} restaurantes</strong> del grupo y todo lo que hay en la intranet ahora mismo.<br><br>Para acciones directas, redacción libre o respuestas abiertas, activa la IA avanzada — es gratis, sin tarjeta. <button class="btn btn-s btn-g" onclick="pKey()">Activar gratis →</button></div>`;
   } else {
-    chat.innerHTML = `<div class="ia-msg bot">Estoy lista para ayudarte con recetas, compras, avisos o traducciones. La IA avanzada está activada.</div>`;
+    chat.innerHTML = `<div class="ia-msg bot">Lista. Conozco <strong>${platos} platos</strong> y <strong>${rests} restaurantes</strong>. Puedo actuar directamente en la intranet: crear avisos, añadir pedidos, registrar KPIs y mucho más. ¿En qué te ayudo?</div>`;
   }
+}
+
+function clearIA() {
+  iaH.length = 0;
+  initIA();
 }
 
 function iaSug(text) {
   document.getElementById("iainput").value = text;
+  document.getElementById("iasugs").innerHTML = "";
   iaEnv();
 }
 
@@ -2816,7 +2871,7 @@ async function iaEnv() {
     const reply = localIAResponse(text);
     document.getElementById(loadingId)?.remove();
     iaH.push({ role: "assistant", content: reply });
-    chat.innerHTML += `<div class="ia-msg bot">${safeText(reply).replace(/\n/g, "<br>")}</div>`;
+    chat.innerHTML += `<div class="ia-msg bot">${iaMD(reply)}</div>`;
     chat.scrollTop = chat.scrollHeight;
     return;
   }
@@ -2889,29 +2944,35 @@ async function iaEnv() {
 
       const reply2 = data2.choices?.[0]?.message?.content || "Listo.";
       iaH.push({ role: "assistant", content: reply2 });
-      chat.innerHTML += `<div class="ia-msg bot">${safeText(reply2).replace(/\n/g, "<br>")}</div>`;
+      chat.innerHTML += `<div class="ia-msg bot">${iaMD(reply2)}</div>`;
 
     } else {
       // ── Respuesta normal (sin herramientas) ───────────────────
       const reply = choice?.message?.content || "Sin respuesta.";
       iaH.push({ role: "assistant", content: reply });
-      chat.innerHTML += `<div class="ia-msg bot">${safeText(reply).replace(/\n/g, "<br>")}</div>`;
+      chat.innerHTML += `<div class="ia-msg bot">${iaMD(reply)}</div>`;
     }
 
   } catch (error) {
     document.getElementById(loadingId)?.remove();
     const fallback = `${localIAResponse(text)}\n\nHe entrado en modo local porque la IA avanzada no ha respondido.`;
     iaH.push({ role: "assistant", content: fallback });
-    chat.innerHTML += `<div class="ia-msg bot">${safeText(fallback).replace(/\n/g, "<br>")}<br><br><button class="btn btn-s" onclick="pKey()">Revisar key</button></div>`;
+    chat.innerHTML += `<div class="ia-msg bot">${iaMD(fallback)}<br><br><button class="btn btn-s" onclick="pKey()">Revisar key</button></div>`;
   }
   chat.scrollTop = chat.scrollHeight;
 }
 
 function pKey() {
+  const yaActivada = !!gKey();
   oModal(`
-    <h3>Activar asistente IA</h3>
-    <p style="margin-bottom:12px;color:#5e5a54">Introduce tu API key de Groq. Se guarda solo en este navegador.</p>
-    <div class="fr"><label>API key</label><input id="apik" type="password" placeholder="gsk_..."></div>
+    <h3>${yaActivada ? "Cambiar API key" : "Activar IA avanzada"}</h3>
+    <p style="margin-bottom:16px;color:#5e5a54">Usa <strong>Groq</strong> — completamente gratis, sin tarjeta, sin límite diario para un equipo pequeño.</p>
+    <div class="setup-steps">
+      <div class="setup-step"><span class="step-num">1</span><div>Entra en <a href="https://console.groq.com/keys" target="_blank" rel="noopener" class="setup-link">console.groq.com/keys ↗</a> y crea una cuenta gratis</div></div>
+      <div class="setup-step"><span class="step-num">2</span><div>Haz clic en <strong>"Create API Key"</strong>, dale un nombre (ej: OBA) y cópiala</div></div>
+      <div class="setup-step"><span class="step-num">3</span><div>Pégala aquí abajo — se guarda solo en este dispositivo</div></div>
+    </div>
+    <div class="fr" style="margin-top:16px"><label>Tu API key de Groq</label><input id="apik" type="password" placeholder="gsk_..." autocomplete="off"></div>
     <div class="mf"><button class="secondary-btn" onclick="cModal()">Cancelar</button><button class="primary-btn" onclick="gAPIK()">Activar</button></div>`);
 }
 
