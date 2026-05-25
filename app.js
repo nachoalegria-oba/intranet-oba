@@ -3229,7 +3229,7 @@ function oGrupoDescM(id, catPreset) {
   const tipoOpts = GRUPO_DESC_TIPOS.map((t) =>
     `<option value="${t.key}"${(d?.tipo || "link") === t.key ? " selected" : ""}>${t.icon} ${t.label}</option>`
   ).join("");
-  oM(`
+  oModal(`
     <h2>${d ? "Editar documento" : "Nuevo documento"}</h2>
     <label>Título</label>
     <input class="field-input" id="gd-titulo" placeholder="Ej: Manual de identidad visual OBA" value="${safeText(d?.titulo || "")}" autofocus>
@@ -3243,7 +3243,7 @@ function oGrupoDescM(id, catPreset) {
     <input class="field-input" id="gd-url" placeholder="https://..." value="${safeText(d?.url || "")}">
     <div class="form-actions">
       ${d ? `<button class="btn btn-d btn-s" onclick="dGrupoDesc(${id})">Eliminar</button>` : ""}
-      <button class="secondary-btn" onclick="cM()">Cancelar</button>
+      <button class="secondary-btn" onclick="cModal()">Cancelar</button>
       <button class="primary-btn" onclick="sGrupoDesc(${id || "null"})">Guardar</button>
     </div>`);
 }
@@ -3267,7 +3267,7 @@ function sGrupoDesc(id) {
     D.grupo_descargables.push({ id: nid, ...payload });
   }
   save("grupo_descargables");
-  cM();
+  cModal();
   rGrupoDescargables();
 }
 
@@ -3275,7 +3275,7 @@ function dGrupoDesc(id) {
   if (!confirm("¿Eliminar este documento?")) return;
   D.grupo_descargables = (D.grupo_descargables || []).filter((x) => x.id !== id);
   save("grupo_descargables");
-  cM();
+  cModal();
   rGrupoDescargables();
 }
 
