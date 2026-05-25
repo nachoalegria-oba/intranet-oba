@@ -106,13 +106,13 @@ const INSTALL_BANNER_DISMISSED_KEY = "oba_install_banner_dismissed_v1";
 const GROQ = "https://api.groq.com/openai/v1/chat/completions";
 const IASUGS = [
   "¿Qué platos tenemos en Bosque?",
-  "Genera ficha de un plato con trucha",
-  "Calcula pedido para 40 cubiertos",
-  "¿Ingredientes para la Torcaz en Nabos?",
-  "Ideas para plato de temporada con setas",
-  "Redacta aviso para el equipo",
-  "Traduce al inglés: Cuajada de Castañas",
-  "Sugiere maridaje para el pase de Huerta"
+  "Publica un aviso: mañana no hay servicio de comidas",
+  "Añade al pedido: 5kg de trucha arcoíris",
+  "¿Cómo van los KPIs de Can Domo este mes?",
+  "Crea una idea nueva para eñe: menú degustación vegano",
+  "¿Qué proyectos están activos ahora mismo?",
+  "Añade un cambio de menú en OBA: retiramos el calamar",
+  "Resume todo lo que está pasando en el grupo hoy"
 ];
 
 const DR = [
@@ -2498,7 +2498,198 @@ function sKey(key) {
 }
 
 function iaCtx() {
-  return `Eres el asistente del restaurante OBA en España. Recetario disponible: ${D.recipes.map((recipe) => `${recipe.nombre} (${recipe.seccion})`).join(", ")}. Ingredientes disponibles: ${D.ingredientes.slice(0, 20).map((item) => item.ing).join(", ")}. Responde en español, muy claro, práctico y útil para cocina y sala.`;
+  const hoy = new Date().toLocaleDateString("es-ES", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+
+  // OBA intranet data
+  const recetas = D.recipes.map((r) => `${r.nombre} (${r.seccion})`).join(", ") || "ninguna";
+  const menuActivo = D.menu.filter((m) => m.estado === "activo").map((m) => `${m.plato} — ${m.seccion}`).join(", ") || "sin cambios";
+  const avisosRec = [...D.avisos].slice(-5).reverse().map((a) => `[${a.fecha}${a.urgente ? " ⚠️URGENTE" : ""}] ${a.titulo}: ${a.texto.slice(0, 80)}`).join("\n") || "ninguno";
+  const proyectosActivos = D.proyectos.filter((p) => p.estado === "activo" || p.estado === "testeo").map((p) => `${p.nombre} (${p.estado}) — ${p.responsable}`).join(", ") || "ninguno";
+  const pedidosPendientes = D.ingredientes.filter((i) => i.pedido).map((i) => `${i.nombre}${i.cantidad ? " x" + i.cantidad : ""}${i.proveedor ? " [" + i.proveedor + "]" : ""}`).join(", ") || "ninguno";
+  const eventosProx = D.eventos.filter((e) => e.fecha >= today()).slice(0, 5).map((e) => `${e.fecha}: ${e.titulo}`).join(", ") || "ninguno";
+  const pracActivos = D.practicantes.filter((p) => getPipelineStage(p) === "activo").map((p) => `${p.nombre} (${p.partida || "sin partida"})`).join(", ") || "ninguno";
+
+  // Grupo restaurantes
+  const grupoCtx = (D.empresas || []).map((e) => {
+    const col = REST_COL_MAP[e.theme] || e.theme;
+    const recRest = (D[`${col}_recetas`] || []).map((r) => r.nombre).join(", ") || "ninguna";
+    const menuRest = (D[`${col}_menus`] || []).filter((m) => m.estado === "activo").map((m) => m.nombre).join(", ") || "sin cambios";
+    const ideasRest = (D[`${col}_ideas`] || []).filter((i) => i.estado !== "descartada").map((i) => `${i.nombre} (${i.estado})`).join(", ") || "ninguna";
+    const kpisRest = [...(D[`${col}_kpis`] || [])].sort((a, b) => b.fecha > a.fecha ? 1 : -1).slice(0, 1)[0];
+    const kpiStr = kpisRest ? `último KPI ${kpisRest.fecha}: ${kpisRest.nota ? "⭐" + kpisRest.nota : ""}${kpisRest.covers ? " " + kpisRest.covers + " covers" : ""}${kpisRest.ticket ? " " + kpisRest.ticket + "€ ticket" : ""}` : "sin KPIs";
+    return `=== ${e.nombre} (${e.ubicacion}) ===\nEstado: ${e.estado} | ${kpiStr}\nRecetas estandarizadas: ${recRest}\nMenú activo: ${menuRest}\nIdeas: ${ideasRest}\nNota del día: ${e.notaDia || "ninguna"}`;
+  }).join("\n\n");
+
+  return `Eres el asistente de gestión del grupo gastronómico OBA. Tienes acceso en tiempo real a todos los datos de la intranet y puedes realizar acciones directas.
+
+HOY: ${hoy}
+
+=== OBA INTRANET ===
+RECETARIO (${D.recipes.length} platos): ${recetas}
+MENÚ ACTIVO: ${menuActivo}
+PEDIDOS PENDIENTES: ${pedidosPendientes}
+PROYECTOS ACTIVOS: ${proyectosActivos}
+PRACTICANTES ACTIVOS: ${pracActivos}
+PRÓXIMOS EVENTOS: ${eventosProx}
+AVISOS RECIENTES:
+${avisosRec}
+
+=== GRUPO DE RESTAURANTES ===
+${grupoCtx}
+
+INSTRUCCIONES:
+- Responde siempre en español, de forma clara y directa.
+- Cuando el usuario pida crear/añadir/registrar algo, usa las herramientas disponibles para hacerlo.
+- Si el usuario pide información, usa los datos de arriba para responder con precisión.
+- Puedes hacer acciones en cualquier restaurante del grupo.
+- Sé proactivo: si ves algo relevante en los datos (urgentes, KPI bajo, ideas interesantes), menciónalo.`;
+}
+
+// ── Herramientas IA ──────────────────────────────────────────
+const IA_TOOLS = [
+  {
+    type: "function",
+    function: {
+      name: "crear_aviso",
+      description: "Publica un aviso en la intranet de OBA",
+      parameters: {
+        type: "object",
+        properties: {
+          titulo: { type: "string", description: "Título corto del aviso" },
+          texto: { type: "string", description: "Texto completo del aviso" },
+          urgente: { type: "boolean", description: "Si es urgente o no" }
+        },
+        required: ["titulo", "texto", "urgente"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "añadir_pedido",
+      description: "Añade un ingrediente o producto a la lista de pedidos",
+      parameters: {
+        type: "object",
+        properties: {
+          nombre: { type: "string", description: "Nombre del producto" },
+          cantidad: { type: "string", description: "Cantidad (ej: 5kg, 3 cajas)" },
+          proveedor: { type: "string", description: "Nombre del proveedor (opcional)" }
+        },
+        required: ["nombre"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "crear_proyecto",
+      description: "Crea un nuevo proyecto o tarea en I+D de OBA",
+      parameters: {
+        type: "object",
+        properties: {
+          nombre: { type: "string", description: "Nombre del proyecto" },
+          descripcion: { type: "string", description: "Descripción breve" },
+          estado: { type: "string", enum: ["activo", "testeo", "pausado"], description: "Estado inicial" }
+        },
+        required: ["nombre", "descripcion", "estado"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "cambio_menu",
+      description: "Registra un cambio en el menú de OBA",
+      parameters: {
+        type: "object",
+        properties: {
+          plato: { type: "string", description: "Nombre del plato" },
+          seccion: { type: "string", description: "Sección del menú" },
+          nota: { type: "string", description: "Descripción del cambio" }
+        },
+        required: ["plato", "seccion"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "restaurante_accion",
+      description: "Realiza una acción en un restaurante del grupo (eñe, Can Domo, Cañitas Maite, CEBO, OBA)",
+      parameters: {
+        type: "object",
+        properties: {
+          restaurante: { type: "string", enum: ["oba", "ene", "candomo", "canitas", "cebo"], description: "Identificador del restaurante" },
+          tipo: { type: "string", enum: ["receta", "idea", "menu", "kpi"], description: "Tipo de acción" },
+          nombre: { type: "string", description: "Nombre o descripción del elemento" },
+          notas: { type: "string", description: "Notas adicionales (opcional)" },
+          covers: { type: "number", description: "Número de comensales (solo para kpi)" },
+          ticket: { type: "number", description: "Ticket medio en euros (solo para kpi)" },
+          nota_valoracion: { type: "number", description: "Valoración 1-5 (solo para kpi)" }
+        },
+        required: ["restaurante", "tipo", "nombre"]
+      }
+    }
+  }
+];
+
+async function ejecutarHerramienta(name, args) {
+  const t = today();
+  switch (name) {
+    case "crear_aviso": {
+      const id = await nextId("avisos");
+      D.avisos.push({ id, titulo: args.titulo.slice(0, 60), texto: args.texto, urgente: !!args.urgente, fecha: t, autor: "Asistente IA" });
+      save("avisos");
+      if (typeof rAv === "function") rAv();
+      return `✅ Aviso "${args.titulo}" publicado en la intranet${args.urgente ? " (URGENTE)" : ""}.`;
+    }
+    case "añadir_pedido": {
+      const id = await nextId("ingredientes");
+      D.ingredientes.push({ id, nombre: args.nombre, cantidad: args.cantidad || "", unidad: "ud", proveedor: args.proveedor || "", categoria: "Sin categoría", pedido: true, notas: "Añadido por IA" });
+      save("ingredientes");
+      return `✅ "${args.nombre}"${args.cantidad ? " (" + args.cantidad + ")" : ""} añadido a la lista de pedidos.`;
+    }
+    case "crear_proyecto": {
+      const id = await nextId("proyectos");
+      D.proyectos.push({ id, nombre: args.nombre, descripcion: args.descripcion, estado: args.estado || "activo", responsable: "IA", fecha: t, notas: "" });
+      save("proyectos");
+      return `✅ Proyecto "${args.nombre}" creado en I+D con estado "${args.estado}".`;
+    }
+    case "cambio_menu": {
+      const id = await nextId("menu");
+      D.menu.push({ id, plato: args.plato, seccion: args.seccion || "", estado: "activo", fecha: t, nota: args.nota || "" });
+      save("menu");
+      return `✅ Cambio de menú registrado: "${args.plato}" en ${args.seccion}.`;
+    }
+    case "restaurante_accion": {
+      const col = REST_COL_MAP[args.restaurante] || args.restaurante;
+      const restNombre = (D.empresas || []).find((e) => e.theme === args.restaurante)?.nombre || args.restaurante;
+      if (args.tipo === "kpi") {
+        const colKey = `${col}_kpis`;
+        const list = D[colKey] || [];
+        const id = list.length ? Math.max(...list.map((x) => x.id || 0)) + 1 : 1;
+        list.push({ id, covers: args.covers || null, ticket: args.ticket || null, nota: args.nota_valoracion || null, fecha: t, autor: "Asistente IA" });
+        D[colKey] = list;
+        save(colKey);
+        return `✅ KPI registrado en ${restNombre}: ${args.covers ? args.covers + " covers" : ""}${args.ticket ? " · " + args.ticket + "€" : ""}${args.nota_valoracion ? " · ⭐" + args.nota_valoracion : ""}`;
+      }
+      const colKey = args.tipo === "menu" ? `${col}_menus` : `${col}_${args.tipo}s`;
+      const list = D[colKey] || [];
+      const id = list.length ? Math.max(...list.map((x) => x.id || 0)) + 1 : 1;
+      list.push({ id, nombre: args.nombre, descripcion: args.notas || "", estado: "activo", fecha: t, autor: "Asistente IA", notas: args.notas || "" });
+      D[colKey] = list;
+      save(colKey);
+      const tipos = { receta: "Receta", idea: "Idea", menu: "Cambio de menú" };
+      return `✅ ${tipos[args.tipo] || args.tipo} "${args.nombre}" añadida en ${restNombre}.`;
+    }
+    default:
+      return "Herramienta no reconocida.";
+  }
+}
+
+function nextId(col) {
+  const list = D[col] || [];
+  return list.length ? Math.max(...list.map((x) => Number(x.id) || 0)) + 1 : 1;
 }
 
 function normalizeText(value) {
@@ -2630,29 +2821,83 @@ async function iaEnv() {
     return;
   }
   try {
+    // ── Primera llamada con herramientas ──────────────────────
+    const messages = [{ role: "system", content: iaCtx() }, ...iaH.slice(-10)];
     const response = await fetch(GROQ, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${key}`
-      },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
-        messages: [{ role: "system", content: iaCtx() }, ...iaH.slice(-10)],
+        messages,
+        tools: IA_TOOLS,
+        tool_choice: "auto",
         max_tokens: 1024,
         temperature: 0.7
       })
     });
     const data = await response.json();
     document.getElementById(loadingId)?.remove();
+
     if (!response.ok || data.error) {
       const message = data?.error?.message || `No he podido conectar con la IA avanzada (HTTP ${response.status}).`;
       chat.innerHTML += `<div class="ia-msg bot">Error: ${safeText(message)} <button class="btn btn-s" onclick="pKey()">Cambiar key</button></div>`;
+      chat.scrollTop = chat.scrollHeight;
+      return;
+    }
+
+    const choice = data.choices?.[0];
+
+    // ── Llamada a herramientas ────────────────────────────────
+    if (choice?.finish_reason === "tool_calls" && choice.message?.tool_calls?.length) {
+      const assistantMsg = choice.message;
+      messages.push(assistantMsg);
+
+      // Ejecutar cada herramienta y recoger resultados
+      const toolResults = [];
+      const confirmations = [];
+      for (const tc of assistantMsg.tool_calls) {
+        let args = {};
+        try { args = JSON.parse(tc.function.arguments); } catch (_) {}
+        const result = await ejecutarHerramienta(tc.function.name, args);
+        confirmations.push(result);
+        toolResults.push({ role: "tool", tool_call_id: tc.id, content: result });
+      }
+
+      // Mostrar confirmaciones de acciones en el chat
+      if (confirmations.length) {
+        chat.innerHTML += `<div class="ia-msg action">${confirmations.map((c) => safeText(c)).join("<br>")}</div>`;
+        chat.scrollTop = chat.scrollHeight;
+      }
+
+      // Segunda llamada para respuesta final
+      const loadingId2 = `ia-${Date.now()}`;
+      chat.innerHTML += `<div class="ia-msg loading" id="${loadingId2}">Redactando respuesta...</div>`;
+      chat.scrollTop = chat.scrollHeight;
+
+      const response2 = await fetch(GROQ, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [...messages, ...toolResults],
+          max_tokens: 512,
+          temperature: 0.7
+        })
+      });
+      const data2 = await response2.json();
+      document.getElementById(loadingId2)?.remove();
+
+      const reply2 = data2.choices?.[0]?.message?.content || "Listo.";
+      iaH.push({ role: "assistant", content: reply2 });
+      chat.innerHTML += `<div class="ia-msg bot">${safeText(reply2).replace(/\n/g, "<br>")}</div>`;
+
     } else {
-      const reply = data.choices?.[0]?.message?.content || "Sin respuesta.";
+      // ── Respuesta normal (sin herramientas) ───────────────────
+      const reply = choice?.message?.content || "Sin respuesta.";
       iaH.push({ role: "assistant", content: reply });
       chat.innerHTML += `<div class="ia-msg bot">${safeText(reply).replace(/\n/g, "<br>")}</div>`;
     }
+
   } catch (error) {
     document.getElementById(loadingId)?.remove();
     const fallback = `${localIAResponse(text)}\n\nHe entrado en modo local porque la IA avanzada no ha respondido.`;

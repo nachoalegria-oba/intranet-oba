@@ -1326,6 +1326,16 @@ th,
   color:var(--muted);
   background:var(--surface);
 }
+.ia-msg.action{
+  align-self:flex-start;
+  max-width:92%;
+  background:#f0faf4;
+  border-left:4px solid #2d9c5e;
+  color:#1a6640;
+  font-size:.85rem;
+  font-family:var(--mono);
+  white-space:pre-wrap;
+}
 .chat-compose{
   display:flex;
   gap:10px;
