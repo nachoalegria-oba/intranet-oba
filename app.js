@@ -30,7 +30,8 @@ const EMPRESAS_SEED = [
     notaDia: "",
     theme: "oba",
     logoFile: null,
-    googleSearch: "OBA Restaurante Casas Ibáñez"
+    googleSearch: "OBA Restaurante Casas Ibáñez",
+    googlePlaceId: ""
   },
   {
     id: 2,
@@ -42,7 +43,8 @@ const EMPRESAS_SEED = [
     notaDia: "",
     theme: "ene",
     logoFile: "logo-ene.png",
-    googleSearch: "Eñe by Cañitas restaurante Albacete"
+    googleSearch: "Eñe by Cañitas restaurante Albacete",
+    googlePlaceId: ""
   },
   {
     id: 3,
@@ -54,7 +56,8 @@ const EMPRESAS_SEED = [
     notaDia: "",
     theme: "candomo",
     logoFile: "logo-candomo.webp",
-    googleSearch: "Can Domo restaurante Ibiza"
+    googleSearch: "Can Domo restaurante Ibiza",
+    googlePlaceId: ""
   },
   {
     id: 4,
@@ -66,7 +69,8 @@ const EMPRESAS_SEED = [
     notaDia: "",
     theme: "canitas",
     logoFile: "logo-canitas.png",
-    googleSearch: "Cañitas Maite Málaga restaurante"
+    googleSearch: "Cañitas Maite Málaga restaurante",
+    googlePlaceId: ""
   },
   {
     id: 5,
@@ -78,7 +82,8 @@ const EMPRESAS_SEED = [
     notaDia: "",
     theme: "cebo",
     logoFile: null,
-    googleSearch: "CEBO restaurante Hotel Urban Madrid"
+    googleSearch: "CEBO restaurante Hotel Urban Madrid",
+    googlePlaceId: ""
   }
 ];
 const LOCAL_KEY = "oba_intranet_v4";
@@ -475,6 +480,7 @@ function seedEmpresas() {
         ["logoFile", "theme", "subtitulo", "ubicacion", "googleSearch"].forEach((k) => {
           if (emp[k] !== seed[k]) { emp[k] = seed[k]; changed = true; }
         });
+        if (emp.googlePlaceId === undefined) { emp.googlePlaceId = ""; changed = true; }
       } else {
         // New restaurant added to seed — insert it
         D.empresas.push(JSON.parse(JSON.stringify(seed)));
@@ -3402,6 +3408,29 @@ function rEmpresaDetalle(id, tab) {
             </div>`).join("")}
           <button class="ghost-btn ghost-btn-sm" onclick="sp('avisos')">Ver todos →</button>
         </div>` : ""}
+
+        <div class="emp-detalle-card">
+          <div class="emp-detalle-card-title">Google Reviews</div>
+          ${(() => {
+            const ggKey = getGGKey();
+            const hasPlaceId = !!e.googlePlaceId;
+            const col = `${REST_COL_MAP[e.theme] || e.theme}_kpis`;
+            const lastAuto = [...(D[col] || [])].filter((k) => k.autor === "Google Reviews (auto)").sort((a, b) => b.fecha > a.fecha ? 1 : -1)[0];
+            return `
+              <div id="emp-gg-rating-${e.id}" style="margin-bottom:12px">
+                ${lastAuto?.nota
+                  ? `<strong style="font-size:22px">⭐ ${lastAuto.nota}</strong><span class="nd" style="margin-left:8px">${lastAuto.total_resenas || ""} reseñas</span><div class="nd" style="font-size:11px;margin-top:4px">Última sync: ${fmtDate(lastAuto.fecha)}</div>`
+                  : `<span class="nd">Sin datos todavía</span>`}
+              </div>
+              <div id="gg-sync-status-${e.id}" style="font-size:12px;margin-bottom:10px"></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button id="gg-sync-btn-${e.id}" class="primary-btn" onclick="syncGoogleReviews(${e.id})"
+                  style="font-size:13px">🔄 Actualizar</button>
+                ${!hasPlaceId ? `<button class="secondary-btn" style="font-size:13px" onclick="oSetPlaceId(${e.id})">Configurar restaurante</button>` : `<button class="ghost-btn ghost-btn-sm" onclick="oSetPlaceId(${e.id})">Editar Place ID</button>`}
+                ${!ggKey ? `<button class="ghost-btn ghost-btn-sm gg-key-btn" onclick="pGGKey()">Añadir API key</button>` : `<button class="ghost-btn ghost-btn-sm gg-key-btn" onclick="pGGKey()">API configurada ✓</button>`}
+              </div>`;
+          })()}
+        </div>
       </div>`;
 
   } else if (restTab === "recetario") {
@@ -3957,6 +3986,121 @@ function setEstadoEmpresa(id, estado) {
     badge.textContent = est.label;
   }
 }
+
+// ─── GOOGLE REVIEWS AUTO-SYNC ────────────────────────────────────────────────
+
+const GG_KEY_LS = "gg_places_key";
+
+function getGGKey() { return localStorage.getItem(GG_KEY_LS) || ""; }
+function setGGKey(k) { if (k) localStorage.setItem(GG_KEY_LS, k); else localStorage.removeItem(GG_KEY_LS); }
+
+function pGGKey() {
+  oModal(`
+    <h3>Conectar Google Reviews</h3>
+    <div class="setup-steps">
+      <div class="setup-step"><span class="step-num">1</span>Ve a <a class="setup-link" href="https://console.cloud.google.com/apis/library/places-backend.googleapis.com" target="_blank">Google Cloud Console →</a> y activa <strong>Places API (New)</strong></div>
+      <div class="setup-step"><span class="step-num">2</span>En <strong>Credenciales</strong> crea una clave de API y restringe su uso a tu dominio <code class="ia-code">intranet.obarestaurante.es</code></div>
+      <div class="setup-step"><span class="step-num">3</span>Pega la clave aquí — se guarda solo en este dispositivo</div>
+    </div>
+    <div class="fr" style="margin-top:16px"><label>API Key de Google</label>
+      <input id="gg-key-input" type="password" placeholder="AIzaSy…" value="${safeText(getGGKey())}">
+    </div>
+    <div class="mf">
+      <button class="secondary-btn" onclick="cModal()">Cancelar</button>
+      <button class="primary-btn" onclick="saveGGKey()">Guardar clave</button>
+    </div>`);
+}
+
+function saveGGKey() {
+  const k = document.getElementById("gg-key-input")?.value.trim();
+  if (!k) { alert("Pega tu clave de API."); return; }
+  setGGKey(k);
+  cModal();
+  // update key buttons
+  document.querySelectorAll(".gg-key-btn").forEach((btn) => btn.textContent = "API configurada ✓");
+}
+
+function oSetPlaceId(empId) {
+  const e = (D.empresas || []).find((x) => x.id === empId);
+  if (!e) return;
+  oModal(`
+    <h3>Google Place ID — ${safeText(e.nombre)}</h3>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:16px">El Place ID identifica a tu restaurante en Google Maps. Es único por local.</p>
+    <div class="setup-steps">
+      <div class="setup-step"><span class="step-num">1</span>Busca <strong>"${safeText(e.googleSearch)}"</strong> en <a class="setup-link" href="https://maps.google.com/?q=${encodeURIComponent(e.googleSearch)}" target="_blank">Google Maps →</a></div>
+      <div class="setup-step"><span class="step-num">2</span>Haz clic en el restaurante → toca <strong>Compartir</strong> → copia el enlace</div>
+      <div class="setup-step"><span class="step-num">3</span>O usa <a class="setup-link" href="https://developers.google.com/maps/documentation/javascript/examples/places-placeid-finder" target="_blank">Place ID Finder →</a> para encontrarlo directamente</div>
+    </div>
+    <div class="fr" style="margin-top:16px"><label>Place ID</label>
+      <input id="place-id-input" placeholder="ChIJ…" value="${safeText(e.googlePlaceId || "")}">
+    </div>
+    <div class="mf">
+      <button class="secondary-btn" onclick="cModal()">Cancelar</button>
+      <button class="primary-btn" onclick="savePlaceId(${empId})">Guardar</button>
+    </div>`);
+}
+
+function savePlaceId(empId) {
+  const e = (D.empresas || []).find((x) => x.id === empId);
+  if (!e) return;
+  const pid = document.getElementById("place-id-input")?.value.trim();
+  e.googlePlaceId = pid || "";
+  save("empresas");
+  cModal();
+  rEmpresaDetalle(empId, "resumen");
+}
+
+async function syncGoogleReviews(empId) {
+  const e = (D.empresas || []).find((x) => x.id === empId);
+  if (!e) return;
+  const apiKey = getGGKey();
+  if (!apiKey) { pGGKey(); return; }
+  if (!e.googlePlaceId) { oSetPlaceId(empId); return; }
+
+  const btn = document.getElementById(`gg-sync-btn-${empId}`);
+  const status = document.getElementById(`gg-sync-status-${empId}`);
+  if (btn) { btn.disabled = true; btn.textContent = "Sincronizando…"; }
+
+  try {
+    const url = `https://places.googleapis.com/v1/places/${encodeURIComponent(e.googlePlaceId)}`;
+    const res = await fetch(url, {
+      headers: {
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask": "rating,userRatingCount,displayName"
+      }
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || `Error ${res.status}`);
+    }
+    const data = await res.json();
+    const nota = data.rating ? Math.round(data.rating * 10) / 10 : null;
+    const total = data.userRatingCount || null;
+    if (!nota) throw new Error("Sin datos de valoración");
+
+    // Save as KPI entry
+    const col = `${REST_COL_MAP[e.theme] || e.theme}_kpis`;
+    const list = D[col] || [];
+    // Remove previous auto entries from today to avoid duplicates
+    const todayStr = today();
+    const filtered = list.filter((k) => !(k.autor === "Google Reviews (auto)" && k.fecha === todayStr));
+    const newId = (list.length ? Math.max(...list.map((k) => k.id || 0)) : 0) + 1;
+    filtered.push({ id: newId, nota, total_resenas: total, covers: null, ticket: null, fecha: todayStr, autor: "Google Reviews (auto)" });
+    D[col] = filtered;
+    save(col);
+
+    if (status) status.innerHTML = `<span style="color:var(--green)">⭐ ${nota} · ${total ? total + " reseñas" : ""} · Actualizado ahora</span>`;
+    if (btn) { btn.disabled = false; btn.textContent = "🔄 Actualizar"; }
+    // refresh resumen stats
+    const statsEl = document.getElementById(`emp-gg-rating-${empId}`);
+    if (statsEl) statsEl.innerHTML = `<strong style="font-size:22px">⭐ ${nota}</strong><span class="nd" style="margin-left:8px">${total || ""} reseñas</span>`;
+  } catch (err) {
+    if (status) status.innerHTML = `<span style="color:var(--red)">Error: ${safeText(err.message)}</span>`;
+    if (btn) { btn.disabled = false; btn.textContent = "🔄 Reintentar"; }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 function saveNotaDia(id) {
   const e = (D.empresas || []).find((x) => x.id === id);
