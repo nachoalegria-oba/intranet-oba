@@ -3677,16 +3677,16 @@ function rRestRecetario(empId, col) {
         ${(r.alergenos || []).length ? `<br>⚠ ${(r.alergenos || []).join(", ")}` : ""}
       </div>
       <div class="ca" style="margin-top:12px">
-        <button class="btn btn-s" onclick="openRestRecipe(${empId},'${col}',${r.id})">Ver ficha</button>
-        <button class="btn btn-o btn-s" onclick="oRestRM(${empId},'${col}',${r.id})">Editar</button>
-        <button class="btn btn-s btn-d" onclick="dRestRec(${empId},'${col}',${r.id})">Eliminar</button>
+        <button class="btn btn-s" onclick="openRestRecipe(${empId},'${col}',${r._i})">Ver ficha</button>
+        <button class="btn btn-o btn-s" onclick="oRestRM(${empId},'${col}',${r._i})">Editar</button>
+        <button class="btn btn-s btn-d" onclick="dRestRec(${empId},'${col}',${r._i})">Eliminar</button>
       </div>
     </article>`).join("") : `<div class="notice"><strong>Sin resultados</strong><div>No se encontraron recetas con ese filtro.</div></div>`;
 }
 
 function oRestRM(empId, col, id) {
   const colKey = `${col}_recetas`;
-  const recipe = id ? (D[colKey] || []).find((r) => r.id === id) : null;
+  const recipe = (id !== null && id !== undefined) ? (D[colKey] || []).find((r) => r._i === id) : null;
   const alerg = recipe?.alergenos || [];
   const subs = recipe?.subrecetas || [];
   oModal(`
@@ -3785,12 +3785,12 @@ function sRestRec(empId, col, id) {
     fecha: today(),
     autor: "Dirección"
   };
-  if (id) {
-    const existing = list.find((r) => r.id === id);
+  if (id !== null && id !== undefined) {
+    const existing = list.find((r) => r._i === id);
     if (existing) Object.assign(existing, payload);
   } else {
-    const newId = list.length ? Math.max(...list.map((r) => r.id || 0)) + 1 : 1;
-    list.push({ id: newId, ...payload });
+    const newId = list.length ? Math.max(...list.map((r) => r._i ?? r.id ?? 0)) + 1 : 1;
+    list.push({ _i: newId, ...payload });
     D[colKey] = list;
   }
   save(colKey);
@@ -3801,7 +3801,7 @@ function sRestRec(empId, col, id) {
 function dRestRec(empId, col, id) {
   if (!confirm("¿Eliminar esta receta?")) return;
   const colKey = `${col}_recetas`;
-  D[colKey] = (D[colKey] || []).filter((r) => r.id !== id);
+  D[colKey] = (D[colKey] || []).filter((r) => r._i !== id);
   save(colKey);
   rEmpresaDetalle(empId, "recetario");
 }
@@ -3859,7 +3859,7 @@ function buildRestFichaHTML(recipe) {
 
 function openRestRecipe(empId, col, id) {
   const colKey = `${col}_recetas`;
-  const recipe = (D[colKey] || []).find((r) => r.id === id);
+  const recipe = (D[colKey] || []).find((r) => r._i === id);
   if (!recipe) return;
   activeRestRecipeId = id;
   restRecipeEmpId = empId;
@@ -3881,7 +3881,7 @@ function closeRestRecipe() {
 
 function printRestFicha() {
   if (!activeRestRecipeId || !restRecipeCol) return;
-  const recipe = (D[`${restRecipeCol}_recetas`] || []).find((r) => r.id === activeRestRecipeId);
+  const recipe = (D[`${restRecipeCol}_recetas`] || []).find((r) => r._i === activeRestRecipeId);
   if (!recipe) return;
   const w = window.open("", "_blank");
   w.document.write(`<!DOCTYPE html>
