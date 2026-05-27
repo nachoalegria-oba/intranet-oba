@@ -29,6 +29,85 @@ function scheduleRender() {
 // Collections whose items may have large foto fields — excluded from localStorage
 const FOTO_COLS = new Set(["recipes", "oba_recetas", "ene_recetas", "candomo_recetas", "canitas_recetas", "cebo_recetas"]);
 
+// --- IndexedDB photo cache ---
+// Photos live in Firestore `{col}_fotos` and are cached here after first load.
+// Main recipe docs only have hasPhoto:true — no heavy base64 in the main payload.
+let _photoDB = null;
+function _openPhotoDB() {
+  if (_photoDB) return Promise.resolve(_photoDB);
+  return new Promise((res, rej) => {
+    const req = indexedDB.open("oba-photo-cache", 1);
+    req.onupgradeneeded = (e) => e.target.result.createObjectStore("photos", { keyPath: "key" });
+    req.onsuccess = (e) => { _photoDB = e.target.result; res(_photoDB); };
+    req.onerror = (e) => rej(e.target.error);
+  });
+}
+async function _getPhoto(col, i) {
+  try {
+    const db = await _openPhotoDB();
+    return await new Promise((res) => {
+      const req = db.transaction("photos").objectStore("photos").get(`${col}_${i}`);
+      req.onsuccess = () => res(req.result?.foto || null);
+      req.onerror = () => res(null);
+    });
+  } catch { return null; }
+}
+async function _setPhoto(col, i, foto) {
+  try {
+    const db = await _openPhotoDB();
+    await new Promise((res) => {
+      const tx = db.transaction("photos", "readwrite");
+      tx.objectStore("photos").put({ key: `${col}_${i}`, foto });
+      tx.oncomplete = res; tx.onerror = res;
+    });
+  } catch { /* ignore */ }
+}
+async function _getAllCachedPhotos(col) {
+  try {
+    const db = await _openPhotoDB();
+    return await new Promise((res) => {
+      const out = {}; const prefix = `${col}_`;
+      const req = db.transaction("photos").objectStore("photos").openCursor();
+      req.onsuccess = (e) => {
+        const cur = e.target.result;
+        if (cur) { if (String(cur.key).startsWith(prefix)) out[parseInt(String(cur.key).slice(prefix.length))] = cur.value.foto; cur.continue(); }
+        else res(out);
+      };
+      req.onerror = () => res({});
+    });
+  } catch { return {}; }
+}
+
+// Load photos for a restaurant collection: IndexedDB → Firestore _fotos fallback
+const _photoLoadedCols = new Set();
+async function loadRestPhotos(col) {
+  if (_photoLoadedCols.has(col)) return;
+  _photoLoadedCols.add(col);
+  const recipes = D[`${col}_recetas`] || [];
+  const withPhoto = recipes.filter(r => r.hasPhoto);
+  if (!withPhoto.length) return;
+
+  // Check IndexedDB cache
+  const cached = await _getAllCachedPhotos(col);
+  const missing = withPhoto.filter(r => !cached[r._i]);
+
+  // Merge cached photos into D
+  withPhoto.forEach(r => { if (cached[r._i]) r.foto = cached[r._i]; });
+
+  if (missing.length === 0) return; // all from cache, done
+
+  // Fetch missing from Firestore _fotos collection
+  try {
+    const snap = await db.collection(`${col}_recetas_fotos`).get();
+    if (snap.empty) return;
+    snap.docs.forEach(d => {
+      const { _i, foto } = d.data();
+      const recipe = recipes.find(r => r._i === _i);
+      if (recipe && foto) { recipe.foto = foto; _setPhoto(col, _i, foto); }
+    });
+  } catch (e) { console.warn("Error loading photos for", col, e); }
+}
+
 const EMPRESAS_SEED = [
   {
     id: 1,
@@ -3476,8 +3555,11 @@ function rEmpresaDetalle(id, tab) {
         </select>
       </div>
       <div class="rest-rcards" id="rest-rcards-${e.id}"></div>`; // filled by rRestRecetario
-    // defer render to after bodyHtml is injected
-    setTimeout(() => rRestRecetario(e.id, col), 0);
+    // defer render to after bodyHtml is injected; load photos in background
+    setTimeout(() => {
+      rRestRecetario(e.id, col);
+      loadRestPhotos(col).then(() => rRestRecetario(e.id, col));
+    }, 0);
 
   } else if (restTab === "menu") {
     const menus = (D[`${col}_menus`] || []).slice().reverse();
@@ -3706,7 +3788,7 @@ function rRestRecetario(empId, col) {
       </div>
       <div class="ca" style="margin-top:12px">
         <button class="btn btn-s" onclick="openRestRecipe(${empId},'${col}',${r._i})">Ver ficha</button>
-        ${r.foto ? `<button class="btn btn-s btn-o" onclick="viewRestPhoto('${r._i}','${col}')">Ver plato</button>` : ""}
+        ${(r.hasPhoto || r.foto) ? `<button class="btn btn-s btn-o" onclick="viewRestPhoto(${r._i},'${col}')">Ver plato</button>` : ""}
         <button class="btn btn-o btn-s" onclick="oRestRM(${empId},'${col}',${r._i})">Editar</button>
         <button class="btn btn-s btn-d" onclick="dRestRec(${empId},'${col}',${r._i})">Eliminar</button>
       </div>
@@ -3898,7 +3980,7 @@ function openRestRecipe(empId, col, id) {
   document.getElementById("restdet-body").innerHTML = restRecipePrintMarkup;
   const photoBtn = document.getElementById("restdet-photo-btn");
   if (photoBtn) {
-    if (recipe.foto) {
+    if (recipe.hasPhoto || recipe.foto) {
       photoBtn.style.display = "";
       photoBtn.onclick = () => viewRestPhoto(id, col);
     } else {
@@ -3917,16 +3999,29 @@ function closeRestRecipe() {
   updateOverlayState();
 }
 
-function viewRestPhoto(id, col) {
+async function viewRestPhoto(id, col) {
   const colKey = `${col}_recetas`;
   const recipe = (D[colKey] || []).find((r) => r._i === id);
-  if (!recipe?.foto) return;
+  if (!recipe) return;
+
+  // Get foto: in-memory → IndexedDB → Firestore _fotos
+  let foto = recipe.foto;
+  if (!foto) foto = await _getPhoto(col, id);
+  if (!foto) {
+    // Last resort: fetch single doc from Firestore
+    try {
+      const snap = await db.collection(`${col}_recetas_fotos`).where("_i", "==", id).limit(1).get();
+      if (!snap.empty) { foto = snap.docs[0].data().foto; recipe.foto = foto; _setPhoto(col, id, foto); }
+    } catch (e) { console.warn("Error fetching photo", e); }
+  }
+  if (!foto) return;
+
   const overlay = document.createElement("div");
   overlay.id = "photo-lightbox";
   overlay.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:zoom-out;padding:20px";
   overlay.innerHTML = `
     <button onclick="document.getElementById('photo-lightbox').remove()" style="position:absolute;top:18px;right:22px;background:none;border:none;color:#fff;font-size:28px;cursor:pointer;line-height:1">✕</button>
-    <img src="${recipe.foto}" alt="${safeText(recipe.nombre)}" style="max-width:100%;max-height:90vh;object-fit:contain;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.6)">
+    <img src="${foto}" alt="${safeText(recipe.nombre)}" style="max-width:100%;max-height:90vh;object-fit:contain;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.6)">
     <p style="color:#ccc;margin-top:14px;font-size:15px;letter-spacing:.5px">${safeText(recipe.nombre)}</p>`;
   overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
