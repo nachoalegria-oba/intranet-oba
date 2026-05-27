@@ -19,6 +19,16 @@ const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "
 
 const REST_COL_MAP = { oba: "oba", ene: "ene", candomo: "candomo", canitas: "canitas", cebo: "cebo" };
 
+// --- Performance: debounced render ---
+let _renderTimer = null;
+function scheduleRender() {
+  clearTimeout(_renderTimer);
+  _renderTimer = setTimeout(renderAll, 60);
+}
+
+// Collections whose items may have large foto fields — excluded from localStorage
+const FOTO_COLS = new Set(["recipes", "oba_recetas", "ene_recetas", "candomo_recetas", "canitas_recetas", "cebo_recetas"]);
+
 const EMPRESAS_SEED = [
   {
     id: 1,
@@ -387,12 +397,25 @@ function loadFromLocal() {
 }
 
 function persistLocal() {
-  localStorage.setItem(LOCAL_KEY, JSON.stringify(D));
+  const slim = {};
+  COLLECTIONS.forEach((col) => {
+    slim[col] = FOTO_COLS.has(col)
+      ? (D[col] || []).map(({ foto, ...rest }) => rest)
+      : (D[col] || []);
+  });
+  try {
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(slim));
+  } catch (e) {
+    console.warn("localStorage lleno, limpiando caché:", e);
+    localStorage.removeItem(LOCAL_KEY);
+  }
 }
 
 async function loadFromFirebase() {
   const cols = [...COLLECTIONS];
-  for (const col of cols) {
+
+  // Load all collections in parallel (was sequential — major speedup)
+  await Promise.all(cols.map(async (col) => {
     const snap = await db.collection(col).get();
     if (snap.empty) {
       D[col] = JSON.parse(JSON.stringify(DEFAULTS[col]));
@@ -401,15 +424,20 @@ async function loadFromFirebase() {
       const items = snap.docs.map((doc) => doc.data()).sort((a, b) => (a._i || 0) - (b._i || 0));
       D[col] = items.map((item, idx) => ({ ...item, _i: item._i ?? idx }));
     }
-  }
+  }));
 
+  // Single render after all data is ready
+  computeNextId();
+  renderAll();
+
+  // Live listeners — debounced so burst updates don't thrash the UI
   cols.forEach((col) => {
     db.collection(col).onSnapshot((snap) => {
       if (snap.empty) return;
       const items = snap.docs.map((doc) => doc.data()).sort((a, b) => (a._i || 0) - (b._i || 0));
       D[col] = items.map((item, idx) => ({ ...item, _i: item._i ?? idx }));
       computeNextId();
-      renderAll();
+      scheduleRender();
     });
   });
 }
