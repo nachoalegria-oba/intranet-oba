@@ -399,7 +399,7 @@ async function loadFromFirebase() {
       await saveCol(col);
     } else {
       const items = snap.docs.map((doc) => doc.data()).sort((a, b) => (a._i || 0) - (b._i || 0));
-      D[col] = items.map(({ _i, ...rest }) => rest);
+      D[col] = items.map((item, idx) => ({ ...item, _i: item._i ?? idx }));
     }
   }
 
@@ -407,7 +407,7 @@ async function loadFromFirebase() {
     db.collection(col).onSnapshot((snap) => {
       if (snap.empty) return;
       const items = snap.docs.map((doc) => doc.data()).sort((a, b) => (a._i || 0) - (b._i || 0));
-      D[col] = items.map(({ _i, ...rest }) => rest);
+      D[col] = items.map((item, idx) => ({ ...item, _i: item._i ?? idx }));
       computeNextId();
       renderAll();
     });
