@@ -3678,6 +3678,7 @@ function rRestRecetario(empId, col) {
       </div>
       <div class="ca" style="margin-top:12px">
         <button class="btn btn-s" onclick="openRestRecipe(${empId},'${col}',${r._i})">Ver ficha</button>
+        ${r.foto ? `<button class="btn btn-s btn-o" onclick="viewRestPhoto('${r._i}','${col}')">Ver plato</button>` : ""}
         <button class="btn btn-o btn-s" onclick="oRestRM(${empId},'${col}',${r._i})">Editar</button>
         <button class="btn btn-s btn-d" onclick="dRestRec(${empId},'${col}',${r._i})">Eliminar</button>
       </div>
@@ -3867,6 +3868,15 @@ function openRestRecipe(empId, col, id) {
   document.getElementById("restdet-tit").textContent = recipe.nombre;
   restRecipePrintMarkup = buildRestFichaHTML(recipe);
   document.getElementById("restdet-body").innerHTML = restRecipePrintMarkup;
+  const photoBtn = document.getElementById("restdet-photo-btn");
+  if (photoBtn) {
+    if (recipe.foto) {
+      photoBtn.style.display = "";
+      photoBtn.onclick = () => viewRestPhoto(id, col);
+    } else {
+      photoBtn.style.display = "none";
+    }
+  }
   document.getElementById("restdet").classList.add("open");
   updateOverlayState();
 }
@@ -3877,6 +3887,21 @@ function closeRestRecipe() {
   restRecipeEmpId = null;
   restRecipeCol = "";
   updateOverlayState();
+}
+
+function viewRestPhoto(id, col) {
+  const colKey = `${col}_recetas`;
+  const recipe = (D[colKey] || []).find((r) => r._i === id);
+  if (!recipe?.foto) return;
+  const overlay = document.createElement("div");
+  overlay.id = "photo-lightbox";
+  overlay.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:zoom-out;padding:20px";
+  overlay.innerHTML = `
+    <button onclick="document.getElementById('photo-lightbox').remove()" style="position:absolute;top:18px;right:22px;background:none;border:none;color:#fff;font-size:28px;cursor:pointer;line-height:1">✕</button>
+    <img src="${recipe.foto}" alt="${safeText(recipe.nombre)}" style="max-width:100%;max-height:90vh;object-fit:contain;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.6)">
+    <p style="color:#ccc;margin-top:14px;font-size:15px;letter-spacing:.5px">${safeText(recipe.nombre)}</p>`;
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
 }
 
 function printRestFicha() {
