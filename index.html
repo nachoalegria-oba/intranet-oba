@@ -333,6 +333,16 @@
         <button class="secondary-btn" onclick="cRD()">Cerrar</button>
       </div>
     </div>
+    <div class="scale-bar" id="rdet-scalebar" style="display:none">
+      <span class="scale-label">Base: <strong id="rdet-scale-base">—</strong> rac.</span>
+      <div class="scale-ctrl">
+        <span class="scale-label">Escalar a:</span>
+        <button class="scale-btn" onclick="changeScale(-1)">−</button>
+        <strong id="rdet-scale-n">—</strong>
+        <button class="scale-btn" onclick="changeScale(1)">+</button>
+        <span class="scale-label">raciones</span>
+      </div>
+    </div>
     <div class="drawer-body" id="rdbody"></div>
   </div>
 
@@ -353,6 +363,16 @@
         <button class="secondary-btn" id="restdet-photo-btn" style="display:none" onclick="">Ver plato</button>
         <button class="secondary-btn" onclick="printRestFicha()">Imprimir</button>
         <button class="secondary-btn" onclick="closeRestRecipe()">Cerrar</button>
+      </div>
+    </div>
+    <div class="scale-bar" id="restdet-scalebar" style="display:none">
+      <span class="scale-label">Base: <strong id="restdet-scale-base">—</strong> rac.</span>
+      <div class="scale-ctrl">
+        <span class="scale-label">Escalar a:</span>
+        <button class="scale-btn" onclick="changeRestScale(-1)">−</button>
+        <strong id="restdet-scale-n">—</strong>
+        <button class="scale-btn" onclick="changeRestScale(1)">+</button>
+        <span class="scale-label">raciones</span>
       </div>
     </div>
     <div class="drawer-body" id="restdet-body"></div>

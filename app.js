@@ -19,6 +19,40 @@ const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "
 
 const REST_COL_MAP = { oba: "oba", ene: "ene", candomo: "candomo", canitas: "canitas", cebo: "cebo" };
 
+// --- Recipe scaling helpers ---
+function _fmtNum(n) {
+  if (n <= 0) return "0";
+  if (n >= 1000) return String(Math.round(n));
+  if (n >= 100)  return String(Math.round(n));
+  if (n >= 10)   return String(parseFloat((Math.round(n * 10) / 10).toFixed(1)));
+  if (n >= 1)    return String(parseFloat((Math.round(n * 100) / 100).toFixed(2)));
+  return String(parseFloat((Math.round(n * 1000) / 1000).toFixed(3)));
+}
+function scaleQty(c, factor) {
+  if (!c || factor === 1) return c;
+  const s = String(c).trim();
+  if (!s || s === "—") return s;
+  // Range: "2-3" or "2–4"
+  const rangeM = s.match(/^([\d,.]+)\s*[-–]\s*([\d,.]+)$/);
+  if (rangeM) return `${_fmtNum(parseFloat(rangeM[1].replace(",", ".")) * factor)}–${_fmtNum(parseFloat(rangeM[2].replace(",", ".")) * factor)}`;
+  // Mixed number: "1 1/2"
+  const mixM = s.match(/^(\d+)\s+(\d+)\/(\d+)$/);
+  if (mixM) return _fmtNum((+mixM[1] + +mixM[2] / +mixM[3]) * factor);
+  // Fraction: "1/2"
+  const fracM = s.match(/^(\d+)\/(\d+)$/);
+  if (fracM) return _fmtNum((+fracM[1] / +fracM[2]) * factor);
+  // Plain number (with optional comma decimal)
+  const n = parseFloat(s.replace(",", "."));
+  if (!isNaN(n)) return _fmtNum(n * factor);
+  // Non-numeric (e.g. "a gusto", "c.s.") — return as-is
+  return s;
+}
+function parseRaciones(s) {
+  if (!s) return null;
+  const m = String(s).match(/\d+/);
+  return m ? parseInt(m[0]) : null;
+}
+
 // --- Performance: debounced render ---
 let _renderTimer = null;
 function scheduleRender() {
@@ -342,6 +376,42 @@ let restRecipePrintMarkup = "";
 let restRecipeEmpId = null;
 let restRecipeCol = "";
 let iaH = [];
+// Recipe scaling state
+let _scaleBase = 1;      // original raciones (main rdet)
+let _scaleCur = 1;       // current raciones (main rdet)
+let _rscaleBase = 1;     // original raciones (restdet)
+let _rscaleCur = 1;      // current raciones (restdet)
+
+function _initScaleBar(barId, nId, baseId, base) {
+  const bar = document.getElementById(barId);
+  if (!bar) return;
+  if (!base) { bar.style.display = "none"; return; }
+  bar.style.display = "";
+  document.getElementById(nId).textContent = base;
+  document.getElementById(baseId).textContent = base;
+}
+
+function changeScale(delta) {
+  const next = Math.max(1, _scaleCur + delta);
+  _scaleCur = next;
+  document.getElementById("rdet-scale-n").textContent = next;
+  const recipe = D.recipes.find((r) => r.id === activeRecipeId);
+  if (!recipe) return;
+  const factor = _scaleCur / _scaleBase;
+  printRecipeMarkup = buildFichaHTML(recipe, factor);
+  document.getElementById("rdbody").innerHTML = printRecipeMarkup;
+}
+
+function changeRestScale(delta) {
+  const next = Math.max(1, _rscaleCur + delta);
+  _rscaleCur = next;
+  document.getElementById("restdet-scale-n").textContent = next;
+  const recipe = (D[`${restRecipeCol}_recetas`] || []).find((r) => r._i === activeRestRecipeId);
+  if (!recipe) return;
+  const factor = _rscaleCur / _rscaleBase;
+  restRecipePrintMarkup = buildRestFichaHTML(recipe, factor);
+  document.getElementById("restdet-body").innerHTML = restRecipePrintMarkup;
+}
 let deferredPrompt = null;
 let printRecipeMarkup = "";
 
@@ -747,7 +817,7 @@ function rRec() {
   }).join("") : `<div class="notice"><strong>Sin resultados</strong><div>No se encontraron platos con ese filtro.</div></div>`;
 }
 
-function buildFichaHTML(recipe) {
+function buildFichaHTML(recipe, scale = 1) {
   const subs = recipe.subrecetas || [];
   const alerg = recipe.alergenos || [];
   const photo = recipe.foto ? `<img src="${recipe.foto}" alt="${safeText(recipe.nombre)}" style="width:100%;max-height:280px;object-fit:cover;border-radius:24px;margin-bottom:20px">` : "";
@@ -756,7 +826,7 @@ function buildFichaHTML(recipe) {
       <h4>Ingredientes principales</h4>
       <div class="ig">
         <div class="ih">Ingrediente</div><div class="ih">Cantidad</div><div class="ih">Unidad</div>
-        ${(recipe.ingredientes || []).map((item) => `<div>${safeText(item.i)}</div><div style="text-align:right">${safeText(item.c || "—")}</div><div>${safeText(item.u || "")}</div>`).join("")}
+        ${(recipe.ingredientes || []).map((item) => `<div>${safeText(item.i)}</div><div style="text-align:right">${safeText(scaleQty(item.c, scale) || "—")}</div><div>${safeText(item.u || "")}</div>`).join("")}
       </div>
     </div>` : "";
   const subsHtml = subs.map((sub) => `
@@ -766,7 +836,7 @@ function buildFichaHTML(recipe) {
       ${(sub.ingredientes || []).length ? `
         <div class="ig" style="margin-bottom:14px">
           <div class="ih">Ingrediente</div><div class="ih">Cantidad</div><div class="ih">Unidad</div>
-          ${(sub.ingredientes || []).map((item) => `<div>${safeText(item.i)}</div><div style="text-align:right">${safeText(item.c || "—")}</div><div>${safeText(item.u || "")}</div>`).join("")}
+          ${(sub.ingredientes || []).map((item) => `<div>${safeText(item.i)}</div><div style="text-align:right">${safeText(scaleQty(item.c, scale) || "—")}</div><div>${safeText(item.u || "")}</div>`).join("")}
         </div>` : ""}
       ${(sub.pasos || []).length ? `<ol class="sl">${sub.pasos.map((step, index) => `<li><div class="sn">${index + 1}</div><div>${safeText(step)}</div></li>`).join("")}</ol>` : ""}
     </div>`).join("");
@@ -809,6 +879,9 @@ function oRD(id) {
   if (!recipe) return;
   activeRecipeId = id;
   history.replaceState(null, "", `#receta-${id}`);
+  _scaleBase = parseRaciones(recipe.raciones) || 4;
+  _scaleCur = _scaleBase;
+  _initScaleBar("rdet-scalebar", "rdet-scale-n", "rdet-scale-base", _scaleBase);
   document.getElementById("rdtit").textContent = recipe.nombre;
   printRecipeMarkup = buildFichaHTML(recipe);
   document.getElementById("rdbody").innerHTML = printRecipeMarkup;
@@ -3917,7 +3990,7 @@ function dRestRec(empId, col, id) {
   rEmpresaDetalle(empId, "recetario");
 }
 
-function buildRestFichaHTML(recipe) {
+function buildRestFichaHTML(recipe, scale = 1) {
   const subs = recipe.subrecetas || [];
   const alerg = recipe.alergenos || [];
   const ingredients = (recipe.ingredientes || []).length ? `
@@ -3925,7 +3998,7 @@ function buildRestFichaHTML(recipe) {
       <h4>Ingredientes principales</h4>
       <div class="ig">
         <div class="ih">Ingrediente</div><div class="ih">Cantidad</div><div class="ih">Unidad</div>
-        ${(recipe.ingredientes || []).map((item) => `<div>${safeText(item.i)}</div><div style="text-align:right">${safeText(item.c || "—")}</div><div>${safeText(item.u || "")}</div>`).join("")}
+        ${(recipe.ingredientes || []).map((item) => `<div>${safeText(item.i)}</div><div style="text-align:right">${safeText(scaleQty(item.c, scale) || "—")}</div><div>${safeText(item.u || "")}</div>`).join("")}
       </div>
     </div>` : "";
   const subsHtml = subs.map((sub) => `
@@ -3935,7 +4008,7 @@ function buildRestFichaHTML(recipe) {
       ${(sub.ingredientes || []).length ? `
         <div class="ig" style="margin-bottom:14px">
           <div class="ih">Ingrediente</div><div class="ih">Cantidad</div><div class="ih">Unidad</div>
-          ${(sub.ingredientes || []).map((item) => `<div>${safeText(item.i)}</div><div style="text-align:right">${safeText(item.c || "—")}</div><div>${safeText(item.u || "")}</div>`).join("")}
+          ${(sub.ingredientes || []).map((item) => `<div>${safeText(item.i)}</div><div style="text-align:right">${safeText(scaleQty(item.c, scale) || "—")}</div><div>${safeText(item.u || "")}</div>`).join("")}
         </div>` : ""}
       ${(sub.pasos || []).length ? `<ol class="sl">${sub.pasos.map((step, i) => `<li><div class="sn">${i+1}</div><div>${safeText(step)}</div></li>`).join("")}</ol>` : ""}
     </div>`).join("");
@@ -3975,6 +4048,9 @@ function openRestRecipe(empId, col, id) {
   activeRestRecipeId = id;
   restRecipeEmpId = empId;
   restRecipeCol = col;
+  _rscaleBase = parseRaciones(recipe.raciones) || 4;
+  _rscaleCur = _rscaleBase;
+  _initScaleBar("restdet-scalebar", "restdet-scale-n", "restdet-scale-base", _rscaleBase);
   document.getElementById("restdet-tit").textContent = recipe.nombre;
   restRecipePrintMarkup = buildRestFichaHTML(recipe);
   document.getElementById("restdet-body").innerHTML = restRecipePrintMarkup;
