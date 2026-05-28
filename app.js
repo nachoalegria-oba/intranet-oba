@@ -382,14 +382,7 @@ let _scaleCur = 1;       // current raciones (main rdet)
 let _rscaleBase = 1;     // original raciones (restdet)
 let _rscaleCur = 1;      // current raciones (restdet)
 
-function _initScaleBar(barId, nId, baseId, base) {
-  const bar = document.getElementById(barId);
-  if (!bar) return;
-  if (!base) { bar.style.display = "none"; return; }
-  bar.style.display = "";
-  document.getElementById(nId).textContent = base;
-  document.getElementById(baseId).textContent = base;
-}
+function _initScaleBar(_barId, _nId, _baseId, _base) { /* scale bar is now rendered inline in the ficha body */ }
 
 function changeScale(delta) {
   const next = Math.max(1, _scaleCur + delta);
@@ -851,11 +844,23 @@ function buildFichaHTML(recipe, scale = 1) {
       <div class="ca">${alerg.map((item) => `<span class="badge" style="border-color:#b84337;color:#b84337">${safeText(item)}</span>`).join("")}</div>
     </div>` : "";
 
+  const scaleBar = _scaleBase > 0 ? `
+    <div class="scale-bar">
+      <span class="scale-label">Base: <strong>${_scaleBase}</strong> rac.</span>
+      <div class="scale-ctrl">
+        <span class="scale-label">Escalar a:</span>
+        <button class="scale-btn" onclick="changeScale(-1)">−</button>
+        <strong>${_scaleCur}</strong>
+        <button class="scale-btn" onclick="changeScale(1)">+</button>
+        <span class="scale-label">raciones</span>
+      </div>
+    </div>` : "";
   return `
     <div class="recipe-brand">
       <img class="logo-mark logo-mark-black" src="${logoWhiteUrl()}" alt="OBA">
     </div>
     ${photo}
+    ${scaleBar}
     <div class="rs">
       <h4>Información general</h4>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
@@ -4022,7 +4027,19 @@ function buildRestFichaHTML(recipe, scale = 1) {
       <h4>Alérgenos</h4>
       <div class="ca">${alerg.map((a) => `<span class="badge" style="border-color:#b84337;color:#b84337">${safeText(a)}</span>`).join("")}</div>
     </div>` : "";
+  const scaleBar = _rscaleBase > 0 ? `
+    <div class="scale-bar">
+      <span class="scale-label">Base: <strong>${_rscaleBase}</strong> rac.</span>
+      <div class="scale-ctrl">
+        <span class="scale-label">Escalar a:</span>
+        <button class="scale-btn" onclick="changeRestScale(-1)">−</button>
+        <strong>${_rscaleCur}</strong>
+        <button class="scale-btn" onclick="changeRestScale(1)">+</button>
+        <span class="scale-label">raciones</span>
+      </div>
+    </div>` : "";
   return `
+    ${scaleBar}
     <div class="rs">
       <h4>Información general</h4>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
