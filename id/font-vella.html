@@ -904,7 +904,28 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
+/* ---------- FIREBASE ---------- */
+const FV_FB_CFG = {
+  apiKey: "AIzaSyAUUgLnKnh1xUbCjis4nPoEzoLLrJp9loY",
+  authDomain: "intranet-oba.firebaseapp.com",
+  projectId: "intranet-oba",
+  storageBucket: "intranet-oba.firebasestorage.app",
+  messagingSenderId: "603055689454",
+  appId: "1:603055689454:web:4e25c2a58f6a42c9c0adff"
+};
+let fvDb;
+try {
+  firebase.app('fv-oba');
+  fvDb = firebase.firestore(firebase.app('fv-oba'));
+} catch(e) {
+  firebase.initializeApp(FV_FB_CFG, 'fv-oba');
+  fvDb = firebase.firestore(firebase.app('fv-oba'));
+}
+const FV_COL = 'fv_batches';
+
 /* ---------- DATA ---------- */
 const BASES = [
   {code:'NAR', name:'Naranja',      color:'#C95E0A'},
@@ -1123,6 +1144,40 @@ try{ const t=localStorage.getItem('fv_oba_lastsaved_v1'); if(t) lastSavedAt=t; }
 const firstVisit = !localStorage.getItem('fv_oba_visited_v1');
 try{ localStorage.setItem('fv_oba_visited_v1','1'); } catch(e){}
 
+/* ---------- FIRESTORE SYNC ---------- */
+let _fsReady = false;
+
+async function _fsSave(){
+  try{
+    const fbBatch = fvDb.batch();
+    const snap = await fvDb.collection(FV_COL).get();
+    snap.docs.forEach(d => fbBatch.delete(d.ref));
+    batches.forEach((item, i) => {
+      fbBatch.set(fvDb.collection(FV_COL).doc(item.id), {...item, _i: i});
+    });
+    await fbBatch.commit();
+  } catch(e){ console.warn('FV Firestore save:', e); }
+}
+
+fvDb.collection(FV_COL).orderBy('_i').onSnapshot(snap => {
+  // Ignorar escrituras locales pendientes (evita re-render innecesario)
+  if(snap.metadata.hasPendingWrites) return;
+  const incoming = snap.docs.map(d => { const o={...d.data()}; delete o._i; return o; });
+  if(incoming.length > 0){
+    batches = incoming;
+    try{ localStorage.setItem('fv_oba_batches_v1', JSON.stringify(batches)); }catch(e){}
+    lastSavedAt = new Date().toISOString();
+    renderBatches(); updateSaveStatus();
+  } else if(!_fsReady && batches.length > 0){
+    // Firestore vacío pero tenemos datos locales → subir
+    _fsSave();
+  }
+  _fsReady = true;
+  // Actualiza indicador de nube
+  const sub = document.getElementById('ssub');
+  if(sub) sub.textContent = '☁ Sincronizado · ' + new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+}, err => console.warn('FV onSnapshot:', err));
+
 function detectBrowser(){
   const ua = navigator.userAgent;
   if(/Edg\//.test(ua)) return 'Edge';
@@ -1139,6 +1194,7 @@ function saveBatches(){
     localStorage.setItem('fv_oba_lastsaved_v1', lastSavedAt);
     updateSaveStatus();
     if(fileHandle && batches.length) writeToLinkedFile(true);
+    _fsSave(); // ← sync a Firestore
     return true;
   } catch(e){
     toast('Error al guardar: '+e.message, 'error', 6000);
