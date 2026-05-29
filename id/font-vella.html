@@ -1110,7 +1110,15 @@ async function writeToLinkedFile(silent){
   }catch(e){ toast('Error al escribir en archivo: '+e.message,'error',4000); }
 }
 
+const SEED_BATCHES = [
+  {"code":"FV-NAR-OOL-LP","recipe":"R01","date":"2026-05-29","replica":"1","strain":"L. plantarum · LP-01","bot":"Té milky oolong 40 grs","sugar":"100","vol":"2300","dose":"","temp":"","ph0":"3.5","ph1":"","b0":"","b1":"","dur":"","abv":"","ta":"","co2":"","tasting":"","notes":"Se disuelve el azucar, el te y 200 ml de zumo de naranja para luego ya la solución disuelta enfriar con el resto de liquido sobrande de naranja. Se guarda en nevera a 2ºC durante 24h. ","verdict":"pendiente","pair":"","id":"b_1780048876802"},
+  {"code":"FV-FR-ROSA","recipe":"R03","date":"2026-05-28","replica":"1","strain":"Tibicos · WK-12","bot":"Pétalo de rosa seco 40 grs","sugar":"100","vol":"2300","dose":"","temp":"","ph0":"3.4","ph1":"","b0":"","b1":"","dur":"","abv":"","ta":"","co2":"","tasting":"","notes":"Se disuelve el azucar en 200 ml de agua de frutos rojos junto a las rosas secas, se infusiona y luego se agrega el resto de agua de frutos rojos para enfriar. Se guarda en bolsa de vacio grande sellado a una 80% y se deja reposar 24h en nevera.","verdict":"pendiente","pair":"","id":"b_1780048728567"},
+  {"code":"FV-MANZ-SAUCO","recipe":"R05","date":"2026-05-28","replica":"1","strain":"T. delbrueckii · TD-10","bot":"Sauco 100 grs","sugar":"100","vol":"2300","dose":"","temp":"","ph0":"3.5","ph1":"","b0":"","b1":"","dur":"","abv":"","ta":"","co2":"","tasting":"","notes":"Se infusiona el sauco fresco junto al azucar y 200 ml de liquido de manzana para disolver e infusionar, se le agrega el resto de liquido para enfriar y se deja en bolsa al vacio 80% sellado en nevera a 2º durante 24h.","verdict":"pendiente","pair":"","id":"b_1780048663118"},
+  {"code":"FV-TROP-KOJI","recipe":"R02","date":"2026-05-29","replica":"1","strain":"A. oryzae (koji)","bot":"Cebada perlada koji","sugar":"0","vol":"2300","dose":"300 grs","temp":"55","ph0":"3.2","ph1":"","b0":"","b1":"","dur":"24h","abv":"","ta":"","co2":"","tasting":"","notes":"Se agregan 300 grs de koji de cebada perlada (A. Oryzae) en una bolsa de vacio junto al zumo tropical y se deja en un cuerto a 55ºC constantes durante 24h. Se coloca luego a 70ºC para inactivar el proceso enzimatico y se deja reposar en nevera durante 24h","verdict":"pendiente","pair":"","id":"b_1780048547735"}
+];
+
 try{ const s=localStorage.getItem('fv_oba_batches_v1'); if(s) batches=JSON.parse(s); } catch(e){}
+if(!batches.length){ batches = JSON.parse(JSON.stringify(SEED_BATCHES)); try{ localStorage.setItem('fv_oba_batches_v1', JSON.stringify(batches)); }catch(e){} }
 try{ const t=localStorage.getItem('fv_oba_lastsaved_v1'); if(t) lastSavedAt=t; } catch(e){}
 const firstVisit = !localStorage.getItem('fv_oba_visited_v1');
 try{ localStorage.setItem('fv_oba_visited_v1','1'); } catch(e){}
