@@ -698,12 +698,74 @@ function renderAll() {
 
 function sp(id) {
   if (id === "grupo") { rGrupo(); }
+  if (id === "id") { showIDPanel(); return; }
   document.querySelectorAll(".panel").forEach((panel) => panel.classList.remove("active"));
   document.querySelectorAll(".nav-btn").forEach((btn) => btn.classList.remove("active"));
   document.getElementById(`panel-${id}`)?.classList.add("active");
   document.querySelector(`.nav-btn[data-panel="${id}"]`)?.classList.add("active");
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
+
+// ── I+D ──────────────────────────────────────────────
+const ID_PWD = "hijodeladeisy";
+const ID_SESSION_KEY = "oba_id_unlocked_v1";
+
+function showIDPanel() {
+  document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+  document.getElementById("panel-id")?.classList.add("active");
+  document.querySelector('.nav-btn[data-panel="id"]')?.classList.add("active");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  const unlocked = sessionStorage.getItem(ID_SESSION_KEY) === "1";
+  document.getElementById("id-gate").style.display = unlocked ? "none" : "flex";
+  document.getElementById("id-content").style.display = unlocked ? "block" : "none";
+  if (unlocked) showIDGrid();
+}
+
+function unlockID() {
+  const val = document.getElementById("id-pwd").value;
+  if (val === ID_PWD) {
+    sessionStorage.setItem(ID_SESSION_KEY, "1");
+    document.getElementById("id-err").textContent = "";
+    document.getElementById("id-pwd").value = "";
+    document.getElementById("id-gate").style.display = "none";
+    document.getElementById("id-content").style.display = "block";
+    showIDGrid();
+  } else {
+    const err = document.getElementById("id-err");
+    err.textContent = "Contraseña incorrecta";
+    document.getElementById("id-pwd").value = "";
+    document.getElementById("id-pwd").focus();
+  }
+}
+
+function lockID() {
+  sessionStorage.removeItem(ID_SESSION_KEY);
+  document.getElementById("id-gate").style.display = "flex";
+  document.getElementById("id-content").style.display = "none";
+  document.getElementById("id-pwd").value = "";
+}
+
+function showIDGrid() {
+  document.getElementById("id-grid-view").style.display = "block";
+  document.getElementById("id-iframe-view").style.display = "none";
+  const iframe = document.getElementById("id-iframe");
+  iframe.src = "";
+}
+
+function openIDProject(name, path) {
+  document.getElementById("id-grid-view").style.display = "none";
+  document.getElementById("id-iframe-view").style.display = "block";
+  document.getElementById("id-iframe-title").textContent = "I+D · " + name;
+  document.getElementById("id-iframe").src = path;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function closeIDProject() {
+  showIDGrid();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+// ─────────────────────────────────────────────────────
 
 function bsec(section) {
   const map = { Bosque: "bosque", Afluente: "fluvial", Rivera: "fluvial", Corral: "corral", Caza: "caza", Acantilado: "caza", "Monte Bajo": "caza", Llanura: "corral", Postres: "postre", Huerta: "huerta", Bienvenida: "base" };

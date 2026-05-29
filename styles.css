@@ -342,6 +342,22 @@ td select:focus{
 .nav-btn-ai{color:var(--green-deep)}
 .nav-btn-ai.active{background:linear-gradient(180deg, #2e3d26 0%, #111 100%)}
 
+/* I+D */
+.nav-btn-id{color:#a78bfa}
+.nav-btn-id.active{background:linear-gradient(180deg,#2d1f4e 0%,#111 100%);color:#c4b5fd}
+
+.id-gate{display:flex;align-items:center;justify-content:center;min-height:60vh}
+.id-gate-card{width:100%;max-width:360px;padding:40px 32px;border:1.5px solid var(--border);background:var(--surface);border-radius:4px;text-align:center}
+.id-gate-card .login-input{width:100%;box-sizing:border-box;text-align:center;letter-spacing:.15em}
+
+.id-project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:8px}
+.id-project-card{text-align:left;background:var(--surface);border:1.5px solid var(--border);border-radius:4px;padding:22px 20px;cursor:pointer;transition:border-color .15s,transform .1s;display:flex;flex-direction:column;gap:6px}
+.id-project-card:hover{border-color:#a78bfa;transform:translateY(-2px)}
+.id-project-tag{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#a78bfa;font-family:'Space Mono',monospace;font-weight:700}
+.id-project-name{font-size:1.15rem;font-weight:700;font-family:'Unbounded',sans-serif;letter-spacing:-.01em}
+.id-project-desc{font-size:12px;color:var(--muted);line-height:1.5}
+.id-project-meta{font-size:10.5px;font-family:'Space Mono',monospace;color:var(--muted);margin-top:4px;opacity:.7}
+
 .page{padding:28px 32px 48px}
 .panel{display:none}
 .panel.active{display:block}

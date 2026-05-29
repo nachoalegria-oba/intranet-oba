@@ -64,6 +64,7 @@
       <button class="nav-btn" data-panel="proyectos" onclick="sp('proyectos')">Proyectos</button>
       <button class="nav-btn" data-panel="avisos" onclick="sp('avisos')">Avisos</button>
       <button class="nav-btn nav-btn-grupo" data-panel="grupo" onclick="sp('grupo')">Cañitas Gastro</button>
+      <button class="nav-btn nav-btn-id" data-panel="id" onclick="sp('id')">I+D</button>
       <button class="nav-btn nav-btn-ai" data-panel="ia" onclick="sp('ia')">IA</button>
     </nav>
     <button id="mobile-nav-toggle" class="mobile-nav-toggle" type="button" aria-label="Mostrar u ocultar navegación" aria-expanded="true" onclick="toggleMobileNav()">
@@ -302,6 +303,58 @@
         <div id="panel-grupo-body"></div>
       </section>
 
+      <!-- ===== I+D ===== -->
+      <section class="panel" id="panel-id">
+
+        <!-- Gate: bloqueo con contraseña -->
+        <div id="id-gate" class="id-gate">
+          <div class="id-gate-card">
+            <div class="eyebrow" style="margin-bottom:12px">Acceso restringido</div>
+            <h2 style="font-size:1.5rem;margin:0 0 6px">I+D</h2>
+            <p style="color:var(--muted);font-size:13px;margin:0 0 24px">Laboratorio de investigación y desarrollo</p>
+            <input class="login-input" type="password" id="id-pwd" placeholder="Contraseña"
+              onkeydown="if(event.key==='Enter')unlockID()">
+            <button class="primary-btn" style="margin-top:10px;width:100%" onclick="unlockID()">Entrar</button>
+            <div class="login-error" id="id-err" style="margin-top:8px"></div>
+          </div>
+        </div>
+
+        <!-- Contenido I+D (oculto hasta desbloqueo) -->
+        <div id="id-content" style="display:none">
+
+          <!-- Vista: grid de proyectos -->
+          <div id="id-grid-view">
+            <div class="section-head section-head-lg">
+              <div>
+                <div class="eyebrow">Investigación &amp; Desarrollo</div>
+                <h1>Proyectos I+D</h1>
+                <p>Experimentos, prototipos y desarrollos en curso.</p>
+              </div>
+              <button class="ghost-btn ghost-btn-sm" onclick="lockID()">Cerrar sesión I+D</button>
+            </div>
+            <div class="id-project-grid" id="id-project-grid">
+              <!-- Tarjeta Font Vella -->
+              <button class="id-project-card" onclick="openIDProject('Font Vella','./id/font-vella.html')">
+                <div class="id-project-tag">Fermentación</div>
+                <div class="id-project-name">Font Vella</div>
+                <div class="id-project-desc">Registro de lotes · cepas · parámetros fisicoquímicos · veredictos</div>
+                <div class="id-project-meta">4 recetas activas · Registro de lotes</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Vista: iframe de proyecto -->
+          <div id="id-iframe-view" style="display:none">
+            <div style="display:flex;align-items:center;gap:12px;padding:16px 0 12px;border-bottom:1px solid var(--border);margin-bottom:0">
+              <button class="ghost-btn ghost-btn-sm" onclick="closeIDProject()">← Volver</button>
+              <span class="eyebrow" id="id-iframe-title" style="margin:0"></span>
+            </div>
+            <iframe id="id-iframe" src="" style="width:100%;height:calc(100dvh - 140px);border:none;display:block"></iframe>
+          </div>
+
+        </div>
+      </section>
+
       <section class="panel" id="panel-ia">
         <div class="section-head section-head-lg">
           <div>
@@ -362,6 +415,6 @@
     <div class="modal" id="mi"></div>
   </div>
 
-  <script src="./app.js?v=52"></script>
+  <script src="./app.js?v=53"></script>
 </body>
 </html>
