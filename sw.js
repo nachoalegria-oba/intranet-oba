@@ -1,4 +1,4 @@
-const CACHE_NAME = "oba-intranet-v63";
+const CACHE_NAME = "oba-intranet-v64";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -22,7 +22,12 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) => Promise.all(
       keys.map((key) => caches.delete(key))
-    )).then(() => self.clients.claim())
+    )).then(() => self.clients.claim()).then(() => {
+      // Tell all open tabs to reload so they get fresh assets
+      self.clients.matchAll({ type: "window" }).then((clients) => {
+        clients.forEach((client) => client.postMessage({ type: "SW_UPDATED" }));
+      });
+    })
   );
 });
 

@@ -4508,9 +4508,9 @@ function saveNotaDia(id) {
 
 function registerPWA() {
   const isLocalPreview = ["127.0.0.1", "localhost"].includes(location.hostname);
-  const disableServiceWorker = isLocalPreview || location.hostname.endsWith("github.io");
 
-  if (disableServiceWorker && "serviceWorker" in navigator) {
+  // Unregister any stale SW on local dev only
+  if (isLocalPreview && "serviceWorker" in navigator) {
     navigator.serviceWorker.getRegistrations().then((registrations) => {
       registrations.forEach((registration) => registration.unregister());
     });
@@ -4528,7 +4528,12 @@ function registerPWA() {
         });
       });
     }).catch((error) => console.warn("SW error:", error));
+    // Reload page when a new SW takes control so users always get fresh assets
     navigator.serviceWorker.addEventListener("controllerchange", () => window.location.reload());
+    // Also listen for explicit SW_UPDATED message
+    navigator.serviceWorker.addEventListener("message", (event) => {
+      if (event.data?.type === "SW_UPDATED") window.location.reload();
+    });
   }
 
   const installCard = document.getElementById("install-card");
