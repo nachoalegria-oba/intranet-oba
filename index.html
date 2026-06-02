@@ -42,6 +42,11 @@
   <div id="app" class="app-shell">
     <header class="topbar">
       <div class="topbar-brand">
+        <button id="hamburger-btn" class="hamburger-btn" aria-label="Menú" onclick="toggleHamburger()">
+          <span class="hb-line"></span>
+          <span class="hb-line"></span>
+          <span class="hb-line"></span>
+        </button>
         <img class="logo-mark logo-mark-black logo-mark-topbar" src="./icons/oba-logo-white.png" alt="OBA">
         <div>
           <div class="eyebrow">Intranet del equipo</div>
@@ -50,7 +55,7 @@
       </div>
 
       <div class="topbar-actions">
-        <button class="ghost-btn ghost-btn-sm" onclick="logout()">Salir</button>
+        <button class="ghost-btn ghost-btn-sm topbar-logout-btn" onclick="logout()">Salir</button>
       </div>
     </header>
 
@@ -413,6 +418,31 @@
 
   <div class="modal-bg" id="modal">
     <div class="modal" id="mi"></div>
+  </div>
+
+  <!-- Hamburger menu overlay -->
+  <div id="hamburger-overlay" class="hamburger-overlay" onclick="closeHamburger()"></div>
+  <div id="hamburger-menu" class="hamburger-menu" role="dialog" aria-modal="true" aria-label="Navegación principal">
+    <div class="hamburger-header">
+      <img class="logo-mark hamburger-logo" src="./icons/oba-logo-white.png" alt="OBA">
+      <button class="hamburger-close" onclick="closeHamburger()" aria-label="Cerrar menú">✕</button>
+    </div>
+    <nav class="hamburger-nav" aria-label="Secciones">
+      <button class="hnav-btn active" data-panel="inicio" onclick="sp('inicio')">Inicio</button>
+      <button class="hnav-btn" data-panel="recetario" onclick="sp('recetario')">Recetario</button>
+      <button class="hnav-btn" data-panel="pedidos" onclick="sp('pedidos')">Pedidos</button>
+      <button class="hnav-btn" data-panel="menu" onclick="sp('menu')">Menú</button>
+      <button class="hnav-btn" data-panel="calendario" onclick="sp('calendario')">Calendario</button>
+      <button class="hnav-btn" data-panel="practicantes" onclick="sp('practicantes')">Practicantes</button>
+      <button class="hnav-btn" data-panel="proyectos" onclick="sp('proyectos')">Proyectos</button>
+      <button class="hnav-btn" data-panel="avisos" onclick="sp('avisos')">Avisos</button>
+      <button class="hnav-btn hnav-btn-grupo" data-panel="grupo" onclick="sp('grupo')">Cañitas Gastro</button>
+      <button class="hnav-btn hnav-btn-id" data-panel="id" onclick="sp('id')">I+D</button>
+      <button class="hnav-btn hnav-btn-ai" data-panel="ia" onclick="sp('ia')">IA</button>
+    </nav>
+    <div class="hamburger-footer">
+      <button class="ghost-btn ghost-btn-sm" style="color:rgba(255,255,255,.6)" onclick="logout()">Cerrar sesión</button>
+    </div>
   </div>
 
   <script src="./app.js?v=53"></script>

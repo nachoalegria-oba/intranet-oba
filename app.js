@@ -388,6 +388,11 @@ const DEFAULTS = {
   cebo_recetas: [], cebo_menus: [], cebo_ideas: [], cebo_kpis: []
 };
 
+// Hamburger menu — stubbed until setupHamburgerMenu() runs
+window.closeHamburger = () => {};
+window.openHamburger  = () => {};
+window.toggleHamburger = () => {};
+
 let db = null;
 let storageMode = "local";
 let D = cloneDefaults();
@@ -738,9 +743,12 @@ function sp(id) {
   if (id === "id") { showIDPanel(); return; }
   document.querySelectorAll(".panel").forEach((panel) => panel.classList.remove("active"));
   document.querySelectorAll(".nav-btn").forEach((btn) => btn.classList.remove("active"));
+  document.querySelectorAll(".hnav-btn").forEach((btn) => btn.classList.remove("active"));
   document.getElementById(`panel-${id}`)?.classList.add("active");
   document.querySelector(`.nav-btn[data-panel="${id}"]`)?.classList.add("active");
+  document.querySelector(`.hnav-btn[data-panel="${id}"]`)?.classList.add("active");
   window.scrollTo({ top: 0, behavior: "smooth" });
+  closeHamburger();
 }
 
 // ── I+D ──────────────────────────────────────────────
@@ -750,9 +758,12 @@ const ID_SESSION_KEY = "oba_id_unlocked_v1";
 function showIDPanel() {
   document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
   document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+  document.querySelectorAll(".hnav-btn").forEach((b) => b.classList.remove("active"));
   document.getElementById("panel-id")?.classList.add("active");
   document.querySelector('.nav-btn[data-panel="id"]')?.classList.add("active");
+  document.querySelector('.hnav-btn[data-panel="id"]')?.classList.add("active");
   window.scrollTo({ top: 0, behavior: "smooth" });
+  closeHamburger();
   const unlocked = sessionStorage.getItem(ID_SESSION_KEY) === "1";
   document.getElementById("id-gate").style.display = unlocked ? "none" : "flex";
   document.getElementById("id-content").style.display = unlocked ? "block" : "none";
@@ -2047,6 +2058,10 @@ function cPF() {
 }
 
 function closeTopOverlay() {
+  if (document.getElementById("hamburger-menu")?.classList.contains("open")) {
+    closeHamburger();
+    return true;
+  }
   if (document.getElementById("modal")?.classList.contains("open")) {
     cModal();
     return true;
@@ -4569,20 +4584,39 @@ function setupMobileNavToggle() {
       toggle.setAttribute("aria-expanded", "true");
       return;
     }
-    toggle.hidden = false;
-    const hidden = localStorage.getItem("oba_mobile_nav_hidden_v1") === "1";
-    nav.classList.toggle("nav-hidden", hidden);
-    toggle.setAttribute("aria-expanded", hidden ? "false" : "true");
-  };
-
-  window.toggleMobileNav = () => {
-    const hidden = !nav.classList.contains("nav-hidden");
-    localStorage.setItem("oba_mobile_nav_hidden_v1", hidden ? "1" : "0");
-    window.applyMobileNavState();
+    toggle.hidden = true; // hamburger takes over on mobile
   };
 
   window.addEventListener("resize", window.applyMobileNavState);
   window.applyMobileNavState();
+}
+
+function setupHamburgerMenu() {
+  const btn = document.getElementById("hamburger-btn");
+  const menu = document.getElementById("hamburger-menu");
+  const overlay = document.getElementById("hamburger-overlay");
+  if (!btn || !menu || !overlay) return;
+
+  window.toggleHamburger = () => {
+    const isOpen = menu.classList.contains("open");
+    if (isOpen) { closeHamburger(); } else { openHamburger(); }
+  };
+
+  window.openHamburger = () => {
+    menu.classList.add("open");
+    overlay.classList.add("open");
+    btn.classList.add("is-open");
+    btn.setAttribute("aria-expanded", "true");
+    document.body.style.overflow = "hidden";
+  };
+
+  window.closeHamburger = () => {
+    menu.classList.remove("open");
+    overlay.classList.remove("open");
+    btn.classList.remove("is-open");
+    btn.setAttribute("aria-expanded", "false");
+    document.body.style.overflow = "";
+  };
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -4597,6 +4631,7 @@ document.addEventListener("DOMContentLoaded", () => {
     installCardClose.onclick = dismissInstallHint;
   }
   setupMobileNavToggle();
+  setupHamburgerMenu();
   registerPWA();
   initIA();
   initData().catch((error) => showError(error.message));
