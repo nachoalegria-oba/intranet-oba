@@ -698,7 +698,7 @@ function startApp() {
   seedEmpresas();
   const label = formatLongDate(new Date());
   document.getElementById("hdate").textContent = label;
-  document.getElementById("ifecha").textContent = `${label}. Todo lo importante está aquí, sin perderse en pestañas.`;
+  document.getElementById("ifecha").textContent = label;
 
   // Escape key closes the topmost open overlay
   document.addEventListener("keydown", (e) => {
@@ -850,43 +850,82 @@ function cModal() {
 }
 
 function rInicio() {
+  // Greeting by time of day
+  const h = new Date().getHours();
+  const greetSub = h < 13 ? "Buenos días ☀️" : h < 20 ? "Buenas tardes 🌤️" : "Buenas noches 🌙";
+  const greetEl = document.getElementById("greet-sub");
+  if (greetEl) greetEl.textContent = greetSub;
+
+  // Urgent banner
   const urgent = D.avisos.filter((item) => item.urgente);
-  document.getElementById("iurg").innerHTML = urgent.length
-    ? urgent.map((item) => `<div class="notice urgent"><strong>${safeText(item.titulo)}</strong><div>${safeText(item.texto)}</div><div class="nd">${safeText(item.autor)} · ${safeText(item.fecha)}</div></div>`).join("")
-    : `<div class="notice"><strong>Todo en orden</strong><div>No hay avisos urgentes ahora mismo.</div></div>`;
+  const urgentBanner = document.getElementById("home-urgent-banner");
+  if (urgentBanner) {
+    urgentBanner.innerHTML = urgent.length
+      ? urgent.map((item) => `
+        <div class="home-urgent-card">
+          <div class="home-urgent-tag">🚨 Urgente</div>
+          <div class="home-urgent-title">${safeText(item.titulo)}</div>
+          <div class="home-urgent-text">${safeText(item.texto)}</div>
+          <div class="home-urgent-meta">${safeText(item.autor)} · ${safeText(item.fecha)}</div>
+        </div>`).join("")
+      : "";
+  }
 
+  // Stats
   const stats = [
-    { label: "Platos en recetario", value: D.recipes.length, section: "recetario" },
-    { label: "Ingredientes activos", value: D.ingredientes.length, section: "pedidos" },
-    { label: "Practicantes activos", value: D.practicantes.filter((item) => item.estado === "activo").length, section: "practicantes" },
-    { label: "Proyectos activos", value: D.proyectos.filter((item) => item.estado === "activo").length, section: "proyectos" }
+    { icon: "🍽️", label: "Platos", value: D.recipes.length, section: "recetario", color: "amber" },
+    { icon: "📦", label: "Ingredientes", value: D.ingredientes.length, section: "pedidos", color: "blue" },
+    { icon: "👨‍🍳", label: "Practicantes", value: D.practicantes.filter((p) => p.estado === "activo").length, section: "practicantes", color: "green" },
+    { icon: "💡", label: "Proyectos", value: D.proyectos.filter((p) => p.estado === "activo").length, section: "proyectos", color: "purple" }
   ];
-
-  document.getElementById("icards").innerHTML = stats.map((stat) => `
-    <button class="stat-card" onclick="sp('${stat.section}')">
-      <div class="eyebrow">OBA</div>
-      <strong>${stat.value}</strong>
-      <span>${safeText(stat.label)}</span>
+  document.getElementById("icards").innerHTML = stats.map((s) => `
+    <button class="home-stat-card home-stat-${s.color}" onclick="sp('${s.section}')">
+      <span class="home-stat-icon">${s.icon}</span>
+      <strong class="home-stat-value">${s.value}</strong>
+      <span class="home-stat-label">${s.label}</span>
     </button>`).join("");
 
-  const activeMenu = D.menu.filter((item) => item.estado === "activo").slice(0, 3);
+  // Feed
+  const activeMenu = D.menu.filter((item) => item.estado === "activo").slice(0, 4);
   const upcoming = [...D.eventos]
-    .filter((event) => event.fecha >= today())
+    .filter((e) => e.fecha >= today())
     .sort((a, b) => a.fecha.localeCompare(b.fecha))
-    .slice(0, 4);
-  const lastNotice = D.avisos[D.avisos.length - 1];
+    .slice(0, 3);
+  const recentNotices = [...D.avisos].reverse().slice(0, 2);
 
   let feed = "";
   if (activeMenu.length) {
-    feed += `<div class="notice"><strong>Menú activo</strong><div>${activeMenu.map((item) => `${safeText(item.plato)} (${safeText(item.seccion)})`).join(" · ")}</div></div>`;
+    feed += `<div class="home-feed-block">
+      <div class="home-feed-header"><span class="home-feed-dot dot-menu"></span>Menú activo</div>
+      ${activeMenu.map((item) => `
+        <div class="home-feed-item">
+          <span class="home-feed-item-name">${safeText(item.plato)}</span>
+          <span class="home-feed-item-meta">${safeText(item.seccion)}</span>
+        </div>`).join("")}
+    </div>`;
   }
   if (upcoming.length) {
-    feed += upcoming.map((item) => `<div class="notice"><strong>${safeText(item.titulo)}</strong><div>${safeText(item.nota || "Evento programado")}</div><div class="nd">${safeText(item.fecha)}</div></div>`).join("");
+    feed += `<div class="home-feed-block">
+      <div class="home-feed-header"><span class="home-feed-dot dot-event"></span>Próximos eventos</div>
+      ${upcoming.map((item) => `
+        <div class="home-feed-item">
+          <span class="home-feed-item-name">${safeText(item.titulo)}</span>
+          <span class="home-feed-item-meta">${safeText(item.fecha)}</span>
+        </div>`).join("")}
+    </div>`;
   }
-  if (lastNotice) {
-    feed += `<div class="notice"><strong>Último aviso</strong><div>${safeText(lastNotice.titulo)}</div><div class="nd">${safeText(lastNotice.autor)} · ${safeText(lastNotice.fecha)}</div></div>`;
+  if (recentNotices.length) {
+    feed += `<div class="home-feed-block">
+      <div class="home-feed-header"><span class="home-feed-dot dot-notice"></span>Últimos avisos</div>
+      ${recentNotices.map((item) => `
+        <div class="home-feed-item">
+          <span class="home-feed-item-name">${safeText(item.titulo)}</span>
+          <span class="home-feed-item-meta">${safeText(item.autor)} · ${safeText(item.fecha)}</span>
+        </div>`).join("")}
+    </div>`;
   }
-  document.getElementById("today-feed").innerHTML = feed || `<div class="notice"><strong>Sin actividad pendiente</strong><div>No hay elementos destacados para hoy.</div></div>`;
+  document.getElementById("today-feed").innerHTML = feed ||
+    `<div class="home-feed-empty">Sin actividad registrada hoy</div>`;
 }
 
 function rRec() {

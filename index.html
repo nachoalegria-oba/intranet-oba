@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@300;500;700;900&family=Cormorant+Garamond:wght@300;400;600&family=Comfortaa:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=61">
+  <link rel="stylesheet" href="./styles.css?v=62">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
@@ -78,18 +78,21 @@
 
     <main class="page">
       <section class="panel active" id="panel-inicio">
-        <div class="page-hero">
-          <div>
-            <div class="eyebrow">Centro de control</div>
-            <h1>Una intranet más clara para el día a día</h1>
-            <p id="ifecha"></p>
+
+        <!-- Greeting -->
+        <div class="home-greeting">
+          <div class="home-greeting-text">
+            <div class="home-greeting-sub" id="greet-sub">Buenos días</div>
+            <h1 class="home-greeting-title">Equipo OBA</h1>
+            <p class="home-greeting-date" id="ifecha"></p>
           </div>
-          <div class="hero-actions">
-            <button class="primary-btn" onclick="oRM()">Nuevo plato</button>
-            <button class="secondary-btn" onclick="oCM()">Nuevo evento</button>
+          <div class="home-greeting-actions">
+            <button class="primary-btn" onclick="oRM()">+ Plato</button>
+            <button class="secondary-btn" onclick="oCM()">+ Evento</button>
           </div>
         </div>
 
+        <!-- Install banner -->
         <div id="install-card" class="install-card" hidden>
           <button id="install-card-close" class="install-card-close" type="button" aria-label="Cerrar aviso de instalación">×</button>
           <div class="install-card-copy">
@@ -99,49 +102,47 @@
           <button class="primary-btn" onclick="installApp()">Cómo instalar</button>
         </div>
 
-        <div class="stats-grid" id="icards"></div>
+        <!-- Urgent alerts -->
+        <div id="home-urgent-banner"></div>
 
-        <div class="home-grid">
-          <div class="home-column">
-            <div class="section-head">
-              <h2>Atajos</h2>
-              <p>Lo que más se usa, a un clic.</p>
-            </div>
-            <div class="shortcut-grid">
-              <button class="shortcut-card" onclick="sp('recetario');oRM()">
-                <strong>Añadir plato</strong>
-                <span>Nueva ficha o subreceta.</span>
-              </button>
-              <button class="shortcut-card" onclick="sp('pedidos');oPM('ing')">
-                <strong>Añadir ingrediente</strong>
-                <span>Actualiza compras rápido.</span>
-              </button>
-              <button class="shortcut-card" onclick="sp('avisos');oAM()">
-                <strong>Publicar aviso</strong>
-                <span>Comunica algo al equipo.</span>
-              </button>
-              <button class="shortcut-card" onclick="sp('calendario');oCM()">
-                <strong>Nuevo evento</strong>
-                <span>Agenda y recordatorios.</span>
-              </button>
-            </div>
-          </div>
+        <!-- Stats -->
+        <div class="home-stats" id="icards"></div>
 
-          <div class="home-column">
-            <div class="section-head">
-              <h2>Urgente</h2>
-              <p>Lo importante del día.</p>
-            </div>
-            <div id="iurg"></div>
-          </div>
+        <!-- Quick actions -->
+        <div class="home-section-label">Acciones rápidas</div>
+        <div class="home-actions-grid">
+          <button class="hqa-card" onclick="sp('recetario');oRM()">
+            <span class="hqa-icon">🍽️</span>
+            <span class="hqa-label">Añadir plato</span>
+          </button>
+          <button class="hqa-card" onclick="sp('pedidos');oPM('ing')">
+            <span class="hqa-icon">🛒</span>
+            <span class="hqa-label">Ingrediente</span>
+          </button>
+          <button class="hqa-card" onclick="sp('avisos');oAM()">
+            <span class="hqa-icon">📣</span>
+            <span class="hqa-label">Aviso</span>
+          </button>
+          <button class="hqa-card" onclick="sp('calendario');oCM()">
+            <span class="hqa-icon">📅</span>
+            <span class="hqa-label">Evento</span>
+          </button>
+          <button class="hqa-card" onclick="sp('recetario')">
+            <span class="hqa-icon">📖</span>
+            <span class="hqa-label">Recetario</span>
+          </button>
+          <button class="hqa-card" onclick="sp('grupo')">
+            <span class="hqa-icon">🏪</span>
+            <span class="hqa-label">Grupo</span>
+          </button>
+        </div>
 
-          <div class="home-column">
-            <div class="section-head">
-              <h2>Hoy en cocina</h2>
-              <p>Menú activo, próximos hitos y último aviso.</p>
-            </div>
-            <div id="today-feed"></div>
-          </div>
+        <!-- Activity feed -->
+        <div class="home-section-label">Hoy en cocina</div>
+        <div id="today-feed"></div>
+
+        <!-- Legacy refs kept for JS compat -->
+        <div id="iurg" style="display:none"></div>
         </div>
       </section>
 
@@ -445,6 +446,6 @@
     </div>
   </div>
 
-  <script src="./app.js?v=61"></script>
+  <script src="./app.js?v=62"></script>
 </body>
 </html>
