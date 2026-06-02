@@ -2428,11 +2428,7 @@ p, span, div, label, td, th, input, select, textarea, button{
 
 /* Page */
 .page{ padding:20px 16px 48px; }
-.panel.active{ animation:fadeInUp .22s ease; }
-@keyframes fadeInUp{
-  from{ opacity:0; transform:translateY(8px); }
-  to{   opacity:1; transform:translateY(0); }
-}
+/* No animation on panel switch — display:block from base CSS is enough */
 
 /* Section headers */
 .section-head-lg{
@@ -2449,22 +2445,22 @@ p, span, div, label, td, th, input, select, textarea, button{
 .eyebrow{ font-size:11px; letter-spacing:.06em; }
 
 /* Drawer */
-.detail-drawer{
-  background:var(--bg) !important;
-  border-radius:20px 20px 0 0 !important;
-}
 .drawer-head{
-  background:rgba(255,255,255,.92) !important;
+  background:rgba(28,28,30,.96) !important;
+  border-radius:18px !important;
   backdrop-filter:saturate(180%) blur(20px) !important;
   -webkit-backdrop-filter:saturate(180%) blur(20px) !important;
-  border-bottom:0.5px solid var(--line) !important;
   padding:14px 18px 12px !important;
 }
 .drawer-head h2{
-  font-size:1.05rem !important;
+  font-size:1rem !important;
   font-weight:700 !important;
   letter-spacing:-.02em !important;
-  color:var(--ink) !important;
+  color:#fff !important;
+}
+.drawer-body{
+  background:var(--bg) !important;
+  border-radius:18px !important;
 }
 
 /* Modal */
