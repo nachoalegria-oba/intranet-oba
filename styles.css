@@ -1545,7 +1545,7 @@ th,
   }
   .main-nav{ display:none !important; }
   .mobile-nav-toggle{ display:none !important; }
-  .hamburger-btn{ display:flex; }
+  .hamburger-btn{ display:flex !important; }
   .topbar-logout-btn{ display:none; }
   .page{ padding-bottom:32px; }
   .page{ padding-bottom:calc(32px + env(safe-area-inset-bottom, 0px)); }
