@@ -53,6 +53,32 @@ function parseRaciones(s) {
   return m ? parseInt(m[0]) : null;
 }
 
+// --- Toast notifications ---
+function toast(msg, type = "ok") {
+  document.querySelectorAll(".oba-toast").forEach(t => t.remove());
+  const el = document.createElement("div");
+  el.className = `oba-toast oba-toast-${type}`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("oba-toast-show")));
+  setTimeout(() => {
+    el.classList.remove("oba-toast-show");
+    setTimeout(() => el.remove(), 300);
+  }, 2600);
+}
+
+// --- Skeleton cards ---
+function skeletonCards(n = 6) {
+  return Array.from({ length: n }, () => `
+    <div class="card rest-rec-card sk-card">
+      <div class="sk sk-badge"></div>
+      <div class="sk sk-title"></div>
+      <div class="sk sk-line"></div>
+      <div class="sk sk-line sk-line-sm"></div>
+      <div class="sk sk-btns"></div>
+    </div>`).join("");
+}
+
 // --- Performance: debounced render ---
 let _renderTimer = null;
 function scheduleRender() {
@@ -598,9 +624,12 @@ async function saveCol(col) {
 function save(col) {
   computeNextId();
   if (storageMode === "firebase" && db) {
-    saveCol(col).catch((error) => console.warn("Save error:", error));
+    saveCol(col)
+      .then(() => toast("✓ Guardado"))
+      .catch((err) => { console.warn("Save error:", err); toast("Error al guardar", "err"); });
   } else {
     persistLocal();
+    toast("✓ Guardado");
   }
   renderAll();
 }
@@ -667,6 +696,16 @@ function startApp() {
   const label = formatLongDate(new Date());
   document.getElementById("hdate").textContent = label;
   document.getElementById("ifecha").textContent = `${label}. Todo lo importante está aquí, sin perderse en pestañas.`;
+
+  // Escape key closes the topmost open overlay
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (document.getElementById("modal")?.classList.contains("open"))   { cModal();          return; }
+    if (document.getElementById("restdet")?.classList.contains("open")) { closeRestRecipe(); return; }
+    if (document.getElementById("rdet")?.classList.contains("open"))    { cRD();             return; }
+    if (document.getElementById("pfdet")?.classList.contains("open"))   { cPF();             return; }
+  });
+
   renderAll();
   const hash = location.hash;
   if (hash.startsWith("#receta-")) {
@@ -3694,7 +3733,7 @@ function rEmpresaDetalle(id, tab) {
           ${REST_SECS.map((s) => `<option value="${s}">${s}</option>`).join("")}
         </select>
       </div>
-      <div class="rest-rcards" id="rest-rcards-${e.id}"></div>`; // filled by rRestRecetario
+      <div class="rest-rcards" id="rest-rcards-${e.id}">${skeletonCards()}</div>`; // filled by rRestRecetario
     // defer render to after bodyHtml is injected; load photos in background
     setTimeout(() => {
       rRestRecetario(e.id, col);
