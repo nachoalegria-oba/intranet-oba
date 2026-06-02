@@ -413,7 +413,6 @@ function _initScaleBar(_barId, _nId, _baseId, _base) { /* scale bar is now rende
 function changeScale(delta) {
   const next = Math.max(1, _scaleCur + delta);
   _scaleCur = next;
-  document.getElementById("rdet-scale-n").textContent = next;
   const recipe = D.recipes.find((r) => r.id === activeRecipeId);
   if (!recipe) return;
   const factor = _scaleCur / _scaleBase;
@@ -424,7 +423,6 @@ function changeScale(delta) {
 function changeRestScale(delta) {
   const next = Math.max(1, _rscaleCur + delta);
   _rscaleCur = next;
-  document.getElementById("restdet-scale-n").textContent = next;
   const recipe = (D[`${restRecipeCol}_recetas`] || []).find((r) => r._i === activeRestRecipeId);
   if (!recipe) return;
   const factor = _rscaleCur / _rscaleBase;
