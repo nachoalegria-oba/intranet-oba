@@ -724,18 +724,13 @@ function startApp() {
 
 function renderAll() {
   if (!document.getElementById("app").classList.contains("visible")) return;
-  rInicio();
-  rRec();
-  rPedLista();
-  if (pedT === "resumen") rPedRes();
-  if (pedT === "prov") rPedProv();
-  if (pedT === "historial") rPedHistorial();
-  rMenu();
-  calRender();
-  rPrac();
-  rProj();
-  rAv();
-  rGrupo();
+  const fns = [
+    rInicio, rRec, rPedLista, rMenu, calRender, rPrac, rProj, rAv, rGrupo,
+    () => { if (pedT === "resumen") rPedRes(); },
+    () => { if (pedT === "prov") rPedProv(); },
+    () => { if (pedT === "historial") rPedHistorial(); }
+  ];
+  fns.forEach((fn) => { try { fn(); } catch(e) { console.warn("renderAll error:", e); } });
 }
 
 function sp(id) {
@@ -878,7 +873,8 @@ function rInicio() {
     { icon: "👨‍🍳", label: "Practicantes", value: D.practicantes.filter((p) => p.estado === "activo").length, section: "practicantes", color: "green" },
     { icon: "💡", label: "Proyectos", value: D.proyectos.filter((p) => p.estado === "activo").length, section: "proyectos", color: "purple" }
   ];
-  document.getElementById("icards").innerHTML = stats.map((s) => `
+  const icardsEl = document.getElementById("icards");
+  if (icardsEl) icardsEl.innerHTML = stats.map((s) => `
     <button class="home-stat-card home-stat-${s.color}" onclick="sp('${s.section}')">
       <span class="home-stat-icon">${s.icon}</span>
       <strong class="home-stat-value">${s.value}</strong>
@@ -924,7 +920,8 @@ function rInicio() {
         </div>`).join("")}
     </div>`;
   }
-  document.getElementById("today-feed").innerHTML = feed ||
+  const feedEl = document.getElementById("today-feed");
+  if (feedEl) feedEl.innerHTML = feed ||
     `<div class="home-feed-empty">Sin actividad registrada hoy</div>`;
 }
 
