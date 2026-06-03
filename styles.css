@@ -2258,18 +2258,21 @@ th,
   margin-bottom:24px;
 }
 .home-greeting-sub{
-  font-size:13px;
-  font-weight:600;
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:15px;
+  font-weight:400;
+  font-style:italic;
   color:var(--muted);
-  letter-spacing:.04em;
-  margin-bottom:4px;
+  letter-spacing:.02em;
+  margin-bottom:2px;
 }
 .home-greeting-title{
-  font-family:'Unbounded',sans-serif;
-  font-size:clamp(1.6rem,5vw,2.4rem);
-  font-weight:700;
-  line-height:1.1;
-  letter-spacing:-.02em;
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:clamp(2rem,6vw,3rem);
+  font-weight:600;
+  line-height:1.0;
+  letter-spacing:.06em;
+  text-transform:uppercase;
   margin:0 0 6px;
 }
 .home-greeting-date{
@@ -2334,10 +2337,11 @@ th,
 .home-stat-icon{ font-size:1.4rem; line-height:1; }
 .home-stat-value{
   display:block;
-  font-size:1.7rem;
-  font-weight:800;
+  font-size:1.9rem;
+  font-weight:300;
   font-family:'Unbounded',sans-serif;
   line-height:1;
+  letter-spacing:-.02em;
   color:#111;
 }
 .home-stat-label{ font-size:11px; font-weight:600; color:rgba(0,0,0,.5); letter-spacing:.02em; }
@@ -2426,7 +2430,7 @@ th,
 /* Mobile adjustments */
 @media(max-width:720px){
   .home-greeting{ padding:20px 0 18px; }
-  .home-greeting-title{ font-size:1.6rem; }
+  .home-greeting-title{ font-size:2rem; }
   .home-stats{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
   .home-stat-card{ padding:14px 12px; }
   .home-stat-value{ font-size:1.4rem; }
@@ -2568,8 +2572,7 @@ p, span, div, label, td, th, input, select, textarea, button{
 
 /* Home greeting */
 .home-greeting{ border-bottom:0.5px solid var(--line) !important; }
-.home-greeting-title{ letter-spacing:-.03em !important; }
-.home-greeting-sub{ color:var(--blue) !important; font-weight:600 !important; letter-spacing:0 !important; }
+.home-greeting-sub{ color:var(--blue) !important; }
 
 /* Home stats */
 .home-stat-card{ border-radius:16px !important; }
