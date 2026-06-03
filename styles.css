@@ -1570,16 +1570,36 @@ th,
   .topbar-logout-btn{ display:none; }
   .page{ padding-bottom:32px; }
   .page{ padding-bottom:calc(32px + env(safe-area-inset-bottom, 0px)); }
+  /* Reduce huge top gap on all pages */
+  .page{ padding-top:10px !important; }
+  .section-head-lg{
+    padding:0 0 12px !important;
+    margin-bottom:14px !important;
+    border-bottom:0.5px solid var(--line) !important;
+  }
+  .section-head-lg h1,
+  .section-head-lg h2{
+    font-size:1.4rem !important;
+    line-height:1.2 !important;
+  }
+  .eyebrow{ display:none; }
+  .home-greeting{
+    padding:10px 0 14px !important;
+    margin-bottom:14px !important;
+  }
+  .home-greeting h2{
+    font-size:1.3rem !important;
+  }
   .page-hero,
   .section-head-lg{
     align-items:stretch;
-    gap:14px;
+    gap:10px;
   }
   .page-hero h1,
   .section-head h1,
   .section-head h2{
     max-width:none;
-    font-size:clamp(1.65rem, 8vw, 2.4rem);
+    font-size:clamp(1.4rem, 7vw, 2rem);
   }
   .hero-actions,
   .section-head-lg > .primary-btn{
