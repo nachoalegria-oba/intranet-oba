@@ -2258,21 +2258,21 @@ th,
   margin-bottom:24px;
 }
 .home-greeting-sub{
-  font-family:'Cormorant Garamond',Georgia,serif;
-  font-size:15px;
-  font-weight:400;
-  font-style:italic;
+  font-family:Arial,'Helvetica Neue',sans-serif;
+  font-size:13px;
+  font-weight:600;
+  font-style:normal;
   color:var(--muted);
-  letter-spacing:.02em;
-  margin-bottom:2px;
+  letter-spacing:.04em;
+  margin-bottom:4px;
 }
 .home-greeting-title{
-  font-family:'Cormorant Garamond',Georgia,serif;
-  font-size:clamp(2rem,6vw,3rem);
-  font-weight:600;
-  line-height:1.0;
-  letter-spacing:.06em;
-  text-transform:uppercase;
+  font-family:Arial,'Helvetica Neue',sans-serif;
+  font-size:clamp(1.8rem,6vw,2.6rem);
+  font-weight:700;
+  line-height:1.05;
+  letter-spacing:-.02em;
+  text-transform:none;
   margin:0 0 6px;
 }
 .home-greeting-date{
