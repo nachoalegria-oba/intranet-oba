@@ -3475,6 +3475,7 @@ let grupoSection = "restaurantes"; // "restaurantes" | "descargables"
 
 function rGrupo() {
   if (grupoSection === "descargables") { rGrupoDescargables(); return; }
+  if (typeof grupoView === "number") { rEmpresaDetalle(grupoView); return; }
 
   const empresas = (D.empresas || []).slice().sort((a, b) => a.id - b.id);
   const tabBar = `
