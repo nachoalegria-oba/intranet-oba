@@ -1543,13 +1543,13 @@ th,
   .logo-mark-hero{
     width:min(148px, 48vw);
   }
-  .page{padding:16px 14px 32px}
+  .page{padding:16px 20px 32px}
   .page{padding-bottom:calc(32px + env(safe-area-inset-bottom, 0px))}
   .topbar{
     flex-direction:row;
     align-items:flex-end;
     justify-content:space-between;
-    padding:16px 14px 14px;
+    padding:16px 20px 14px;
     padding-top:max(28px, calc(env(safe-area-inset-top, 0px) + 18px));
   }
   .topbar-brand{
@@ -1572,7 +1572,7 @@ th,
   .page{ padding-bottom:32px; }
   .page{ padding-bottom:calc(32px + env(safe-area-inset-bottom, 0px)); }
   /* Reduce huge top gap on all pages */
-  .page{ padding-top:10px !important; }
+  .page{ padding-top:10px !important; padding-left:20px !important; padding-right:20px !important; }
   .section-head-lg{
     padding:0 0 12px !important;
     margin-bottom:14px !important;
