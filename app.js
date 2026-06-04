@@ -29,9 +29,11 @@ function scrollTop(smooth = true) {
   window.scrollTo({ top: 0, behavior: smooth ? "smooth" : "instant" });
 }
 
-// --- Login mode: oscurece html/body para que no haya huecos bajo el login ---
+// --- Login mode: oscurece html/body y ajusta theme-color ---
 function setLoginMode(on) {
   document.documentElement.classList.toggle("login-mode", on);
+  const meta = document.getElementById("theme-color-meta");
+  if (meta) meta.content = on ? "#050505" : "#f2f2f7";
 }
 
 // --- Recipe scaling helpers ---
