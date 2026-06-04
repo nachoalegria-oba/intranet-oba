@@ -783,6 +783,115 @@ td select:focus{
   background:#fbf8f2;
 }
 
+/* ── Pedido preview ──────────────────────────────── */
+.ped-preview{
+  border-radius:20px;
+  background:linear-gradient(135deg,#0f1f0a,#1a2e12);
+  color:#fff;
+  margin-bottom:18px;
+  overflow:hidden;
+  box-shadow:0 4px 20px rgba(0,0,0,.18);
+}
+.ped-preview-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:16px 20px;
+  cursor:pointer;
+  user-select:none;
+  gap:10px;
+}
+.ped-preview-title{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:600;
+  font-size:15px;
+}
+.ped-preview-count{
+  font-size:12px;
+  font-weight:500;
+  background:rgba(255,255,255,.15);
+  padding:2px 10px;
+  border-radius:999px;
+  white-space:nowrap;
+}
+.ped-preview-count-empty{
+  background:rgba(255,255,255,.08);
+  color:rgba(255,255,255,.5);
+}
+.ped-preview-toggle{ opacity:.6; }
+.ped-preview-body{
+  padding:0 16px 16px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.ped-preview-group{}
+.ped-preview-prov{
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.5);
+  margin-bottom:6px;
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+.ped-preview-chips{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+.ped-preview-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:999px;
+  padding:5px 8px 5px 12px;
+  font-size:13px;
+  max-width:100%;
+}
+.ped-preview-chip-name{
+  font-weight:500;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:160px;
+}
+.ped-preview-chip-qty{
+  font-weight:700;
+  font-family:Arial,Helvetica,sans-serif;
+  background:rgba(255,255,255,.18);
+  border-radius:999px;
+  padding:1px 8px;
+  font-size:12px;
+  white-space:nowrap;
+}
+.ped-preview-chip-rm{
+  background:none;
+  border:none;
+  color:rgba(255,255,255,.5);
+  cursor:pointer;
+  font-size:16px;
+  line-height:1;
+  padding:0 2px;
+  border-radius:50%;
+  transition:color .15s, background .15s;
+}
+.ped-preview-chip-rm:hover{ color:#fff; background:rgba(255,255,255,.15); }
+.ped-preview-empty{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:rgba(255,255,255,.4);
+  font-size:13px;
+  padding:4px 4px 4px 0;
+}
+
 .danger-icon-btn{
   width:32px;
   height:32px;
