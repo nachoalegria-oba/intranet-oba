@@ -3822,20 +3822,41 @@ function rEmpresaDetalle(id, tab) {
         </select>
       </div>
       <div class="rest-rcards" id="rest-rcards-${e.id}">${skeletonCards()}</div>`; // filled by rRestRecetario
-    // Siempre carga fresco de Firebase si está disponible; si no, usa D[col_recetas]
+    // Siempre carga directo via REST API (funciona en todos los dispositivos/browsers)
     setTimeout(async () => {
-      if (db) {
-        try {
-          const snap = await db.collection(`${col}_recetas`).get();
-          if (!snap.empty) {
-            const items = snap.docs.map(doc => doc.data()).sort((a,b) => (a._i||0)-(b._i||0));
-            D[`${col}_recetas`] = items.map((item, idx) => ({ ...item, _i: item._i ?? idx }));
-          } else {
-            D[`${col}_recetas`] = D[`${col}_recetas`] || [];
+      try {
+        const colName = `${col}_recetas`;
+        const url = `https://firestore.googleapis.com/v1/projects/${FB.projectId}/databases/(default)/documents/${colName}?pageSize=300&key=${FB.apiKey}`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const json = await res.json();
+          const docs = json.documents || [];
+          if (docs.length) {
+            const items = docs.map(doc => {
+              const fields = doc.fields || {};
+              const parse = (v) => {
+                if (!v) return undefined;
+                if (v.stringValue !== undefined) return v.stringValue;
+                if (v.integerValue !== undefined) return Number(v.integerValue);
+                if (v.doubleValue !== undefined) return Number(v.doubleValue);
+                if (v.booleanValue !== undefined) return v.booleanValue;
+                if (v.arrayValue) return (v.arrayValue.values || []).map(parse);
+                if (v.mapValue) {
+                  const obj = {};
+                  Object.entries(v.mapValue.fields || {}).forEach(([k, fv]) => { obj[k] = parse(fv); });
+                  return obj;
+                }
+                return undefined;
+              };
+              const obj = {};
+              Object.entries(fields).forEach(([k, v]) => { obj[k] = parse(v); });
+              return obj;
+            }).sort((a,b) => (a._i||0)-(b._i||0));
+            D[colName] = items.map((item, idx) => ({ ...item, _i: item._i ?? idx }));
           }
-        } catch (err) {
-          console.warn("recetario fetch failed, usando caché:", err);
         }
+      } catch (err) {
+        console.warn("recetario REST fetch failed:", err);
       }
       const total = (D[`${col}_recetas`] || []).length;
       const countEl = document.getElementById(`rest-rcount-${e.id}`);
@@ -4079,16 +4100,34 @@ function rRestRecetario(empId, col) {
 }
 
 async function reloadRecetario(empId, col) {
-  if (!db) { toast("Sin conexión a Firebase", "err"); return; }
   const container = document.getElementById(`rest-rcards-${empId}`);
   if (container) container.innerHTML = skeletonCards();
   try {
-    const snap = await db.collection(`${col}_recetas`).get();
-    if (!snap.empty) {
-      const items = snap.docs.map(doc => doc.data());
-      D[`${col}_recetas`] = items.map((item, idx) => ({ ...item, _i: item._i ?? idx }));
+    const colName = `${col}_recetas`;
+    const url = `https://firestore.googleapis.com/v1/projects/${FB.projectId}/databases/(default)/documents/${colName}?pageSize=300&key=${FB.apiKey}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    const docs = json.documents || [];
+    if (docs.length) {
+      const parse = (v) => {
+        if (!v) return undefined;
+        if (v.stringValue !== undefined) return v.stringValue;
+        if (v.integerValue !== undefined) return Number(v.integerValue);
+        if (v.doubleValue !== undefined) return Number(v.doubleValue);
+        if (v.booleanValue !== undefined) return v.booleanValue;
+        if (v.arrayValue) return (v.arrayValue.values || []).map(parse);
+        if (v.mapValue) { const o={}; Object.entries(v.mapValue.fields||{}).forEach(([k,fv])=>{o[k]=parse(fv);}); return o; }
+        return undefined;
+      };
+      const items = docs.map(doc => {
+        const obj = {};
+        Object.entries(doc.fields||{}).forEach(([k,v])=>{obj[k]=parse(v);});
+        return obj;
+      }).sort((a,b)=>(a._i||0)-(b._i||0));
+      D[colName] = items.map((item,idx)=>({...item, _i: item._i??idx}));
       const countEl = document.getElementById(`rest-rcount-${empId}`);
-      if (countEl) countEl.textContent = `${items.length} receta${items.length !== 1 ? "s" : ""}`;
+      if (countEl) countEl.textContent = `${items.length} receta${items.length!==1?"s":""}`;
       toast(`✓ ${items.length} recetas cargadas`);
     } else {
       toast("La colección está vacía en Firebase", "err");
@@ -4096,7 +4135,7 @@ async function reloadRecetario(empId, col) {
     rRestRecetario(empId, col);
   } catch (err) {
     console.error("reloadRecetario failed", err);
-    toast("Error al cargar recetas: " + err.message, "err");
+    toast("Error: " + err.message, "err");
   }
 }
 
