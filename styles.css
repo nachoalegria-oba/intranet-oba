@@ -364,6 +364,8 @@ td select:focus{
 .id-gate{display:flex;align-items:center;justify-content:center;min-height:60vh}
 .id-gate-card{width:100%;max-width:360px;padding:40px 32px;border:1.5px solid var(--border);background:var(--surface);border-radius:4px;text-align:center}
 .id-gate-card .login-input{width:100%;box-sizing:border-box;text-align:center;letter-spacing:.15em}
+.login-screen .login-input{color:#fff}
+.login-screen .login-input::placeholder{color:rgba(255,255,255,.45)}
 
 .id-project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:8px}
 .id-project-card{text-align:left;background:var(--surface);border:1.5px solid var(--border);border-radius:4px;padding:22px 20px;cursor:pointer;transition:border-color .15s,transform .1s;display:flex;flex-direction:column;gap:6px}
