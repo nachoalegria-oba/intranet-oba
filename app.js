@@ -739,7 +739,7 @@ function renderAll() {
 }
 
 function sp(id) {
-  if (id === "grupo") { rGrupo(); }
+  if (id === "grupo") { showGrupoPanel(); return; }
   if (id === "id") { showIDPanel(); return; }
   document.querySelectorAll(".panel").forEach((panel) => panel.classList.remove("active"));
   document.querySelectorAll(".nav-btn").forEach((btn) => btn.classList.remove("active"));
@@ -801,7 +801,7 @@ function unlockCanitas() {
   if (val === CANITAS_PWD) {
     sessionStorage.setItem(CANITAS_SESSION_KEY, "1");
     document.getElementById("canitas-pwd").value = "";
-    rEmpresaDetalle(4);
+    rGrupo();
   } else {
     const err = document.getElementById("canitas-err");
     err.textContent = "Contraseña incorrecta";
@@ -3505,7 +3505,36 @@ function logoEmpresa(e) {
 
 let grupoSection = "restaurantes"; // "restaurantes" | "descargables"
 
+function showGrupoPanel() {
+  document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+  document.querySelectorAll(".hnav-btn").forEach((b) => b.classList.remove("active"));
+  document.getElementById("panel-grupo")?.classList.add("active");
+  document.querySelector('.nav-btn[data-panel="grupo"]')?.classList.add("active");
+  document.querySelector('.hnav-btn[data-panel="grupo"]')?.classList.add("active");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  closeHamburger();
+
+  if (sessionStorage.getItem(CANITAS_SESSION_KEY) !== "1") {
+    document.getElementById("panel-grupo-body").innerHTML = `
+      <div style="display:flex;justify-content:center;align-items:center;min-height:60vh">
+        <div class="id-gate-card">
+          <div class="eyebrow" style="margin-bottom:12px">Acceso restringido</div>
+          <h2 style="font-size:1.5rem;margin:0 0 6px">Cañitas Gastro</h2>
+          <p style="color:var(--muted);font-size:13px;margin:0 0 24px">Grupo de restaurantes</p>
+          <input class="login-input" type="password" id="canitas-pwd" placeholder="Contraseña"
+            onkeydown="if(event.key==='Enter')unlockCanitas()">
+          <button class="primary-btn" style="margin-top:10px;width:100%" onclick="unlockCanitas()">Entrar</button>
+          <div class="login-error" id="canitas-err" style="margin-top:8px"></div>
+        </div>
+      </div>`;
+    return;
+  }
+  rGrupo();
+}
+
 function rGrupo() {
+  if (sessionStorage.getItem(CANITAS_SESSION_KEY) !== "1") return; // panel locked — don't overwrite gate
   if (grupoSection === "descargables") { rGrupoDescargables(); return; }
   if (typeof grupoView === "number") { rEmpresaDetalle(grupoView); return; }
 
@@ -3696,24 +3725,6 @@ function rEmpresaDetalle(id, tab) {
   if (!e) return;
   grupoView = id;
   if (tab) restTab = tab;
-
-  // Password gate for Cañitas Maite
-  if (e.theme === "canitas" && sessionStorage.getItem(CANITAS_SESSION_KEY) !== "1") {
-    document.getElementById("panel-grupo-body").innerHTML = `
-      <div style="display:flex;justify-content:center;align-items:center;min-height:60vh">
-        <div class="id-gate-card">
-          <div class="eyebrow" style="margin-bottom:12px">Acceso restringido</div>
-          <h2 style="font-size:1.5rem;margin:0 0 6px">${safeText(e.nombre)}</h2>
-          <p style="color:var(--muted);font-size:13px;margin:0 0 24px">${safeText(e.subtitulo)}</p>
-          <input class="login-input" type="password" id="canitas-pwd" placeholder="Contraseña"
-            onkeydown="if(event.key==='Enter')unlockCanitas()">
-          <button class="primary-btn" style="margin-top:10px;width:100%" onclick="unlockCanitas()">Entrar</button>
-          <div class="login-error" id="canitas-err" style="margin-top:8px"></div>
-          <button class="ghost-btn ghost-btn-sm" style="margin-top:16px;width:100%" onclick="grupoView='dashboard';rGrupo()">← Volver al grupo</button>
-        </div>
-      </div>`;
-    return;
-  }
 
   const col = REST_COL_MAP[e.theme] || e.theme;
   const est = ESTADO_LABELS[e.estado] || ESTADO_LABELS.abierto;
