@@ -574,8 +574,56 @@ td select:focus{
 .toolbar .search-input{flex:1;min-width:220px}
 .toolbar .field-select{min-width:220px}
 
-.pedido-toolbar .secondary-btn{
-  min-height:48px;
+.ped-toolbar-btn{
+  min-height:36px !important;
+  padding:6px 14px !important;
+  font-size:13px !important;
+  white-space:nowrap;
+}
+
+/* ── Floating pedido action bar ────────────────── */
+.ped-float-bar{
+  position:fixed;
+  bottom:calc(20px + env(safe-area-inset-bottom, 0px));
+  left:50%;
+  transform:translateX(-50%) translateY(20px);
+  opacity:0;
+  pointer-events:none;
+  display:flex;
+  gap:10px;
+  background:rgba(15,15,15,.85);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:999px;
+  padding:8px 10px;
+  z-index:20;
+  box-shadow:0 8px 32px rgba(0,0,0,.3);
+  transition:opacity .25s, transform .25s;
+  white-space:nowrap;
+}
+.ped-float-bar.visible{
+  opacity:1;
+  pointer-events:auto;
+  transform:translateX(-50%) translateY(0);
+}
+.ped-float-btn{
+  border:none;
+  border-radius:999px;
+  padding:9px 20px;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+  transition:opacity .15s;
+}
+.ped-float-btn:active{ opacity:.7; }
+.ped-float-save{
+  background:#fff;
+  color:#111;
+}
+.ped-float-clear{
+  background:rgba(255,255,255,.12);
+  color:#fff;
 }
 
 .segmented-bar{

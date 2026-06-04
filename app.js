@@ -758,6 +758,9 @@ function sp(id) {
   document.querySelector(`.hnav-btn[data-panel="${id}"]`)?.classList.add("active");
   window.scrollTo({ top: 0, behavior: "smooth" });
   closeHamburger();
+  // Hide pedido float bar when leaving pedidos panel
+  const fb = document.getElementById("ped-float-bar");
+  if (fb) fb.classList.toggle("visible", false);
 }
 
 // ── I+D ──────────────────────────────────────────────
@@ -4843,6 +4846,17 @@ function setupMobileNavToggle() {
   window.applyMobileNavState();
 }
 
+function setupPedFloatBar() {
+  const toolbar = document.getElementById("ped-action-toolbar");
+  const floatBar = document.getElementById("ped-float-bar");
+  if (!toolbar || !floatBar) return;
+  const obs = new IntersectionObserver(
+    ([entry]) => floatBar.classList.toggle("visible", !entry.isIntersecting),
+    { threshold: 0, rootMargin: "0px" }
+  );
+  obs.observe(toolbar);
+}
+
 function setupHamburgerMenu() {
   const btn = document.getElementById("hamburger-btn");
   const menu = document.getElementById("hamburger-menu");
@@ -4884,6 +4898,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   setupMobileNavToggle();
   setupHamburgerMenu();
+  setupPedFloatBar();
   registerPWA();
   initIA();
   initData().catch((error) => showError(error.message));

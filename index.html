@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@300;500;700;900&family=Cormorant+Garamond:wght@300;400;600&family=Comfortaa:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.css">
-  <link rel="stylesheet" href="./styles.css?v=128">
+  <link rel="stylesheet" href="./styles.css?v=129">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
@@ -192,16 +192,22 @@
           <button class="secondary-btn sort-btn" id="pt-sort" onclick="toggleSort()">A→Z</button>
         </div>
 
-        <div class="toolbar pedido-toolbar">
+        <div class="toolbar pedido-toolbar" id="ped-action-toolbar">
           <input class="search-input" type="text" id="ped-search" placeholder="Buscar proveedor o ingrediente..." oninput="onPedSearch()">
-          <button class="secondary-btn" onclick="guardarPedidoActual()">Guardar pedido</button>
-          <button class="secondary-btn danger-soft" onclick="limpiarPedido()">Limpiar pedido</button>
+          <button class="secondary-btn ped-toolbar-btn" onclick="guardarPedidoActual()">Guardar</button>
+          <button class="secondary-btn danger-soft ped-toolbar-btn" onclick="limpiarPedido()">Limpiar</button>
         </div>
 
         <div id="pp-lista"></div>
         <div id="pp-resumen" style="display:none"></div>
         <div id="pp-prov" style="display:none"></div>
         <div id="pp-historial" style="display:none"></div>
+
+        <!-- Floating action bar (aparece al hacer scroll) -->
+        <div class="ped-float-bar" id="ped-float-bar">
+          <button class="ped-float-btn ped-float-save" onclick="guardarPedidoActual()">Guardar pedido</button>
+          <button class="ped-float-btn ped-float-clear" onclick="limpiarPedido()">Limpiar</button>
+        </div>
       </section>
 
       <section class="panel" id="panel-menu">
@@ -447,6 +453,6 @@
     </div>
   </div>
 
-  <script src="./app.js?v=128"></script>
+  <script src="./app.js?v=129"></script>
 </body>
 </html>
