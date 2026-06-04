@@ -19,6 +19,11 @@ const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "
 
 const REST_COL_MAP = { oba: "oba", ene: "ene", candomo: "candomo", canitas: "canitas", cebo: "cebo" };
 
+// --- Icon helper (Phosphor Icons fill) ---
+function ico(name, size = 18) {
+  return `<i class="ph-fill ph-${name}" style="font-size:${size}px;line-height:1;vertical-align:middle;flex-shrink:0"></i>`;
+}
+
 // --- Recipe scaling helpers ---
 function _fmtNum(n) {
   if (n <= 0) return "0";
@@ -523,7 +528,7 @@ function showLoginForm() {
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("app").classList.add("visible");
     const greetEl = document.getElementById("greet-sub");
-    if (greetEl) greetEl.textContent = getGreeting();
+    if (greetEl) greetEl.innerHTML = getGreeting();
     startApp();
   }
 }
@@ -653,7 +658,7 @@ function login() {
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("app").classList.add("visible");
     const greetEl = document.getElementById("greet-sub");
-    if (greetEl) greetEl.textContent = getGreeting();
+    if (greetEl) greetEl.innerHTML = getGreeting();
     startApp();
   } else if (errorEl) {
     errorEl.textContent = "Contraseña incorrecta";
@@ -881,15 +886,15 @@ function cModal() {
 
 function getGreeting() {
   const h = new Date().getHours();
-  if (h >= 6 && h < 12) return "Buenos días ☀️";
-  if (h >= 12 && h < 21) return "Buenas tardes 🌤️";
-  return "Buenas noches 🌙";
+  if (h >= 6 && h < 12) return `${ico('sun', 20)} Buenos días`;
+  if (h >= 12 && h < 21) return `${ico('cloud-sun', 20)} Buenas tardes`;
+  return `${ico('moon', 20)} Buenas noches`;
 }
 
 function rInicio() {
   // Greeting by time of day
   const greetEl = document.getElementById("greet-sub");
-  if (greetEl) greetEl.textContent = getGreeting();
+  if (greetEl) greetEl.innerHTML = getGreeting();
 
   // Urgent banner
   const urgent = D.avisos.filter((item) => item.urgente);
@@ -898,7 +903,7 @@ function rInicio() {
     urgentBanner.innerHTML = urgent.length
       ? urgent.map((item) => `
         <div class="home-urgent-card">
-          <div class="home-urgent-tag">🚨 Urgente</div>
+          <div class="home-urgent-tag">${ico('warning-circle')} Urgente</div>
           <div class="home-urgent-title">${safeText(item.titulo)}</div>
           <div class="home-urgent-text">${safeText(item.texto)}</div>
           <div class="home-urgent-meta">${safeText(item.autor)} · ${safeText(item.fecha)}</div>
@@ -908,10 +913,10 @@ function rInicio() {
 
   // Stats
   const stats = [
-    { icon: "🍽️", label: "Platos", value: D.recipes.length, section: "recetario", color: "amber" },
-    { icon: "📦", label: "Ingredientes", value: D.ingredientes.length, section: "pedidos", color: "blue" },
-    { icon: "👨‍🍳", label: "Practicantes", value: D.practicantes.filter((p) => p.estado === "activo").length, section: "practicantes", color: "green" },
-    { icon: "💡", label: "Proyectos", value: D.proyectos.filter((p) => p.estado === "activo").length, section: "proyectos", color: "purple" }
+    { icon: ico('fork-knife', 22), label: "Platos", value: D.recipes.length, section: "recetario", color: "amber" },
+    { icon: ico('package', 22), label: "Ingredientes", value: D.ingredientes.length, section: "pedidos", color: "blue" },
+    { icon: ico('chef-hat', 22), label: "Practicantes", value: D.practicantes.filter((p) => p.estado === "activo").length, section: "practicantes", color: "green" },
+    { icon: ico('lightbulb', 22), label: "Proyectos", value: D.proyectos.filter((p) => p.estado === "activo").length, section: "proyectos", color: "purple" }
   ];
   const icardsEl = document.getElementById("icards");
   if (icardsEl) icardsEl.innerHTML = stats.map((s) => `
@@ -1825,9 +1830,9 @@ function calRender() {
     const trainees = D.practicantes.filter((item) => item.fechaEntrada === dateStr);
     let content = events.map((item) => {
       const cls = item.tipo === "especial" ? "ce-esp" : item.urgente || item.tipo === "urgente" ? "ce-urg" : "ce";
-      return `<div class="${cls}">${item.tipo === "especial" ? "★ " : item.urgente ? "⚠ " : ""}${safeText(item.titulo)}</div>`;
+      return `<div class="${cls}">${item.tipo === "especial" ? `${ico('star',12)} ` : item.urgente ? `${ico('warning',12)} ` : ""}${safeText(item.titulo)}</div>`;
     }).join("");
-    content += trainees.map((item) => `<div class="ce-prac" onclick="event.stopPropagation();oPF(${item.id})">👤 ${safeText(item.nombre)}</div>`).join("");
+    content += trainees.map((item) => `<div class="ce-prac" onclick="event.stopPropagation();oPF(${item.id})">${ico('user', 14)} ${safeText(item.nombre)}</div>`).join("");
     html += `<div class="cd${dateStr === today() ? " today" : ""}" onclick="oCM('${dateStr}')"><div class="cdn">${day}</div>${content}</div>`;
   }
 
@@ -2025,7 +2030,7 @@ function rPrac() {
             <div class="ca" style="gap:6px">
               ${p.partida ? `<span class="badge b-huerta">${safeText(p.partida)}</span>` : ""}
             </div>
-            ${done > 0 ? `<span class="nd">📄 ${done}/${DOC_CHECKLIST.length}</span>` : ""}
+            ${done > 0 ? `<span class="nd">${ico('file-text', 13)} ${done}/${DOC_CHECKLIST.length}</span>` : ""}
           </div>
         </div>`;
     }).join("");
@@ -2050,7 +2055,7 @@ function rPrac() {
                       ${p.escuela ? `<div class="nd">${safeText(p.escuela)}</div>` : ""}
                       ${p.fechaEntrada ? `<div class="nd">${fmtDate(p.fechaEntrada)}</div>` : ""}
                       ${p.partida ? `<div class="ca" style="margin-top:8px"><span class="badge b-huerta">${safeText(p.partida)}</span></div>` : ""}
-                      ${done > 0 ? `<div class="nd" style="margin-top:6px">📄 ${done}/${DOC_CHECKLIST.length} docs</div>` : ""}
+                      ${done > 0 ? `<div class="nd" style="margin-top:6px">${ico('file-text', 13)} ${done}/${DOC_CHECKLIST.length} docs</div>` : ""}
                     </div>`;
                 }).join("") : `<div class="pipeline-empty">Sin candidatos</div>`}
               </div>
@@ -2291,7 +2296,7 @@ function rHab() {
                   <div class="hab-ocupantes">
                     ${ocupantes.map((p) => `
                       <div class="hab-ocupante">
-                        <span onclick="oPF(${p.id})" style="cursor:pointer">👤 ${safeText(p.nombre)} <span class="hab-tag-oba">OBA</span></span>
+                        <span onclick="oPF(${p.id})" style="cursor:pointer">${ico('user', 14)} ${safeText(p.nombre)} <span class="hab-tag-oba">OBA</span></span>
                         <div class="ca" style="gap:4px">
                           <button class="btn btn-o btn-s" onclick="oMoverPrac(${p.id},${h.id})">Mover</button>
                           <button class="btn btn-d btn-s" onclick="oDesasignarUno(${h.id},${p.id})">✕</button>
@@ -2299,7 +2304,7 @@ function rHab() {
                       </div>`).join("")}
                     ${ocupantesCañitas.map((c, i) => `
                       <div class="hab-ocupante">
-                        <span>👤 ${safeText(c.nombre)} <span class="hab-tag-cañitas">Cañitas</span></span>
+                        <span>${ico('user', 14)} ${safeText(c.nombre)} <span class="hab-tag-cañitas">Cañitas</span></span>
                         <div class="ca" style="gap:4px">
                           <button class="btn btn-o btn-s" onclick="oMoverCañitas(${i},${h.id})">Mover</button>
                           <button class="btn btn-d btn-s" onclick="desasignarCañitas(${h.id},${i})">✕</button>
@@ -2643,10 +2648,10 @@ function rDescargables() {
 }
 
 function descIcon(d) {
-  if (d.url && d.url.match(/\.(pdf)$/i)) return "📄";
-  if (d.url && d.url.match(/\.(png|jpg|jpeg|gif|webp)$/i)) return "🖼";
-  if (d.url && d.url.match(/^https?:\/\//)) return "🔗";
-  return "📋";
+  if (d.url && d.url.match(/\.(pdf)$/i)) return ico('file-pdf', 16);
+  if (d.url && d.url.match(/\.(png|jpg|jpeg|gif|webp)$/i)) return ico('image', 16);
+  if (d.url && d.url.match(/^https?:\/\//)) return ico('link', 16);
+  return ico('clipboard-text', 16);
 }
 
 function oDescargableM(id, catPreset) {
@@ -2906,7 +2911,7 @@ function iaCtx() {
   // OBA intranet data
   const recetas = D.recipes.map((r) => `${r.nombre} (${r.seccion})`).join(", ") || "ninguna";
   const menuActivo = D.menu.filter((m) => m.estado === "activo").map((m) => `${m.plato} — ${m.seccion}`).join(", ") || "sin cambios";
-  const avisosRec = [...D.avisos].slice(-5).reverse().map((a) => `[${a.fecha}${a.urgente ? " ⚠️URGENTE" : ""}] ${a.titulo}: ${a.texto.slice(0, 80)}`).join("\n") || "ninguno";
+  const avisosRec = [...D.avisos].slice(-5).reverse().map((a) => `[${a.fecha}${a.urgente ? " URGENTE" : ""}] ${a.titulo}: ${a.texto.slice(0, 80)}`).join("\n") || "ninguno";
   const proyectosActivos = D.proyectos.filter((p) => p.estado === "activo" || p.estado === "testeo").map((p) => `${p.nombre} (${p.estado}) — ${p.responsable}`).join(", ") || "ninguno";
   const pedidosPendientes = D.ingredientes.filter((i) => i.pedido).map((i) => `${i.nombre}${i.cantidad ? " x" + i.cantidad : ""}${i.proveedor ? " [" + i.proveedor + "]" : ""}`).join(", ") || "ninguno";
   const eventosProx = D.eventos.filter((e) => e.fecha >= today()).slice(0, 5).map((e) => `${e.fecha}: ${e.titulo}`).join(", ") || "ninguno";
@@ -3044,25 +3049,25 @@ async function ejecutarHerramienta(name, args) {
       D.avisos.push({ id, titulo: args.titulo.slice(0, 60), texto: args.texto, urgente: !!args.urgente, fecha: t, autor: "Asistente IA" });
       save("avisos");
       if (typeof rAv === "function") rAv();
-      return `✅ Aviso "${args.titulo}" publicado en la intranet${args.urgente ? " (URGENTE)" : ""}.`;
+      return `Aviso "${args.titulo}" publicado en la intranet${args.urgente ? " (URGENTE)" : ""}.`;
     }
     case "añadir_pedido": {
       const id = await nextId("ingredientes");
       D.ingredientes.push({ id, nombre: args.nombre, cantidad: args.cantidad || "", unidad: "ud", proveedor: args.proveedor || "", categoria: "Sin categoría", pedido: true, notas: "Añadido por IA" });
       save("ingredientes");
-      return `✅ "${args.nombre}"${args.cantidad ? " (" + args.cantidad + ")" : ""} añadido a la lista de pedidos.`;
+      return `"${args.nombre}"${args.cantidad ? " (" + args.cantidad + ")" : ""} añadido a la lista de pedidos.`;
     }
     case "crear_proyecto": {
       const id = await nextId("proyectos");
       D.proyectos.push({ id, nombre: args.nombre, descripcion: args.descripcion, estado: args.estado || "activo", responsable: "IA", fecha: t, notas: "" });
       save("proyectos");
-      return `✅ Proyecto "${args.nombre}" creado en I+D con estado "${args.estado}".`;
+      return `Proyecto "${args.nombre}" creado en I+D con estado "${args.estado}".`;
     }
     case "cambio_menu": {
       const id = await nextId("menu");
       D.menu.push({ id, plato: args.plato, seccion: args.seccion || "", estado: "activo", fecha: t, nota: args.nota || "" });
       save("menu");
-      return `✅ Cambio de menú registrado: "${args.plato}" en ${args.seccion}.`;
+      return `Cambio de menú registrado: "${args.plato}" en ${args.seccion}.`;
     }
     case "restaurante_accion": {
       const col = REST_COL_MAP[args.restaurante] || args.restaurante;
@@ -3074,7 +3079,7 @@ async function ejecutarHerramienta(name, args) {
         list.push({ id, covers: args.covers || null, ticket: args.ticket || null, nota: args.nota_valoracion || null, fecha: t, autor: "Asistente IA" });
         D[colKey] = list;
         save(colKey);
-        return `✅ KPI registrado en ${restNombre}: ${args.covers ? args.covers + " covers" : ""}${args.ticket ? " · " + args.ticket + "€" : ""}${args.nota_valoracion ? " · ⭐" + args.nota_valoracion : ""}`;
+        return `KPI registrado en ${restNombre}: ${args.covers ? args.covers + " covers" : ""}${args.ticket ? " · " + args.ticket + "€" : ""}${args.nota_valoracion ? " · ★" + args.nota_valoracion : ""}`;
       }
       const colKey = args.tipo === "menu" ? `${col}_menus` : `${col}_${args.tipo}s`;
       const list = D[colKey] || [];
@@ -3083,7 +3088,7 @@ async function ejecutarHerramienta(name, args) {
       D[colKey] = list;
       save(colKey);
       const tipos = { receta: "Receta", idea: "Idea", menu: "Cambio de menú" };
-      return `✅ ${tipos[args.tipo] || args.tipo} "${args.nombre}" añadida en ${restNombre}.`;
+      return `${tipos[args.tipo] || args.tipo} "${args.nombre}" añadida en ${restNombre}.`;
     }
     default:
       return "Herramienta no reconocida.";
@@ -3551,7 +3556,7 @@ function rGrupo() {
   const tabBar = `
     <div class="segmented-bar" style="margin-bottom:18px">
       <button class="segment-btn${grupoSection === "restaurantes" ? " active" : ""}" onclick="grupoSection='restaurantes';rGrupo()">Restaurantes</button>
-      <button class="segment-btn${grupoSection === "descargables" ? " active" : ""}" onclick="grupoSection='descargables';rGrupo()">📁 Kit de apertura</button>
+      <button class="segment-btn${grupoSection === "descargables" ? " active" : ""}" onclick="grupoSection='descargables';rGrupo()">${ico('folder', 16)} Kit de apertura</button>
     </div>`;
 
   if (!empresas.length) {
@@ -3572,7 +3577,7 @@ function rGrupo() {
         <div class="emp-card-logo">${logoEmpresa(e)}</div>
         <div class="emp-card-meta">
           <div class="emp-card-sub">${safeText(e.subtitulo)}</div>
-          <div class="emp-card-loc">📍 ${safeText(e.ubicacion)}</div>
+          <div class="emp-card-loc">${ico('map-pin', 13)} ${safeText(e.ubicacion)}</div>
         </div>
         <div class="emp-card-footer">
           <span class="emp-estado ${est.cls}">${est.label}</span>
@@ -3589,28 +3594,29 @@ function rGrupo() {
 // ── Kit de apertura / Descargables del grupo ──────────────────────────
 
 const GRUPO_DESC_CATS = [
-  { key: "identidad",   label: "Identidad de marca",      icon: "🎨" },
-  { key: "operativo",   label: "Manual operativo",         icon: "📋" },
-  { key: "carta",       label: "Carta y recetario base",   icon: "🍽" },
-  { key: "formacion",   label: "Formación del equipo",     icon: "🎓" },
-  { key: "proveedores", label: "Proveedores homologados",  icon: "🚚" },
-  { key: "rrhh",        label: "RRHH y contratos",         icon: "👥" },
-  { key: "legal",       label: "Legal y permisos",         icon: "⚖️" },
-  { key: "diseno",      label: "Diseño y arquitectura",    icon: "🏗" },
-  { key: "otro",        label: "Otros",                    icon: "📂" }
+  { key: "identidad",   label: "Identidad de marca",      icon: () => ico('paint-brush') },
+  { key: "operativo",   label: "Manual operativo",         icon: () => ico('clipboard-text') },
+  { key: "carta",       label: "Carta y recetario base",   icon: () => ico('fork-knife') },
+  { key: "formacion",   label: "Formación del equipo",     icon: () => ico('graduation-cap') },
+  { key: "proveedores", label: "Proveedores homologados",  icon: () => ico('truck') },
+  { key: "rrhh",        label: "RRHH y contratos",         icon: () => ico('users') },
+  { key: "legal",       label: "Legal y permisos",         icon: () => ico('scales') },
+  { key: "diseno",      label: "Diseño y arquitectura",    icon: () => ico('hard-hat') },
+  { key: "otro",        label: "Otros",                    icon: () => ico('folder-open') }
 ];
 
 const GRUPO_DESC_TIPOS = [
-  { key: "pdf",    label: "PDF",         icon: "📄" },
-  { key: "doc",    label: "Google Doc",  icon: "📝" },
-  { key: "sheet",  label: "Hoja de cálculo", icon: "📊" },
-  { key: "folder", label: "Carpeta",     icon: "📁" },
-  { key: "imagen", label: "Imagen",      icon: "🖼" },
-  { key: "link",   label: "Enlace",      icon: "🔗" }
+  { key: "pdf",    label: "PDF",              icon: () => ico('file-pdf') },
+  { key: "doc",    label: "Google Doc",       icon: () => ico('file-doc') },
+  { key: "sheet",  label: "Hoja de cálculo",  icon: () => ico('table') },
+  { key: "folder", label: "Carpeta",          icon: () => ico('folder') },
+  { key: "imagen", label: "Imagen",           icon: () => ico('image') },
+  { key: "link",   label: "Enlace",           icon: () => ico('link') }
 ];
 
 function tipoIcon(tipo) {
-  return (GRUPO_DESC_TIPOS.find((t) => t.key === tipo) || GRUPO_DESC_TIPOS.find((t) => t.key === "link")).icon;
+  const t = GRUPO_DESC_TIPOS.find((t) => t.key === tipo) || GRUPO_DESC_TIPOS.find((t) => t.key === "link");
+  return t.icon();
 }
 
 function rGrupoDescargables() {
@@ -3618,7 +3624,7 @@ function rGrupoDescargables() {
   const tabBar = `
     <div class="segmented-bar" style="margin-bottom:18px">
       <button class="segment-btn" onclick="grupoSection='restaurantes';rGrupo()">Restaurantes</button>
-      <button class="segment-btn active">📁 Kit de apertura</button>
+      <button class="segment-btn active">${ico('folder', 16)} Kit de apertura</button>
     </div>`;
 
   const intro = `
@@ -3644,7 +3650,7 @@ function rGrupoDescargables() {
     html += `
       <div class="grupo-desc-section">
         <div class="grupo-desc-cat-head">
-          <span>${cat.icon} ${cat.label}</span>
+          <span>${cat.icon()} ${cat.label}</span>
           <button class="ghost-btn ghost-btn-sm" onclick="oGrupoDescM(null,'${cat.key}')">+ Añadir</button>
         </div>
         <div class="grupo-desc-grid">
@@ -3671,10 +3677,10 @@ function rGrupoDescargables() {
 function oGrupoDescM(id, catPreset) {
   const d = id ? (D.grupo_descargables || []).find((x) => x.id === id) : null;
   const catOpts = GRUPO_DESC_CATS.map((c) =>
-    `<option value="${c.key}"${(d ? d.categoria : catPreset) === c.key ? " selected" : ""}>${c.icon} ${c.label}</option>`
+    `<option value="${c.key}"${(d ? d.categoria : catPreset) === c.key ? " selected" : ""}>${c.label}</option>`
   ).join("");
   const tipoOpts = GRUPO_DESC_TIPOS.map((t) =>
-    `<option value="${t.key}"${(d?.tipo || "link") === t.key ? " selected" : ""}>${t.icon} ${t.label}</option>`
+    `<option value="${t.key}"${(d?.tipo || "link") === t.key ? " selected" : ""}>${t.label}</option>`
   ).join("");
   oModal(`
     <h2>${d ? "Editar documento" : "Nuevo documento"}</h2>
@@ -3742,7 +3748,7 @@ function rEmpresaDetalle(id, tab) {
   ).join("");
 
   const tabs = ["resumen", "recetario", "menu", "ideas", "kpis"];
-  const tabLabels = { resumen: "Resumen", recetario: "🍽 Recetario", menu: "📋 Menú", ideas: "💡 Ideas", kpis: "📊 KPIs" };
+  const tabLabels = { resumen: "Resumen", recetario: `${ico('fork-knife',14)} Recetario`, menu: `${ico('clipboard-text',14)} Menú`, ideas: `${ico('lightbulb',14)} Ideas`, kpis: `${ico('chart-bar',14)} KPIs` };
   const tabsHtml = tabs.map((t) =>
     `<button class="tab-btn${restTab === t ? " tab-active" : ""}" onclick="rEmpresaDetalle(${e.id},'${t}')">${tabLabels[t]}</button>`
   ).join("");
@@ -3807,7 +3813,7 @@ function rEmpresaDetalle(id, tab) {
           <div class="emp-detalle-card-title">Ideas recientes</div>
           ${ideas.slice(0, 3).map((i) => `
             <div class="rest-item-row">
-              <span>💡 ${safeText(i.nombre)}</span>
+              <span>${ico('lightbulb', 14)} ${safeText(i.nombre)}</span>
               <span class="nd">${fmtDate(i.fecha)}</span>
             </div>`).join("")}
           <button class="ghost-btn ghost-btn-sm" style="margin-top:10px" onclick="rEmpresaDetalle(${e.id},'ideas')">Ver todas →</button>
@@ -3851,7 +3857,7 @@ function rEmpresaDetalle(id, tab) {
               <div id="gg-sync-status-${e.id}" style="font-size:12px;margin-bottom:10px"></div>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
                 <button id="gg-sync-btn-${e.id}" class="primary-btn" onclick="syncGoogleReviews(${e.id})"
-                  style="font-size:13px">🔄 Actualizar</button>
+                  style="font-size:13px">${ico('arrows-clockwise', 13)} Actualizar</button>
                 ${!hasPlaceId ? `<button class="secondary-btn" style="font-size:13px" onclick="oSetPlaceId(${e.id})">Configurar restaurante</button>` : `<button class="ghost-btn ghost-btn-sm" onclick="oSetPlaceId(${e.id})">Editar Place ID</button>`}
                 ${!ggKey ? `<button class="ghost-btn ghost-btn-sm gg-key-btn" onclick="pGGKey()">Añadir API key</button>` : `<button class="ghost-btn ghost-btn-sm gg-key-btn" onclick="pGGKey()">API configurada ✓</button>`}
               </div>`;
@@ -3865,7 +3871,7 @@ function rEmpresaDetalle(id, tab) {
       <div class="rest-section-head">
         <span id="rest-rcount-${e.id}">${recetas.length} receta${recetas.length !== 1 ? "s" : ""}</span>
         <div style="display:flex;gap:8px">
-          <button class="ghost-btn ghost-btn-sm" onclick="reloadRecetario(${e.id},'${col}')" title="Recargar desde Firebase">🔄</button>
+          <button class="ghost-btn ghost-btn-sm" onclick="reloadRecetario(${e.id},'${col}')" title="Recargar desde Firebase">${ico('arrows-clockwise', 14)}</button>
           <button class="primary-btn" onclick="oRestRM(${e.id},'${col}',null)">+ Nueva receta</button>
         </div>
       </div>
@@ -3952,7 +3958,7 @@ function rEmpresaDetalle(id, tab) {
       ${ideas.length ? ideas.map((i) => `
         <div class="rest-item-card${i.estado === "descartada" ? " rest-item-inactive" : ""}">
           <div class="rest-item-main">
-            <div class="rest-item-name">💡 ${safeText(i.nombre)}</div>
+            <div class="rest-item-name">${ico('lightbulb', 14)} ${safeText(i.nombre)}</div>
             ${i.notas ? `<div class="rest-item-notas">${safeText(i.notas)}</div>` : ""}
           </div>
           <div class="rest-item-meta">
@@ -4000,29 +4006,29 @@ function rEmpresaDetalle(id, tab) {
           <div class="kpi-summary-date">${ultimoAuto ? fmtDate(ultimoAuto.fecha) : ""}</div>
         </div>
         <div class="kpi-summary-card">
-          <div class="kpi-summary-label">🪑 Último covers</div>
+          <div class="kpi-summary-label">${ico('armchair', 14)} Último covers</div>
           <div class="kpi-summary-val">${ultimoManual?.covers || "—"}</div>
           <div class="kpi-summary-sub">comensales</div>
           <div class="kpi-summary-date">${ultimoManual ? fmtDate(ultimoManual.fecha) : ""}</div>
         </div>
         <div class="kpi-summary-card">
-          <div class="kpi-summary-label">💶 Ticket medio</div>
+          <div class="kpi-summary-label">${ico('currency-eur', 14)} Ticket medio</div>
           <div class="kpi-summary-val">${ultimoManual?.ticket ? ultimoManual.ticket + "€" : "—"}</div>
           <div class="kpi-summary-sub">por comensal</div>
           <div class="kpi-summary-date">${ultimoManual ? fmtDate(ultimoManual.fecha) : ""}</div>
         </div>
         <div class="kpi-summary-card">
-          <div class="kpi-summary-label">🍽 Recetas</div>
+          <div class="kpi-summary-label">${ico('fork-knife', 14)} Recetas</div>
           <div class="kpi-summary-val">${recetas.length}</div>
           <div class="kpi-summary-sub">estandarizadas</div>
         </div>
         <div class="kpi-summary-card">
-          <div class="kpi-summary-label">📋 Carta activa</div>
+          <div class="kpi-summary-label">${ico('clipboard-text', 14)} Carta activa</div>
           <div class="kpi-summary-val">${menus.filter((m) => m.estado === "activo").length}</div>
           <div class="kpi-summary-sub">cambios activos</div>
         </div>
         <div class="kpi-summary-card">
-          <div class="kpi-summary-label">💡 Ideas</div>
+          <div class="kpi-summary-label">${ico('lightbulb', 14)} Ideas</div>
           <div class="kpi-summary-val">${ideasActivas.length}</div>
           <div class="kpi-summary-sub">${ideasListas.length} listas · ${ideas.filter((i) => i.estado === "descartada").length} descartadas</div>
         </div>
@@ -4056,7 +4062,7 @@ function rEmpresaDetalle(id, tab) {
             <span>${k.ticket ? k.ticket + "€" : "—"}</span>
             <span>${k.nota ? "⭐ " + k.nota : "—"}</span>
             <span>${k.total_resenas || "—"}</span>
-            <span class="nd">${k.autor === "Google Reviews (auto)" ? "🤖 Auto" : safeText(k.autor || "—")}</span>
+            <span class="nd">${k.autor === "Google Reviews (auto)" ? `${ico('robot', 13)} Auto` : safeText(k.autor || "—")}</span>
           </div>`).join("")}
       </div>` : `<div class="notice" style="margin-top:16px">Sin historial aún. Usa /${col} kpi covers:X ticket:X nota:X desde WhatsApp, o activa Google Reviews automático.</div>`}`;
   }
@@ -4069,7 +4075,7 @@ function rEmpresaDetalle(id, tab) {
         <div class="emp-detalle-logo">${logoEmpresa(e)}</div>
         <div class="emp-detalle-info">
           <div class="emp-detalle-sub">${safeText(e.subtitulo)}</div>
-          <div class="emp-detalle-loc">📍 ${safeText(e.ubicacion)}</div>
+          <div class="emp-detalle-loc">${ico('map-pin', 13)} ${safeText(e.ubicacion)}</div>
           ${e.web ? `<a class="emp-detalle-web" href="${safeText(e.web)}" target="_blank">${safeText(e.web)}</a>` : ""}
         </div>
       </div>
@@ -4143,7 +4149,7 @@ function rRestRecetario(empId, col) {
         ${r.temporada ? `Temporada: ${safeText(r.temporada)}` : ""}
         ${r.raciones ? ` · ${safeText(r.raciones)} raciones` : ""}
         ${r.tiempoElaboracion ? ` · ${safeText(r.tiempoElaboracion)}` : ""}
-        ${(r.alergenos || []).length ? `<br>⚠ ${(r.alergenos || []).join(", ")}` : ""}
+        ${(r.alergenos || []).length ? `<br>${ico('warning', 13)} ${(r.alergenos || []).join(", ")}` : ""}
       </div>
       <div class="ca" style="margin-top:12px">
         <button class="btn btn-s" onclick="openRestRecipe(${empId},'${col}',${r._i})">Ver ficha</button>
@@ -4652,13 +4658,13 @@ async function syncGoogleReviews(empId) {
     save(col);
 
     if (status) status.innerHTML = `<span style="color:var(--green)">⭐ ${nota} · ${total ? total + " reseñas" : ""} · Actualizado ahora</span>`;
-    if (btn) { btn.disabled = false; btn.textContent = "🔄 Actualizar"; }
+    if (btn) { btn.disabled = false; btn.innerHTML = `${ico('arrows-clockwise', 13)} Actualizar`; }
     // refresh resumen stats
     const statsEl = document.getElementById(`emp-gg-rating-${empId}`);
     if (statsEl) statsEl.innerHTML = `<strong style="font-size:22px">⭐ ${nota}</strong><span class="nd" style="margin-left:8px">${total || ""} reseñas</span>`;
   } catch (err) {
     if (status) status.innerHTML = `<span style="color:var(--red)">Error: ${safeText(err.message)}</span>`;
-    if (btn) { btn.disabled = false; btn.textContent = "🔄 Reintentar"; }
+    if (btn) { btn.disabled = false; btn.innerHTML = `${ico('arrows-clockwise', 13)} Reintentar`; }
   }
 }
 
