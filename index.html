@@ -202,15 +202,6 @@
         <div id="pp-historial" style="display:none"></div>
 
         <!-- Floating action bar (aparece al hacer scroll) -->
-        <div class="ped-float-bar" id="ped-float-bar">
-          <button class="ped-float-btn ped-float-save" onclick="guardarPedidoActual()">
-            <i class="ph-fill ph-floppy-disk"></i> Guardar pedido
-          </button>
-          <div class="ped-float-divider"></div>
-          <button class="ped-float-btn ped-float-clear" onclick="limpiarPedido()">
-            <i class="ph-fill ph-trash"></i> Limpiar
-          </button>
-        </div>
       </section>
 
       <section class="panel" id="panel-menu">
@@ -454,6 +445,17 @@
     <div class="hamburger-footer">
       <button class="ghost-btn ghost-btn-sm" style="color:rgba(255,255,255,.6)" onclick="logout()">Cerrar sesión</button>
     </div>
+  </div>
+
+  <!-- Floating pedido bar — fuera de #app para que position:fixed sea relativo al viewport -->
+  <div class="ped-float-bar" id="ped-float-bar">
+    <button class="ped-float-btn ped-float-save" onclick="guardarPedidoActual()">
+      <i class="ph-fill ph-floppy-disk"></i> Guardar pedido
+    </button>
+    <div class="ped-float-divider"></div>
+    <button class="ped-float-btn ped-float-clear" onclick="limpiarPedido()">
+      <i class="ph-fill ph-trash"></i> Limpiar
+    </button>
   </div>
 
   <script src="./app.js?v=129"></script>
