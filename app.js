@@ -775,9 +775,9 @@ function sp(id) {
   document.querySelector(`.hnav-btn[data-panel="${id}"]`)?.classList.add("active");
   scrollTop();
   closeHamburger();
-  // Hide pedido float bar when leaving pedidos panel
+  // Float bar visibility managed by updatePedFloatBar — hide when not on pedidos
   const fb = document.getElementById("ped-float-bar");
-  if (fb) fb.classList.toggle("visible", false);
+  if (fb && id !== "pedidos") fb.classList.remove("visible");
 }
 
 // ── I+D ──────────────────────────────────────────────
@@ -1475,6 +1475,7 @@ function limpiarPedido() {
     item.cant = "";
   });
   save("ingredientes");
+  updatePedFloatBar();
 }
 
 function rPedLista() {
@@ -1569,6 +1570,7 @@ function rPedLista() {
           </div>
         </div>`).join("") : `<div class="notice"><strong>Sin resultados</strong><div>No hemos encontrado ingredientes con esa búsqueda.</div></div>`}
     </div>`;
+  updatePedFloatBar();
 }
 
 function uIng(id, field, value) {
@@ -1583,6 +1585,7 @@ function clearQty(id) {
   if (!ing) return;
   ing.cant = "";
   save("ingredientes");
+  updatePedFloatBar();
 }
 
 function togglePedPreview() {
@@ -4863,15 +4866,16 @@ function setupMobileNavToggle() {
   window.applyMobileNavState();
 }
 
-function setupPedFloatBar() {
-  const toolbar = document.getElementById("ped-action-toolbar");
+function updatePedFloatBar() {
   const floatBar = document.getElementById("ped-float-bar");
-  if (!toolbar || !floatBar) return;
-  const obs = new IntersectionObserver(
-    ([entry]) => floatBar.classList.toggle("visible", !entry.isIntersecting),
-    { threshold: 0, rootMargin: "0px" }
-  );
-  obs.observe(toolbar);
+  if (!floatBar) return;
+  const hasItems = D.ingredientes.some((item) => String(item.cant || "").trim());
+  floatBar.classList.toggle("visible", hasItems);
+}
+
+function setupPedFloatBar() {
+  // Initial state on load
+  updatePedFloatBar();
 }
 
 function setupHamburgerMenu() {
