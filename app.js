@@ -881,8 +881,8 @@ function cModal() {
 
 function getGreeting() {
   const h = new Date().getHours();
-  if (h >= 6 && h < 14) return "Buenos días ☀️";
-  if (h >= 14 && h < 21) return "Buenas tardes 🌤️";
+  if (h >= 6 && h < 12) return "Buenos días ☀️";
+  if (h >= 12 && h < 21) return "Buenas tardes 🌤️";
   return "Buenas noches 🌙";
 }
 
