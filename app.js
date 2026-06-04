@@ -3815,7 +3815,20 @@ function rEmpresaDetalle(id, tab) {
       </div>
       <div class="rest-rcards" id="rest-rcards-${e.id}">${skeletonCards()}</div>`; // filled by rRestRecetario
     // defer render to after bodyHtml is injected; load photos in background
-    setTimeout(() => {
+    setTimeout(async () => {
+      // Fallback: if data not yet in memory but Firebase is ready, fetch directly
+      if (!D[`${col}_recetas`]?.length && storageMode === "firebase" && db) {
+        try {
+          const snap = await db.collection(`${col}_recetas`).get();
+          if (!snap.empty) {
+            const items = snap.docs.map(doc => doc.data());
+            D[`${col}_recetas`] = items.map((item, idx) => ({ ...item, _i: item._i ?? idx }));
+            // Update count header
+            const head = document.querySelector(`#rest-rcards-${e.id}`)?.closest(".rest-body-inner")?.querySelector(".rest-section-head span");
+            if (head) head.textContent = `${items.length} receta${items.length !== 1 ? "s" : ""}`;
+          }
+        } catch (err) { console.warn("recetario fallback fetch failed", err); }
+      }
       rRestRecetario(e.id, col);
       loadRestPhotos(col).then(() => rRestRecetario(e.id, col));
     }, 0);
