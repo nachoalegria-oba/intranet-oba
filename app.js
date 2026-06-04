@@ -601,13 +601,18 @@ async function loadFromFirebase() {
 
   // Load all collections in parallel (was sequential — major speedup)
   await Promise.all(cols.map(async (col) => {
-    const snap = await db.collection(col).get();
-    if (snap.empty) {
-      D[col] = JSON.parse(JSON.stringify(DEFAULTS[col]));
-      await saveCol(col);
-    } else {
-      const items = snap.docs.map((doc) => doc.data()).sort((a, b) => (a._i || 0) - (b._i || 0));
-      D[col] = items.map((item, idx) => ({ ...item, _i: item._i ?? idx }));
+    try {
+      const snap = await db.collection(col).get();
+      if (snap.empty) {
+        D[col] = JSON.parse(JSON.stringify(DEFAULTS[col] ?? []));
+        try { await saveCol(col); } catch (e) { console.warn("saveCol failed for", col, e); }
+      } else {
+        const items = snap.docs.map((doc) => doc.data()).sort((a, b) => (a._i || 0) - (b._i || 0));
+        D[col] = items.map((item, idx) => ({ ...item, _i: item._i ?? idx }));
+      }
+    } catch (e) {
+      console.warn("loadFromFirebase: error loading collection", col, e);
+      D[col] = JSON.parse(JSON.stringify(DEFAULTS[col] ?? []));
     }
   }));
 
@@ -3803,8 +3808,11 @@ function rEmpresaDetalle(id, tab) {
     const recetas = (D[`${col}_recetas`] || []);
     bodyHtml = `
       <div class="rest-section-head">
-        <span>${recetas.length} receta${recetas.length !== 1 ? "s" : ""}</span>
-        <button class="primary-btn" onclick="oRestRM(${e.id},'${col}',null)">+ Nueva receta</button>
+        <span id="rest-rcount-${e.id}">${recetas.length} receta${recetas.length !== 1 ? "s" : ""}</span>
+        <div style="display:flex;gap:8px">
+          <button class="ghost-btn ghost-btn-sm" onclick="reloadRecetario(${e.id},'${col}')" title="Recargar desde Firebase">🔄</button>
+          <button class="primary-btn" onclick="oRestRM(${e.id},'${col}',null)">+ Nueva receta</button>
+        </div>
       </div>
       <div class="toolbar" style="margin-bottom:16px">
         <input id="rest-rsearch-${e.id}" class="search-input" type="search" placeholder="Buscar receta…" oninput="rRestRecetario(${e.id},'${col}')">
@@ -3817,15 +3825,15 @@ function rEmpresaDetalle(id, tab) {
     // defer render to after bodyHtml is injected; load photos in background
     setTimeout(async () => {
       // Fallback: if data not yet in memory but Firebase is ready, fetch directly
-      if (!D[`${col}_recetas`]?.length && storageMode === "firebase" && db) {
+      if (!D[`${col}_recetas`]?.length && db) {
         try {
           const snap = await db.collection(`${col}_recetas`).get();
           if (!snap.empty) {
             const items = snap.docs.map(doc => doc.data());
             D[`${col}_recetas`] = items.map((item, idx) => ({ ...item, _i: item._i ?? idx }));
             // Update count header
-            const head = document.querySelector(`#rest-rcards-${e.id}`)?.closest(".rest-body-inner")?.querySelector(".rest-section-head span");
-            if (head) head.textContent = `${items.length} receta${items.length !== 1 ? "s" : ""}`;
+            const countEl = document.getElementById(`rest-rcount-${e.id}`);
+            if (countEl) countEl.textContent = `${items.length} receta${items.length !== 1 ? "s" : ""}`;
           }
         } catch (err) { console.warn("recetario fallback fetch failed", err); }
       }
@@ -4065,6 +4073,28 @@ function rRestRecetario(empId, col) {
         <button class="btn btn-s btn-d" onclick="dRestRec(${empId},'${col}',${r._i})">Eliminar</button>
       </div>
     </article>`).join("") : `<div class="notice"><strong>Sin resultados</strong><div>No se encontraron recetas con ese filtro.</div></div>`;
+}
+
+async function reloadRecetario(empId, col) {
+  if (!db) { toast("Sin conexión a Firebase", "err"); return; }
+  const container = document.getElementById(`rest-rcards-${empId}`);
+  if (container) container.innerHTML = skeletonCards();
+  try {
+    const snap = await db.collection(`${col}_recetas`).get();
+    if (!snap.empty) {
+      const items = snap.docs.map(doc => doc.data());
+      D[`${col}_recetas`] = items.map((item, idx) => ({ ...item, _i: item._i ?? idx }));
+      const countEl = document.getElementById(`rest-rcount-${empId}`);
+      if (countEl) countEl.textContent = `${items.length} receta${items.length !== 1 ? "s" : ""}`;
+      toast(`✓ ${items.length} recetas cargadas`);
+    } else {
+      toast("La colección está vacía en Firebase", "err");
+    }
+    rRestRecetario(empId, col);
+  } catch (err) {
+    console.error("reloadRecetario failed", err);
+    toast("Error al cargar recetas: " + err.message, "err");
+  }
 }
 
 function oRestRM(empId, col, id) {
