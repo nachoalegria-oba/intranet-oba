@@ -1411,6 +1411,7 @@ function pedTab(tab) {
     document.getElementById(`pt-${item}`)?.classList.toggle("active", item === tab);
   });
   onPedSearch();
+  updatePedFloatBar();
 }
 
 function pedidoProviderLabel(provider) {
@@ -4872,7 +4873,7 @@ function updatePedFloatBar() {
   const floatBar = document.getElementById("ped-float-bar");
   if (!floatBar) return;
   const hasItems = D.ingredientes.some((item) => String(item.cant || "").trim());
-  floatBar.classList.toggle("visible", hasItems && _pedToolbarHidden);
+  floatBar.classList.toggle("visible", hasItems && _pedToolbarHidden && pedT === "lista");
 }
 
 function setupPedFloatBar() {
