@@ -825,9 +825,12 @@ function closeIDProject() {
 
 function printIDProject() {
   const iframe = document.getElementById("id-iframe");
-  if (!iframe?.contentWindow) return;
-  iframe.contentWindow.focus();
-  iframe.contentWindow.print();
+  if (!iframe) return;
+  document.body.classList.add("printing-id");
+  const cleanup = () => document.body.classList.remove("printing-id");
+  window.addEventListener("afterprint", cleanup, { once: true });
+  // Small delay so the CSS is applied before the dialog opens
+  setTimeout(() => window.print(), 80);
 }
 // ─────────────────────────────────────────────────────
 

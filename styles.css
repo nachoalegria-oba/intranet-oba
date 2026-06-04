@@ -2635,3 +2635,19 @@ p, span, div, label, td, th, input, select, textarea, button{
   .page{ padding:16px 14px 48px; }
   .section-head-lg h1{ font-size:1.55rem; }
 }
+
+/* ── Impresión PDF (I+D) ───────────────────────────── */
+@media print{
+  body.printing-id *{ visibility:hidden !important; }
+  body.printing-id #id-iframe,
+  body.printing-id #id-iframe *{ visibility:visible !important; }
+  body.printing-id #id-iframe{
+    position:fixed !important;
+    inset:0 !important;
+    width:100vw !important;
+    height:100vh !important;
+    border:none !important;
+    margin:0 !important;
+    padding:0 !important;
+  }
+}
