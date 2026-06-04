@@ -1862,17 +1862,13 @@ th,
     flex-shrink:0;
     gap:6px;
   }
-  /* Solo icono en móvil — texto oculto con font-size:0 */
   .ped-chip{
-    font-size:0;
-    padding:7px;
-    width:32px;
-    height:32px;
-    justify-content:center;
-    gap:0;
+    font-size:11px;
+    padding:5px 9px;
+    gap:4px;
   }
   .ped-chip i{
-    font-size:15px;
+    font-size:12px;
   }
   .pedido-group-head,
   .pedido-history-head{
