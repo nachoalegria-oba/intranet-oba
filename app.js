@@ -3828,10 +3828,10 @@ function rEmpresaDetalle(id, tab) {
         const colName = `${col}_recetas`;
         const url = `https://firestore.googleapis.com/v1/projects/${FB.projectId}/databases/(default)/documents/${colName}?pageSize=300&key=${FB.apiKey}`;
         const res = await fetch(url);
-        if (res.ok) {
-          const json = await res.json();
-          const docs = json.documents || [];
-          if (docs.length) {
+        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+        const json = await res.json();
+        const docs = json.documents || [];
+        if (docs.length) {
             const items = docs.map(doc => {
               const fields = doc.fields || {};
               const parse = (v) => {
@@ -3853,10 +3853,10 @@ function rEmpresaDetalle(id, tab) {
               return obj;
             }).sort((a,b) => (a._i||0)-(b._i||0));
             D[colName] = items.map((item, idx) => ({ ...item, _i: item._i ?? idx }));
-          }
         }
       } catch (err) {
         console.warn("recetario REST fetch failed:", err);
+        toast("Error cargando recetario: " + err.message, "err");
       }
       const total = (D[`${col}_recetas`] || []).length;
       const countEl = document.getElementById(`rest-rcount-${e.id}`);
@@ -4096,7 +4096,7 @@ function rRestRecetario(empId, col) {
         <button class="btn btn-o btn-s" onclick="oRestRM(${empId},'${col}',${r._i})">Editar</button>
         <button class="btn btn-s btn-d" onclick="dRestRec(${empId},'${col}',${r._i})">Eliminar</button>
       </div>
-    </article>`).join("") : `<div class="notice"><strong>Sin resultados</strong><div>No se encontraron recetas con ese filtro.</div></div>`;
+    </article>`).join("") : `<div class="notice"><strong>Sin resultados</strong><div>No se encontraron recetas con ese filtro.</div><div style="font-size:11px;color:#999;margin-top:8px">v115 · db:${!!db} · mode:${storageMode} · cache:${(D[col+"_recetas"]||[]).length}</div></div>`;
 }
 
 async function reloadRecetario(empId, col) {
