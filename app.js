@@ -980,7 +980,7 @@ function buildFichaHTML(recipe, scale = 1) {
       <h4>Ingredientes principales</h4>
       <div class="ig">
         <div class="ih">Ingrediente</div><div class="ih">Cantidad</div><div class="ih">Unidad</div>
-        ${(recipe.ingredientes || []).map((item) => `<div>${safeText(item.i)}</div><div style="text-align:right">${safeText(scaleQty(item.c, scale) || "—")}</div><div>${safeText(item.u || "")}</div>`).join("")}
+        ${(recipe.ingredientes || []).map((raw) => { const item = normalizeIngItem(raw); return `<div>${safeText(item.i)}</div><div style="text-align:right">${safeText(scaleQty(item.c, scale) || "—")}</div><div>${safeText(item.u || "")}</div>`; }).join("")}
       </div>
     </div>` : "";
   const subsHtml = subs.map((sub) => `
@@ -990,7 +990,7 @@ function buildFichaHTML(recipe, scale = 1) {
       ${(sub.ingredientes || []).length ? `
         <div class="ig" style="margin-bottom:14px">
           <div class="ih">Ingrediente</div><div class="ih">Cantidad</div><div class="ih">Unidad</div>
-          ${(sub.ingredientes || []).map((item) => `<div>${safeText(item.i)}</div><div style="text-align:right">${safeText(scaleQty(item.c, scale) || "—")}</div><div>${safeText(item.u || "")}</div>`).join("")}
+          ${(sub.ingredientes || []).map((raw) => { const item = normalizeIngItem(raw); return `<div>${safeText(item.i)}</div><div style="text-align:right">${safeText(scaleQty(item.c, scale) || "—")}</div><div>${safeText(item.u || "")}</div>`; }).join("")}
         </div>` : ""}
       ${(sub.pasos || []).length ? `<ol class="sl">${sub.pasos.map((step, index) => `<li><div class="sn">${index + 1}</div><div>${safeText(step)}</div></li>`).join("")}</ol>` : ""}
     </div>`).join("");
@@ -1107,7 +1107,22 @@ function cRD() {
   updateOverlayState();
 }
 
-function ingredientItemHtml(item = {}) {
+// Normalise an ingredient that may be a plain string ("2 kg patatas cocidas")
+// or the expected object { i, c, u }
+function normalizeIngItem(item) {
+  if (typeof item !== "string") return item || {};
+  // "c/s perejil"  or  "c/s de perejil"
+  const cs = item.match(/^(c\/s)\s+(?:de\s+)?(.+)$/i);
+  if (cs) return { c: "c/s", u: "", i: cs[2] };
+  // "300 gr aceite 0,4"  /  "9 uds cuerpos de gambas"  /  "2 kg patatas"
+  const m = item.match(/^(\d+(?:[.,]\d+)?(?:\s*-\s*\d+(?:[.,]\d+)?)?)\s+([a-zA-ZáéíóúüñÁÉÍÓÚÜÑ]+\.?)\s+(.+)$/);
+  if (m) return { c: m[1], u: m[2], i: m[3] };
+  // Just a name with no quantity ("Patatas cocidas")
+  return { i: item, c: "", u: "" };
+}
+
+function ingredientItemHtml(raw = {}) {
+  const item = normalizeIngItem(raw);
   const qty = safeText(item.c || "—");
   const unit = safeText(item.u || "");
   return `
@@ -4255,7 +4270,7 @@ function buildRestFichaHTML(recipe, scale = 1) {
       <h4>Ingredientes principales</h4>
       <div class="ig">
         <div class="ih">Ingrediente</div><div class="ih">Cantidad</div><div class="ih">Unidad</div>
-        ${(recipe.ingredientes || []).map((item) => `<div>${safeText(item.i)}</div><div style="text-align:right">${safeText(scaleQty(item.c, scale) || "—")}</div><div>${safeText(item.u || "")}</div>`).join("")}
+        ${(recipe.ingredientes || []).map((raw) => { const item = normalizeIngItem(raw); return `<div>${safeText(item.i)}</div><div style="text-align:right">${safeText(scaleQty(item.c, scale) || "—")}</div><div>${safeText(item.u || "")}</div>`; }).join("")}
       </div>
     </div>` : "";
   const subsHtml = subs.map((sub) => `
@@ -4265,7 +4280,7 @@ function buildRestFichaHTML(recipe, scale = 1) {
       ${(sub.ingredientes || []).length ? `
         <div class="ig" style="margin-bottom:14px">
           <div class="ih">Ingrediente</div><div class="ih">Cantidad</div><div class="ih">Unidad</div>
-          ${(sub.ingredientes || []).map((item) => `<div>${safeText(item.i)}</div><div style="text-align:right">${safeText(scaleQty(item.c, scale) || "—")}</div><div>${safeText(item.u || "")}</div>`).join("")}
+          ${(sub.ingredientes || []).map((raw) => { const item = normalizeIngItem(raw); return `<div>${safeText(item.i)}</div><div style="text-align:right">${safeText(scaleQty(item.c, scale) || "—")}</div><div>${safeText(item.u || "")}</div>`; }).join("")}
         </div>` : ""}
       ${(sub.pasos || []).length ? `<ol class="sl">${sub.pasos.map((step, i) => `<li><div class="sn">${i+1}</div><div>${safeText(step)}</div></li>`).join("")}</ol>` : ""}
     </div>`).join("");
