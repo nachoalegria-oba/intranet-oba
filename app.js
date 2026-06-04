@@ -15,9 +15,9 @@ const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "
 const DS = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"];
 const SKILLS = ["Mise en place", "Fondos y salsas", "Carnes", "Pescados", "Pastelería", "Fermentos", "Limpieza y orden", "Trabajo en equipo"];
 const ALERGEN_LIST = ["Gluten", "Crustáceos", "Huevos", "Pescado", "Cacahuetes", "Soja", "Lácteos", "Frutos de cáscara", "Apio", "Mostaza", "Sésamo", "Dióxido de azufre", "Altramuces", "Moluscos"];
-const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "eventos", "proveedores", "practicantes", "centros", "habitaciones", "pedidosHistorial", "descargables", "empresas", "grupo_descargables", "oba_recetas", "oba_menus", "oba_ideas", "oba_kpis", "ene_recetas", "ene_menus", "ene_ideas", "ene_kpis", "candomo_recetas", "candomo_menus", "candomo_ideas", "candomo_kpis", "canitas_recetas", "canitas_menus", "canitas_ideas", "canitas_kpis", "cebo_recetas", "cebo_menus", "cebo_ideas", "cebo_kpis", "me_recetas", "me_menus", "me_ideas", "me_kpis"];
+const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "eventos", "proveedores", "practicantes", "centros", "habitaciones", "pedidosHistorial", "descargables", "empresas", "grupo_descargables", "oba_recetas", "oba_menus", "oba_ideas", "oba_kpis", "ene_recetas", "ene_menus", "ene_ideas", "ene_kpis", "candomo_recetas", "candomo_menus", "candomo_ideas", "candomo_kpis", "canitas_recetas", "canitas_menus", "canitas_ideas", "canitas_kpis", "cebo_recetas", "cebo_menus", "cebo_ideas", "cebo_kpis"];
 
-const REST_COL_MAP = { oba: "oba", ene: "ene", candomo: "candomo", canitas: "canitas", cebo: "cebo", me: "me" };
+const REST_COL_MAP = { oba: "oba", ene: "ene", candomo: "candomo", canitas: "canitas", cebo: "cebo" };
 
 // --- Recipe scaling helpers ---
 function _fmtNum(n) {
@@ -87,7 +87,7 @@ function scheduleRender() {
 }
 
 // Collections whose items may have large foto fields — excluded from localStorage
-const FOTO_COLS = new Set(["recipes", "oba_recetas", "ene_recetas", "candomo_recetas", "canitas_recetas", "cebo_recetas", "me_recetas"]);
+const FOTO_COLS = new Set(["recipes", "oba_recetas", "ene_recetas", "candomo_recetas", "canitas_recetas", "cebo_recetas"]);
 
 // --- IndexedDB photo cache ---
 // Photos live in Firestore `{col}_fotos` and are cached here after first load.
@@ -234,19 +234,6 @@ const EMPRESAS_SEED = [
     googleSearch: "CEBO restaurante Hotel Urban Madrid",
     googlePlaceId: ""
   },
-  {
-    id: 6,
-    nombre: "ME Málaga",
-    subtitulo: "Restaurante · Málaga",
-    ubicacion: "Málaga",
-    web: "",
-    estado: "abierto",
-    notaDia: "",
-    theme: "me",
-    logoFile: null,
-    googleSearch: "ME Málaga restaurante",
-    googlePlaceId: ""
-  }
 ];
 const LOCAL_KEY = "oba_intranet_v4";
 const PIPELINE_STAGES = [
@@ -398,8 +385,7 @@ const DEFAULTS = {
   ene_recetas: [], ene_menus: [], ene_ideas: [], ene_kpis: [],
   candomo_recetas: [], candomo_menus: [], candomo_ideas: [], candomo_kpis: [],
   canitas_recetas: [], canitas_menus: [], canitas_ideas: [], canitas_kpis: [],
-  cebo_recetas: [], cebo_menus: [], cebo_ideas: [], cebo_kpis: [],
-  me_recetas: [], me_menus: [], me_ideas: [], me_kpis: []
+  cebo_recetas: [], cebo_menus: [], cebo_ideas: [], cebo_kpis: []
 };
 
 // Hamburger menu — stubbed until setupHamburgerMenu() runs
@@ -4096,7 +4082,7 @@ function rRestRecetario(empId, col) {
         <button class="btn btn-o btn-s" onclick="oRestRM(${empId},'${col}',${r._i})">Editar</button>
         <button class="btn btn-s btn-d" onclick="dRestRec(${empId},'${col}',${r._i})">Eliminar</button>
       </div>
-    </article>`).join("") : `<div class="notice"><strong>Sin resultados</strong><div>No se encontraron recetas con ese filtro.</div><div style="font-size:11px;color:#999;margin-top:8px">v115 · db:${!!db} · mode:${storageMode} · cache:${(D[col+"_recetas"]||[]).length}</div></div>`;
+    </article>`).join("") : `<div class="notice"><strong>Sin resultados</strong><div>No se encontraron recetas con ese filtro.</div></div>`;
 }
 
 async function reloadRecetario(empId, col) {
