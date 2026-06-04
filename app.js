@@ -24,10 +24,9 @@ function ico(name, size = 18) {
   return `<i class="ph-fill ph-${name}" style="font-size:${size}px;line-height:1;vertical-align:middle;flex-shrink:0"></i>`;
 }
 
-// --- Scroll helper (app-shell is the real scroll container on iOS) ---
+// --- Scroll helper ---
 function scrollTop(smooth = true) {
-  const app = document.getElementById("app");
-  if (app) app.scrollTo({ top: 0, behavior: smooth ? "smooth" : "instant" });
+  window.scrollTo({ top: 0, behavior: smooth ? "smooth" : "instant" });
 }
 
 // --- Recipe scaling helpers ---

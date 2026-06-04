@@ -25,26 +25,25 @@
 
 *{box-sizing:border-box;margin:0;padding:0}
 html{
-  height:100%;
-  background:#050505;
+  min-height:100%;
+  background:var(--bg);
   -webkit-text-size-adjust:100%;
-  overflow:hidden;
-  overscroll-behavior:none;
 }
 body{
-  height:100%;
-  background:#050505;
+  min-height:100vh;
+  min-height:100svh;
+  min-height:100dvh;
+  background:var(--bg);
   color:var(--ink);
   font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
   font-size:15px;
   line-height:1.5;
-  overflow:hidden;
-  overscroll-behavior:none;
+  overflow-x:hidden;
   -webkit-tap-highlight-color:transparent;
 }
 
-body.overlay-open .app-shell{
-  overflow:hidden; /* lock scroll while modal/overlay is open */
+body.overlay-open{
+  overflow:hidden;
 }
 
 button,input,select,textarea{font:inherit}
@@ -287,21 +286,15 @@ td select:focus{
 
 .app-shell{
   display:none;
-  height:100dvh;
+  min-height:100vh;
+  min-height:100svh;
   background:var(--bg);
-  overflow-y:auto;
-  overflow-x:hidden;
-  -webkit-overflow-scrolling:touch;
-  overscroll-behavior:none;
 }
 .app-shell.visible{
   display:block;
-  height:100dvh;
+  min-height:100vh;
+  min-height:100svh;
   background:var(--bg);
-  overflow-y:auto;
-  overflow-x:hidden;
-  -webkit-overflow-scrolling:touch;
-  overscroll-behavior:none;
 }
 
 .topbar{
