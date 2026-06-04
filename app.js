@@ -753,6 +753,8 @@ function sp(id) {
 
 // ── I+D ──────────────────────────────────────────────
 const ID_PWD = "hijodeladeisy";
+const CANITAS_PWD = "cañitasgastro123";
+const CANITAS_SESSION_KEY = "oba_canitas_unlocked_v1";
 const ID_SESSION_KEY = "oba_id_unlocked_v1";
 
 function showIDPanel() {
@@ -792,6 +794,20 @@ function lockID() {
   document.getElementById("id-gate").style.display = "flex";
   document.getElementById("id-content").style.display = "none";
   document.getElementById("id-pwd").value = "";
+}
+
+function unlockCanitas() {
+  const val = document.getElementById("canitas-pwd").value;
+  if (val === CANITAS_PWD) {
+    sessionStorage.setItem(CANITAS_SESSION_KEY, "1");
+    document.getElementById("canitas-pwd").value = "";
+    rEmpresaDetalle(4);
+  } else {
+    const err = document.getElementById("canitas-err");
+    err.textContent = "Contraseña incorrecta";
+    document.getElementById("canitas-pwd").value = "";
+    document.getElementById("canitas-pwd").focus();
+  }
 }
 
 function showIDGrid() {
@@ -3680,6 +3696,24 @@ function rEmpresaDetalle(id, tab) {
   if (!e) return;
   grupoView = id;
   if (tab) restTab = tab;
+
+  // Password gate for Cañitas Maite
+  if (e.theme === "canitas" && sessionStorage.getItem(CANITAS_SESSION_KEY) !== "1") {
+    document.getElementById("panel-grupo-body").innerHTML = `
+      <div style="display:flex;justify-content:center;align-items:center;min-height:60vh">
+        <div class="id-gate-card">
+          <div class="eyebrow" style="margin-bottom:12px">Acceso restringido</div>
+          <h2 style="font-size:1.5rem;margin:0 0 6px">${safeText(e.nombre)}</h2>
+          <p style="color:var(--muted);font-size:13px;margin:0 0 24px">${safeText(e.subtitulo)}</p>
+          <input class="login-input" type="password" id="canitas-pwd" placeholder="Contraseña"
+            onkeydown="if(event.key==='Enter')unlockCanitas()">
+          <button class="primary-btn" style="margin-top:10px;width:100%" onclick="unlockCanitas()">Entrar</button>
+          <div class="login-error" id="canitas-err" style="margin-top:8px"></div>
+          <button class="ghost-btn ghost-btn-sm" style="margin-top:16px;width:100%" onclick="grupoView='dashboard';rGrupo()">← Volver al grupo</button>
+        </div>
+      </div>`;
+    return;
+  }
 
   const col = REST_COL_MAP[e.theme] || e.theme;
   const est = ESTADO_LABELS[e.estado] || ESTADO_LABELS.abierto;
