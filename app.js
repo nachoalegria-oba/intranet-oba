@@ -4866,16 +4866,27 @@ function setupMobileNavToggle() {
   window.applyMobileNavState();
 }
 
+let _pedToolbarHidden = false; // true cuando el toolbar ha salido del viewport
+
 function updatePedFloatBar() {
   const floatBar = document.getElementById("ped-float-bar");
   if (!floatBar) return;
   const hasItems = D.ingredientes.some((item) => String(item.cant || "").trim());
-  floatBar.classList.toggle("visible", hasItems);
+  floatBar.classList.toggle("visible", hasItems && _pedToolbarHidden);
 }
 
 function setupPedFloatBar() {
-  // Initial state on load
-  updatePedFloatBar();
+  const toolbar = document.getElementById("ped-action-toolbar");
+  const floatBar = document.getElementById("ped-float-bar");
+  if (!toolbar || !floatBar) return;
+  const obs = new IntersectionObserver(
+    ([entry]) => {
+      _pedToolbarHidden = !entry.isIntersecting;
+      updatePedFloatBar();
+    },
+    { threshold: 0, rootMargin: "0px" }
+  );
+  obs.observe(toolbar);
 }
 
 function setupHamburgerMenu() {
