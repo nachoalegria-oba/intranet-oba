@@ -522,6 +522,8 @@ function showLoginForm() {
   if (sessionStorage.getItem("oba-auth") === "1") {
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("app").classList.add("visible");
+    const greetEl = document.getElementById("greet-sub");
+    if (greetEl) greetEl.textContent = getGreeting();
     startApp();
   }
 }
@@ -650,6 +652,8 @@ function login() {
     sessionStorage.setItem("oba-auth", "1");
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("app").classList.add("visible");
+    const greetEl = document.getElementById("greet-sub");
+    if (greetEl) greetEl.textContent = getGreeting();
     startApp();
   } else if (errorEl) {
     errorEl.textContent = "Contraseña incorrecta";
@@ -875,12 +879,17 @@ function cModal() {
   updateOverlayState();
 }
 
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h >= 6 && h < 14) return "Buenos días ☀️";
+  if (h >= 14 && h < 21) return "Buenas tardes 🌤️";
+  return "Buenas noches 🌙";
+}
+
 function rInicio() {
   // Greeting by time of day
-  const h = new Date().getHours();
-  const greetSub = h < 13 ? "Buenos días ☀️" : h < 20 ? "Buenas tardes 🌤️" : "Buenas noches 🌙";
   const greetEl = document.getElementById("greet-sub");
-  if (greetEl) greetEl.textContent = greetSub;
+  if (greetEl) greetEl.textContent = getGreeting();
 
   // Urgent banner
   const urgent = D.avisos.filter((item) => item.urgente);
