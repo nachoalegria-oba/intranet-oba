@@ -194,14 +194,6 @@
 
         <div class="toolbar pedido-toolbar" id="ped-action-toolbar">
           <input class="search-input" type="text" id="ped-search" placeholder="Buscar proveedor o ingrediente..." oninput="onPedSearch()">
-          <div class="ped-toolbar-chips">
-            <button class="ped-chip ped-chip-save" onclick="guardarPedidoActual()">
-              <i class="ph-fill ph-floppy-disk"></i> Guardar
-            </button>
-            <button class="ped-chip ped-chip-clear" onclick="limpiarPedido()">
-              <i class="ph-fill ph-trash"></i> Limpiar
-            </button>
-          </div>
         </div>
 
         <div id="pp-lista"></div>
@@ -211,8 +203,13 @@
 
         <!-- Floating action bar (aparece al hacer scroll) -->
         <div class="ped-float-bar" id="ped-float-bar">
-          <button class="ped-float-btn ped-float-save" onclick="guardarPedidoActual()">Guardar pedido</button>
-          <button class="ped-float-btn ped-float-clear" onclick="limpiarPedido()">Limpiar</button>
+          <button class="ped-float-btn ped-float-save" onclick="guardarPedidoActual()">
+            <i class="ph-fill ph-floppy-disk"></i> Guardar pedido
+          </button>
+          <div class="ped-float-divider"></div>
+          <button class="ped-float-btn ped-float-clear" onclick="limpiarPedido()">
+            <i class="ph-fill ph-trash"></i> Limpiar
+          </button>
         </div>
       </section>
 

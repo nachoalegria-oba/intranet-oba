@@ -639,49 +639,62 @@ td select:focus{
   border-color:rgba(255,59,48,.18);
 }
 
-/* ── Floating pedido action bar ────────────────── */
+/* ── Floating pedido action bar — Apple frosted glass ── */
 .ped-float-bar{
   position:fixed;
-  bottom:calc(20px + env(safe-area-inset-bottom, 0px));
+  bottom:calc(24px + env(safe-area-inset-bottom, 0px));
   left:50%;
-  transform:translateX(-50%) translateY(20px);
+  transform:translateX(-50%) translateY(16px) scale(.96);
   opacity:0;
   pointer-events:none;
   display:flex;
-  gap:10px;
-  background:rgba(15,15,15,.85);
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-  border:1px solid rgba(255,255,255,.1);
+  align-items:center;
+  gap:0;
+  background:rgba(28,28,30,.72);
+  backdrop-filter:saturate(180%) blur(24px);
+  -webkit-backdrop-filter:saturate(180%) blur(24px);
+  border:0.5px solid rgba(255,255,255,.14);
   border-radius:999px;
-  padding:8px 10px;
-  z-index:20;
-  box-shadow:0 8px 32px rgba(0,0,0,.3);
-  transition:opacity .25s, transform .25s;
+  padding:5px;
+  z-index:25;
+  box-shadow:0 4px 24px rgba(0,0,0,.28), 0 1px 0 rgba(255,255,255,.06) inset;
+  transition:opacity .22s cubic-bezier(.4,0,.2,1), transform .22s cubic-bezier(.4,0,.2,1);
   white-space:nowrap;
 }
 .ped-float-bar.visible{
   opacity:1;
   pointer-events:auto;
-  transform:translateX(-50%) translateY(0);
+  transform:translateX(-50%) translateY(0) scale(1);
 }
 .ped-float-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
   border:none;
+  background:transparent;
   border-radius:999px;
-  padding:9px 20px;
-  font-size:14px;
-  font-weight:600;
+  padding:9px 18px;
+  font-size:13.5px;
+  font-weight:500;
   cursor:pointer;
-  transition:opacity .15s;
-}
-.ped-float-btn:active{ opacity:.7; }
-.ped-float-save{
-  background:#fff;
-  color:#111;
-}
-.ped-float-clear{
-  background:rgba(255,255,255,.12);
+  transition:background .15s, opacity .15s;
   color:#fff;
+  letter-spacing:.01em;
+}
+.ped-float-btn i{ font-size:15px; flex-shrink:0; }
+.ped-float-btn:active{ opacity:.65; }
+.ped-float-save:hover,
+.ped-float-save:active{ background:rgba(255,255,255,.1); }
+.ped-float-save{ color:#fff; }
+.ped-float-clear{ color:rgba(255,100,90,1); }
+.ped-float-clear:hover,
+.ped-float-clear:active{ background:rgba(255,59,48,.12); }
+.ped-float-divider{
+  width:0.5px;
+  height:22px;
+  background:rgba(255,255,255,.18);
+  flex-shrink:0;
+  margin:0 2px;
 }
 
 .segmented-bar{
