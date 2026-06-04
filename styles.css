@@ -34,7 +34,7 @@ body{
   min-height:100vh;
   min-height:100svh;
   min-height:100dvh;
-  background:var(--bg);
+  background:#050505;
   color:var(--ink);
   font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
   font-size:15px;
@@ -290,11 +290,13 @@ td select:focus{
   display:none;
   min-height:100vh;
   min-height:100svh;
+  background:var(--bg);
 }
 .app-shell.visible{
   display:block;
   min-height:100vh;
   min-height:100svh;
+  background:var(--bg);
 }
 
 .topbar{
