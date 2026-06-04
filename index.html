@@ -194,8 +194,14 @@
 
         <div class="toolbar pedido-toolbar" id="ped-action-toolbar">
           <input class="search-input" type="text" id="ped-search" placeholder="Buscar proveedor o ingrediente..." oninput="onPedSearch()">
-          <button class="secondary-btn ped-toolbar-btn" onclick="guardarPedidoActual()">Guardar</button>
-          <button class="secondary-btn danger-soft ped-toolbar-btn" onclick="limpiarPedido()">Limpiar</button>
+          <div class="ped-toolbar-chips">
+            <button class="ped-chip ped-chip-save" onclick="guardarPedidoActual()">
+              <i class="ph-fill ph-floppy-disk"></i> Guardar
+            </button>
+            <button class="ped-chip ped-chip-clear" onclick="limpiarPedido()">
+              <i class="ph-fill ph-trash"></i> Limpiar
+            </button>
+          </div>
         </div>
 
         <div id="pp-lista"></div>
