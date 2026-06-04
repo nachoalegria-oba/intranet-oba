@@ -51,6 +51,20 @@ body.overlay-open{
   overflow:hidden;
 }
 
+/* ── Animaciones de entrada ── */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(18px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes fadeIn{
+  from{opacity:0}
+  to{opacity:1}
+}
+@keyframes appReveal{
+  from{opacity:0;transform:scale(.97)}
+  to{opacity:1;transform:scale(1)}
+}
+
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
 img{max-width:100%;display:block}
@@ -90,7 +104,6 @@ img{max-width:100%;display:block}
   position:fixed;
   inset:0;
   width:100%;
-  /* Cubre también el área que queda al abrir el teclado en iOS */
   min-height:100%;
   min-height:100vh;
   min-height:100lvh;
@@ -103,13 +116,13 @@ img{max-width:100%;display:block}
   padding:24px;
   padding-top:max(24px, env(safe-area-inset-top, 0px));
   padding-bottom:max(24px, env(safe-area-inset-bottom, 0px));
+  background-color:#050505;
   background:
     radial-gradient(circle at 20% 10%, rgba(95,127,76,.18), transparent 24%),
     radial-gradient(circle at 100% 0%, rgba(255,255,255,.08), transparent 18%),
     linear-gradient(135deg, #050505 0%, #111 52%, #1a2415 100%);
-  /* Extiende el color de fondo más allá del gradiente */
-  background-color:#050505;
   z-index:30;
+  animation:fadeIn .5s ease-out both;
 }
 
 .login-card{
@@ -125,6 +138,7 @@ img{max-width:100%;display:block}
   border-radius:32px;
   box-shadow:0 30px 90px rgba(0,0,0,.35);
   backdrop-filter:blur(14px);
+  animation:fadeUp .55s cubic-bezier(.22,.68,0,1.2) .1s both;
 }
 
 .brand-lockup{
@@ -304,6 +318,7 @@ td select:focus{
   min-height:100vh;
   min-height:100svh;
   background:var(--bg);
+  animation:appReveal .4s cubic-bezier(.25,.46,.45,.94) both;
 }
 
 .topbar{
