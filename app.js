@@ -822,6 +822,13 @@ function closeIDProject() {
   showIDGrid();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
+
+function printIDProject() {
+  const iframe = document.getElementById("id-iframe");
+  if (!iframe?.contentWindow) return;
+  iframe.contentWindow.focus();
+  iframe.contentWindow.print();
+}
 // ─────────────────────────────────────────────────────
 
 function bsec(section) {
