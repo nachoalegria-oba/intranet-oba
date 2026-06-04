@@ -3822,21 +3822,24 @@ function rEmpresaDetalle(id, tab) {
         </select>
       </div>
       <div class="rest-rcards" id="rest-rcards-${e.id}">${skeletonCards()}</div>`; // filled by rRestRecetario
-    // defer render to after bodyHtml is injected; load photos in background
+    // Siempre carga fresco de Firebase si está disponible; si no, usa D[col_recetas]
     setTimeout(async () => {
-      // Fallback: if data not yet in memory but Firebase is ready, fetch directly
-      if (!D[`${col}_recetas`]?.length && db) {
+      if (db) {
         try {
           const snap = await db.collection(`${col}_recetas`).get();
           if (!snap.empty) {
-            const items = snap.docs.map(doc => doc.data());
+            const items = snap.docs.map(doc => doc.data()).sort((a,b) => (a._i||0)-(b._i||0));
             D[`${col}_recetas`] = items.map((item, idx) => ({ ...item, _i: item._i ?? idx }));
-            // Update count header
-            const countEl = document.getElementById(`rest-rcount-${e.id}`);
-            if (countEl) countEl.textContent = `${items.length} receta${items.length !== 1 ? "s" : ""}`;
+          } else {
+            D[`${col}_recetas`] = D[`${col}_recetas`] || [];
           }
-        } catch (err) { console.warn("recetario fallback fetch failed", err); }
+        } catch (err) {
+          console.warn("recetario fetch failed, usando caché:", err);
+        }
       }
+      const total = (D[`${col}_recetas`] || []).length;
+      const countEl = document.getElementById(`rest-rcount-${e.id}`);
+      if (countEl) countEl.textContent = `${total} receta${total !== 1 ? "s" : ""}`;
       rRestRecetario(e.id, col);
       loadRestPhotos(col).then(() => rRestRecetario(e.id, col));
     }, 0);
