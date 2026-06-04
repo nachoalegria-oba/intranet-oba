@@ -29,6 +29,11 @@ function scrollTop(smooth = true) {
   window.scrollTo({ top: 0, behavior: smooth ? "smooth" : "instant" });
 }
 
+// --- Login mode: oscurece html/body para que no haya huecos bajo el login ---
+function setLoginMode(on) {
+  document.documentElement.classList.toggle("login-mode", on);
+}
+
 // --- Recipe scaling helpers ---
 function _fmtNum(n) {
   if (n <= 0) return "0";
@@ -532,9 +537,12 @@ function showLoginForm() {
   if (sessionStorage.getItem("oba-auth") === "1") {
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("app").classList.add("visible");
+    setLoginMode(false);
     const greetEl = document.getElementById("greet-sub");
     if (greetEl) greetEl.innerHTML = getGreeting();
     startApp();
+  } else {
+    setLoginMode(true);
   }
 }
 
@@ -662,6 +670,7 @@ function login() {
     sessionStorage.setItem("oba-auth", "1");
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("app").classList.add("visible");
+    setLoginMode(false);
     const greetEl = document.getElementById("greet-sub");
     if (greetEl) greetEl.innerHTML = getGreeting();
     startApp();
@@ -677,6 +686,7 @@ function logout() {
   sessionStorage.removeItem("oba-auth");
   document.getElementById("login-screen").style.display = "flex";
   document.getElementById("app").classList.remove("visible");
+  setLoginMode(true);
   const pwd = document.getElementById("pwd");
   if (pwd) pwd.value = "";
 }
