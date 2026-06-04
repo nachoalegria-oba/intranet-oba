@@ -29,10 +29,17 @@ html{
   background:var(--bg);
   -webkit-text-size-adjust:100%;
 }
-/* Login active: fondo oscuro en todo el documento para que no haya huecos */
-html.login-mode,
+/* Login active: el gradiente vive en html para que se extienda infinitamente
+   en todas direcciones — cubre el resorte de iOS sin importar cuánto rebote */
+html.login-mode{
+  background-color:#050505;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(95,127,76,.18), transparent 24%),
+    radial-gradient(circle at 100% 0%, rgba(255,255,255,.08), transparent 18%),
+    linear-gradient(135deg, #050505 0%, #111 52%, #1a2415 100%);
+}
 html.login-mode body{
-  background:#050505 !important;
+  background:transparent !important;
 }
 body{
   min-height:100vh;
@@ -116,11 +123,7 @@ img{max-width:100%;display:block}
   padding:24px;
   padding-top:max(24px, env(safe-area-inset-top, 0px));
   padding-bottom:max(24px, env(safe-area-inset-bottom, 0px));
-  background-color:#050505;
-  background:
-    radial-gradient(circle at 20% 10%, rgba(95,127,76,.18), transparent 24%),
-    radial-gradient(circle at 100% 0%, rgba(255,255,255,.08), transparent 18%),
-    linear-gradient(135deg, #050505 0%, #111 52%, #1a2415 100%);
+  background:transparent;
   z-index:30;
   animation:fadeIn .5s ease-out both;
 }
