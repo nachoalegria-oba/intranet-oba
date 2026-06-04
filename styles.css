@@ -25,31 +25,26 @@
 
 *{box-sizing:border-box;margin:0;padding:0}
 html{
-  scroll-behavior:smooth;
   height:100%;
   background:#050505;
   -webkit-text-size-adjust:100%;
+  overflow:hidden;
   overscroll-behavior:none;
-  touch-action:pan-y;
 }
 body{
   height:100%;
-  min-height:100vh;
-  min-height:100svh;
-  min-height:100dvh;
   background:#050505;
   color:var(--ink);
   font-family:-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
   font-size:15px;
   line-height:1.5;
-  padding-bottom:env(safe-area-inset-bottom, 0);
-  overflow-x:hidden;
+  overflow:hidden;
   overscroll-behavior:none;
   -webkit-tap-highlight-color:transparent;
 }
 
-body.overlay-open{
-  overflow:hidden;
+body.overlay-open .app-shell{
+  overflow:hidden; /* lock scroll while modal/overlay is open */
 }
 
 button,input,select,textarea{font:inherit}
@@ -292,16 +287,20 @@ td select:focus{
 
 .app-shell{
   display:none;
-  min-height:100vh;
-  min-height:100svh;
+  height:100dvh;
   background:var(--bg);
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
   overscroll-behavior:none;
 }
 .app-shell.visible{
   display:block;
-  min-height:100vh;
-  min-height:100svh;
+  height:100dvh;
   background:var(--bg);
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
   overscroll-behavior:none;
 }
 

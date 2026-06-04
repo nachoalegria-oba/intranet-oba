@@ -24,6 +24,12 @@ function ico(name, size = 18) {
   return `<i class="ph-fill ph-${name}" style="font-size:${size}px;line-height:1;vertical-align:middle;flex-shrink:0"></i>`;
 }
 
+// --- Scroll helper (app-shell is the real scroll container on iOS) ---
+function scrollTop(smooth = true) {
+  const app = document.getElementById("app");
+  if (app) app.scrollTo({ top: 0, behavior: smooth ? "smooth" : "instant" });
+}
+
 // --- Recipe scaling helpers ---
 function _fmtNum(n) {
   if (n <= 0) return "0";
@@ -756,7 +762,7 @@ function sp(id) {
   document.getElementById(`panel-${id}`)?.classList.add("active");
   document.querySelector(`.nav-btn[data-panel="${id}"]`)?.classList.add("active");
   document.querySelector(`.hnav-btn[data-panel="${id}"]`)?.classList.add("active");
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  scrollTop();
   closeHamburger();
   // Hide pedido float bar when leaving pedidos panel
   const fb = document.getElementById("ped-float-bar");
@@ -776,7 +782,7 @@ function showIDPanel() {
   document.getElementById("panel-id")?.classList.add("active");
   document.querySelector('.nav-btn[data-panel="id"]')?.classList.add("active");
   document.querySelector('.hnav-btn[data-panel="id"]')?.classList.add("active");
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  scrollTop();
   closeHamburger();
   const unlocked = sessionStorage.getItem(ID_SESSION_KEY) === "1";
   document.getElementById("id-gate").style.display = unlocked ? "none" : "flex";
@@ -834,12 +840,12 @@ function openIDProject(name, path) {
   document.getElementById("id-iframe-view").style.display = "block";
   document.getElementById("id-iframe-title").textContent = "I+D · " + name;
   document.getElementById("id-iframe").src = path;
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  scrollTop();
 }
 
 function closeIDProject() {
   showIDGrid();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  scrollTop();
 }
 
 function printIDProject() {
@@ -3563,7 +3569,7 @@ function showGrupoPanel() {
   document.getElementById("panel-grupo")?.classList.add("active");
   document.querySelector('.nav-btn[data-panel="grupo"]')?.classList.add("active");
   document.querySelector('.hnav-btn[data-panel="grupo"]')?.classList.add("active");
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  scrollTop();
   closeHamburger();
 
   if (sessionStorage.getItem(CANITAS_SESSION_KEY) !== "1") {
