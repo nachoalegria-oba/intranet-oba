@@ -1471,23 +1471,44 @@ function rPedLista() {
   let entries = Object.entries(groups);
   if (pedSort) entries.sort((a, b) => a[0].localeCompare(b[0], "es"));
 
-  const activeCount = D.ingredientes.filter((item) => String(item.cant || "").trim()).length;
-  const activeProviders = new Set(D.ingredientes.filter((item) => String(item.cant || "").trim()).map((item) => pedidoProviderLabel(item.prov))).size;
+  const activeItems = D.ingredientes.filter((item) => String(item.cant || "").trim());
+  const activeCount = activeItems.length;
+  const activeProviders = new Set(activeItems.map((item) => pedidoProviderLabel(item.prov))).size;
+
+  // Build preview groups
+  const previewGroups = {};
+  activeItems.forEach((item) => {
+    const key = pedidoProviderLabel(item.prov);
+    if (!previewGroups[key]) previewGroups[key] = [];
+    previewGroups[key].push(item);
+  });
+  const previewCollapsed = sessionStorage.getItem("ped-preview-collapsed") === "1";
+
+  const previewBodyHtml = activeItems.length
+    ? Object.entries(previewGroups).map(([prov, items]) => `
+        <div class="ped-preview-group">
+          <div class="ped-preview-prov">${ico("storefront", 12)} ${safeText(prov)}</div>
+          <div class="ped-preview-chips">
+            ${items.map((item) => `
+              <div class="ped-preview-chip">
+                <span class="ped-preview-chip-name">${safeText(item.ing)}</span>
+                <span class="ped-preview-chip-qty">${safeText(item.cant)}</span>
+                <button class="ped-preview-chip-rm" onclick="event.stopPropagation();clearQty(${item.id})" title="Quitar cantidad">×</button>
+              </div>`).join("")}
+          </div>
+        </div>`).join("")
+    : `<div class="ped-preview-empty">${ico("basket", 22)}<span>Aún no has añadido cantidades. Rellena los campos de cantidad en la lista de abajo.</span></div>`;
 
   document.getElementById("pp-lista").innerHTML = `
-    <div class="pedido-summary">
-      <div class="pedido-stat">
-        <strong>${activeCount}</strong>
-        <span>Líneas activas en el pedido</span>
+    <div class="ped-preview">
+      <div class="ped-preview-head" onclick="togglePedPreview()">
+        <div class="ped-preview-title">
+          ${ico("receipt", 16)} Pedido actual
+          ${activeCount ? `<span class="ped-preview-count">${activeCount} ítem${activeCount !== 1 ? "s" : ""} · ${activeProviders} proveedor${activeProviders !== 1 ? "es" : ""}</span>` : `<span class="ped-preview-count ped-preview-count-empty">Vacío</span>`}
+        </div>
+        <span class="ped-preview-toggle">${ico(previewCollapsed ? "caret-down" : "caret-up", 16)}</span>
       </div>
-      <div class="pedido-stat">
-        <strong>${activeProviders}</strong>
-        <span>Proveedores implicados</span>
-      </div>
-      <div class="pedido-stat">
-        <strong>${entries.length}</strong>
-        <span>Bloques visibles en lista</span>
-      </div>
+      ${previewCollapsed ? "" : `<div class="ped-preview-body">${previewBodyHtml}</div>`}
     </div>
     <div class="pedido-list-groups">
       ${entries.length ? entries.map(([provider, providerItems]) => `
@@ -1535,6 +1556,19 @@ function uIng(id, field, value) {
   if (!ing) return;
   ing[field] = field === "cat" ? normalizeIngredientCategory(value) : value;
   save("ingredientes");
+}
+
+function clearQty(id) {
+  const ing = D.ingredientes.find((item) => item.id === id);
+  if (!ing) return;
+  ing.cant = "";
+  save("ingredientes");
+}
+
+function togglePedPreview() {
+  const collapsed = sessionStorage.getItem("ped-preview-collapsed") === "1";
+  sessionStorage.setItem("ped-preview-collapsed", collapsed ? "0" : "1");
+  rPedLista();
 }
 
 function dIng(id) {
