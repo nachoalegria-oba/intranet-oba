@@ -2346,9 +2346,9 @@ th,
 .home-stat-icon{ font-size:1.4rem; line-height:1; }
 .home-stat-value{
   display:block;
-  font-size:1.9rem;
-  font-weight:300;
-  font-family:'Unbounded',sans-serif;
+  font-size:2.6rem;
+  font-weight:700;
+  font-family:Arial,Helvetica,sans-serif;
   line-height:1;
   letter-spacing:-.02em;
   color:#111;
@@ -2442,7 +2442,7 @@ th,
   .home-greeting-title{ font-size:2rem; }
   .home-stats{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
   .home-stat-card{ padding:14px 12px; }
-  .home-stat-value{ font-size:1.4rem; }
+  .home-stat-value{ font-size:2rem; }
   .home-actions-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
   .hqa-card{ padding:14px 6px; }
   .hqa-icon{ font-size:1.4rem; }
