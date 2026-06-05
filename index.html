@@ -194,6 +194,15 @@
 
         <div class="toolbar pedido-toolbar" id="ped-action-toolbar">
           <input class="search-input" type="text" id="ped-search" placeholder="Buscar proveedor o ingrediente..." oninput="onPedSearch()">
+          <!-- Solo visible en escritorio; en móvil se usa el float bar -->
+          <div class="ped-toolbar-chips ped-desktop-actions">
+            <button class="ped-chip ped-chip-save" onclick="guardarPedidoActual()">
+              <i class="ph-fill ph-floppy-disk"></i> Guardar pedido
+            </button>
+            <button class="ped-chip ped-chip-clear" onclick="limpiarPedido()">
+              <i class="ph-fill ph-trash"></i> Limpiar
+            </button>
+          </div>
         </div>
 
         <div id="pp-lista"></div>
