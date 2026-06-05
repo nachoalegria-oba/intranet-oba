@@ -604,6 +604,15 @@ td select:focus{
   white-space:nowrap;
 }
 
+/* En móvil los chips del toolbar se ocultan (usa el float bar) */
+@media (max-width:720px){
+  .ped-desktop-actions{ display:none !important; }
+}
+/* En escritorio el float bar no se muestra */
+@media (min-width:721px){
+  .ped-float-bar{ display:none !important; }
+}
+
 /* Chips compactos de acción en pedidos */
 .ped-toolbar-chips{
   display:flex;
