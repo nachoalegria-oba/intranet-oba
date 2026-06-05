@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GT × OBA · Garum de Atún · Programa de fermentación proteica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700;9..144,900&family=Archivo:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F2EFE7; --paper2:#F9F7F0; --ink:#0E1922; --ink2:#3A4148;
+    --blue:#1B4965; --blue2:#62B6CB; --gold:#C9A227; --olive:#6B7F4E;
+    --coral:#E07A5F; --line:#D8D3C4; --line2:#E7E2D2; --gray:#A8A296; --grayd:#6E695E;
+    --amber:#B5560A; --crimson:#7E1E36; --rust:#C95E0A; --bronze:#8B6914;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:'Archivo',ui-sans-serif,'Helvetica Neue',Arial,sans-serif;
+    background:var(--paper); color:var(--ink);
+    line-height:1.45; -webkit-font-smoothing:antialiased;
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(181,86,10,.05), transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(201,162,39,.04), transparent 40%),
+      linear-gradient(90deg,rgba(0,0,0,.018) 1px,transparent 1px);
+    background-size:auto,auto,64px 100%;
+  }
+  .wrap{max-width:1100px;margin:0 auto;padding:0 22px 80px}
+  .mono{font-family:'DM Mono',ui-monospace,monospace}
+  .serif{font-family:'Fraunces',serif}
+
+  /* ---------- HEADER ---------- */
+  header{padding:30px 0 18px;border-bottom:3px solid var(--ink);position:relative}
+  .meta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
+    font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--grayd);
+    font-weight:600;margin-bottom:22px}
+  .meta b{color:var(--ink)}
+  .meta .pill{background:var(--ink);color:var(--paper);padding:4px 10px;letter-spacing:.1em}
+  .amberbar{height:6px;background:var(--amber);width:54px;margin-bottom:14px}
+  h1{font-family:'Fraunces',serif;font-size:clamp(48px,11vw,116px);line-height:.88;
+    font-weight:900;letter-spacing:-.04em;font-variation-settings:"opsz" 144}
+  h1 em{font-style:italic;color:var(--amber);font-weight:500;font-variation-settings:"opsz" 144}
+  h1 .x{color:var(--gold);font-weight:700;font-style:normal;margin:0 .05em}
+  .lede{margin-top:18px;font-family:'Fraunces',serif;font-style:italic;font-size:clamp(15px,2.2vw,21px);
+    color:var(--ink2);line-height:1.4;max-width:62ch;font-weight:400}
+  .deck{margin-top:14px;font-size:11.5px;letter-spacing:.04em;color:var(--grayd);max-width:72ch}
+
+  /* ---------- SECTION TITLES ---------- */
+  .sec{margin-top:64px}
+  .sechd{display:flex;align-items:baseline;gap:14px;border-bottom:1.5px solid var(--ink);
+    padding-bottom:8px;margin-bottom:24px}
+  .sechd .no{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--amber);
+    letter-spacing:.05em}
+  .sechd h2{font-family:'Fraunces',serif;font-size:clamp(22px,3.8vw,32px);font-weight:700;
+    letter-spacing:-.02em}
+  .sechd .tag{margin-left:auto;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--grayd);font-weight:600}
+
+  /* ---------- KPI ---------- */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1.5px solid var(--ink)}
+  .kpi{padding:18px 16px 16px;border-right:1.5px solid var(--ink);position:relative;
+    opacity:0;transform:translateY(14px);animation:rise .6s forwards}
+  .kpi:last-child{border-right:0}
+  .kpi .lab{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--grayd);font-weight:700}
+  .kpi .val{font-family:'Fraunces',serif;font-size:clamp(32px,6.5vw,52px);font-weight:700;
+    letter-spacing:-.03em;margin-top:10px;line-height:1}
+  .kpi .sub{font-size:11px;color:var(--grayd);margin-top:6px;font-weight:500}
+  .kpi.amber{background:var(--amber)} .kpi.amber .lab,.kpi.amber .sub{color:rgba(255,255,255,.7)} .kpi.amber .val{color:#fff}
+  .kpi.gold{background:var(--gold)} .kpi.gold .lab,.kpi.gold .sub{color:rgba(0,0,0,.55)} .kpi.gold .val{color:var(--ink)}
+  .kpi.dark{background:var(--ink)} .kpi.dark .lab,.kpi.dark .sub{color:var(--gray)} .kpi.dark .val{color:#fff}
+  @keyframes rise{to{opacity:1;transform:none}}
+
+  /* ---------- OBJETIVO ---------- */
+  .obj{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;margin-top:22px;
+    border:1.5px solid var(--ink);background:var(--paper2)}
+  .obj .col{padding:18px 20px;border-right:1.5px solid var(--line2)}
+  .obj .col:last-child{border-right:0}
+  .obj h4{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);font-weight:800;margin-bottom:8px}
+  .obj p{font-size:12.5px;color:var(--ink2);line-height:1.55}
+
+  /* ---------- BASES (5 CORTES) ---------- */
+  .bases{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+  .base{border:1.5px solid var(--ink);background:var(--paper2);position:relative;
+    display:flex;flex-direction:column;min-height:380px}
+  .base .swatch{height:78px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;
+    font-family:'Fraunces',serif;font-size:34px;letter-spacing:-.02em;position:relative;overflow:hidden}
+  .base .swatch::after{content:"";position:absolute;inset:0;
+    background:radial-gradient(circle at 70% 30%,rgba(255,255,255,.2),transparent 60%)}
+  .base .swatch .badge{position:absolute;top:7px;right:7px;font-family:'DM Mono',monospace;
+    font-size:8.5px;letter-spacing:.1em;padding:3px 7px;background:rgba(0,0,0,.4);color:#fff;
+    font-weight:600;border:1px solid rgba(255,255,255,.5);z-index:1}
+  .base.b1 .swatch{background:linear-gradient(160deg,#C95E0A,#8B3200)}
+  .base.b2 .swatch{background:linear-gradient(160deg,#D4941A,#9B6800)}
+  .base.b3 .swatch{background:linear-gradient(160deg,#7E1E36,#4A0F1E)}
+  .base.b4 .swatch{background:linear-gradient(160deg,#6B4F2E,#3E2A12)}
+  .base.b5 .swatch{background:linear-gradient(160deg,#B5560A,#7E3500)}
+  .base .body{padding:12px 13px 13px;flex:1;display:flex;flex-direction:column}
+  .base .code{font-family:'DM Mono',monospace;font-size:10.5px;color:var(--amber);font-weight:500;letter-spacing:.05em}
+  .base .nm{font-family:'Fraunces',serif;font-size:16px;font-weight:700;letter-spacing:-.01em;margin-top:4px;line-height:1.15}
+  .base .notes{font-size:11px;color:var(--ink2);margin-top:8px;line-height:1.45;flex:1}
+  .base .specs{margin-top:10px;display:flex;flex-direction:column;gap:3px;border-top:1px dashed var(--line);padding-top:8px}
+  .base .specs div{display:flex;justify-content:space-between;font-size:10px;gap:6px}
+  .base .specs .k{color:var(--grayd);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+  .base .specs .v{font-family:'DM Mono',monospace;color:var(--ink);font-weight:500;text-align:right}
+
+  /* ---------- PROTOCOLO (cultivos equiv.) ---------- */
+  .pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .pgroup{border:1.5px solid var(--ink);background:var(--paper2)}
+  .pgroup .ghd{padding:11px 14px;display:flex;align-items:baseline;gap:10px;border-bottom:1.5px solid var(--ink)}
+  .pgroup .ghd .gt{font-family:'Fraunces',serif;font-size:16px;font-weight:700;letter-spacing:-.01em}
+  .pgroup .ghd .gs{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;opacity:.85;margin-left:auto;font-weight:600}
+  .pgroup.sal .ghd{background:var(--amber);color:#fff}
+  .pgroup.temp .ghd{background:var(--gold);color:var(--ink)}
+  .pgroup.enz .ghd{background:var(--crimson);color:#fff}
+  .pgroup ul{list-style:none;padding:6px 0}
+  .pgroup li{padding:9px 14px;border-bottom:1px solid var(--line2);font-size:12px;display:grid;
+    grid-template-columns:50px 1fr;gap:10px;align-items:baseline}
+  .pgroup li:last-child{border-bottom:0}
+  .pgroup li .sk{font-family:'DM Mono',monospace;font-size:10.5px;font-weight:500;color:var(--amber)}
+  .pgroup li .nm{font-family:'Fraunces',serif;font-style:italic;font-weight:500}
+  .pgroup li .nt{display:block;font-style:normal;font-family:'Archivo',sans-serif;
+    color:var(--grayd);font-size:10.5px;margin-top:2px;font-weight:500;line-height:1.4}
+
+  /* ---------- VARIABLES DE PROCESO ---------- */
+  .vargrid{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border:1.5px solid var(--ink);background:var(--paper2)}
+  .vcat{padding:14px 14px 16px;border-right:1.5px solid var(--ink)}
+  .vcat:last-child{border-right:0}
+  .vcat .bt{font-family:'Fraunces',serif;font-style:italic;font-size:14px;font-weight:500;color:var(--amber)}
+  .vcat .bn{font-family:'Fraunces',serif;font-weight:700;font-size:18px;margin-top:2px;line-height:1.1;letter-spacing:-.01em}
+  .vcat ul{list-style:none;margin-top:10px}
+  .vcat li{font-size:11.5px;padding:3px 0;color:var(--ink2);border-bottom:1px dotted var(--line)}
+  .vcat li:last-child{border-bottom:0}
+  @media(max-width:760px){.vargrid{grid-template-columns:repeat(2,1fr)}.vcat{border-bottom:1.5px solid var(--ink)}.vcat:nth-child(even){border-right:0}}
+
+  /* ---------- MATRIZ ---------- */
+  .matrixwrap{border:1.5px solid var(--ink);background:var(--paper2);overflow:auto}
+  table.matrix{border-collapse:collapse;width:100%;font-size:11.5px;min-width:780px}
+  table.matrix th,table.matrix td{border:1px solid var(--line);padding:0;text-align:center;vertical-align:middle}
+  table.matrix thead th{background:var(--ink);color:#fff;font-size:10px;letter-spacing:.05em;
+    text-transform:uppercase;font-weight:700;padding:8px 5px;border-color:#000;line-height:1.2}
+  table.matrix thead th .ab{font-family:'DM Mono',monospace;display:block;font-size:9px;color:var(--gold);font-weight:500;margin-top:2px;letter-spacing:.1em}
+  table.matrix tbody th{background:var(--paper);text-align:left;padding:9px 11px;font-weight:700;
+    font-family:'Fraunces',serif;font-size:13px;letter-spacing:-.01em;width:160px;line-height:1.2}
+  table.matrix tbody th small{display:block;font-family:'DM Mono',monospace;font-size:9.5px;color:var(--amber);font-weight:500;margin-top:3px;letter-spacing:.05em}
+  .cell{width:100%;height:62px;cursor:pointer;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:3px;transition:.15s;font-family:'DM Mono',monospace;background:#fff}
+  .cell:hover{background:var(--paper)}
+  .cell .ico{font-size:18px;line-height:1}
+  .cell .id{font-size:8.5px;color:var(--grayd);letter-spacing:.02em}
+  .cell[data-st="0"]{background:#fff}
+  .cell[data-st="1"]{background:#F2EAD8}.cell[data-st="1"] .ico{color:var(--amber)}
+  .cell[data-st="2"]{background:#FBF1D6}.cell[data-st="2"] .ico{color:var(--gold)}
+  .cell[data-st="3"]{background:#E2EDDB}.cell[data-st="3"] .ico{color:var(--olive)}
+  .cell[data-st="4"]{background:var(--ink);color:#fff}.cell[data-st="4"] .ico{color:var(--gold)}.cell[data-st="4"] .id{color:#fff}
+  .stkey{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-size:11px;color:var(--ink2)}
+  .stkey span{display:flex;align-items:center;gap:7px}
+  .stkey i{width:14px;height:14px;border:1px solid var(--line);display:inline-block}
+  .stkey .s1{background:#F2EAD8}.stkey .s2{background:#FBF1D6}.stkey .s3{background:#E2EDDB}.stkey .s4{background:var(--ink)}
+
+  /* ---------- FICHA FERMENTACIÓN ---------- */
+  .ficha{border:1.5px solid var(--ink);background:#fff;padding:0;overflow:hidden}
+  .fhd{display:grid;grid-template-columns:1fr 1fr 1fr;background:var(--ink);color:#fff}
+  .fhd .ft{padding:14px 18px;border-right:1.5px solid rgba(255,255,255,.18)}
+  .fhd .ft:last-child{border-right:0}
+  .fhd .ft .l{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--gold);font-weight:700}
+  .fhd .ft .v{font-family:'Fraunces',serif;font-size:18px;font-weight:700;margin-top:5px;letter-spacing:-.01em}
+  .fhd .ft .v small{font-family:'DM Mono',monospace;font-size:10.5px;color:var(--gray);display:block;margin-top:2px;font-weight:400}
+  .fsec{padding:16px 18px;border-bottom:1px solid var(--line2)}
+  .fsec:last-child{border-bottom:0}
+  .fsec h5{font-family:'Fraunces',serif;font-style:italic;font-size:13px;color:var(--amber);font-weight:500;margin-bottom:10px;
+    display:flex;align-items:baseline;gap:10px}
+  .fsec h5::before{content:"";flex:none;width:24px;height:1px;background:var(--amber)}
+  .frow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:6px}
+  .field{border:1px solid var(--line);padding:7px 9px;background:var(--paper2)}
+  .field .fl{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--grayd);font-weight:700}
+  .field .fv{font-family:'DM Mono',monospace;font-size:13px;color:var(--ink);margin-top:3px;height:18px;
+    border-bottom:1px dashed var(--line)}
+  .field.wide{grid-column:span 2}
+  .field.full{grid-column:span 4}
+  table.curva{width:100%;border-collapse:collapse;margin-top:8px;font-size:10.5px}
+  table.curva th,table.curva td{border:1px solid var(--line);padding:6px 7px;text-align:center}
+  table.curva th{background:var(--paper);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--grayd);font-weight:700}
+  table.curva td{height:24px;font-family:'DM Mono',monospace}
+
+  /* ---------- CATA ---------- */
+  .catagrid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+  .radarbox{border:1.5px solid var(--ink);padding:18px;background:var(--paper2)}
+  .radarbox h4{font-family:'Fraunces',serif;font-size:14px;font-weight:700;margin-bottom:10px;letter-spacing:-.01em}
+  .radarbox p{font-size:11px;color:var(--grayd);margin-top:10px;line-height:1.5}
+  .radar{width:100%;height:auto}
+  .descbox{border:1.5px solid var(--ink);background:var(--paper2);padding:18px}
+  .descbox h4{font-family:'Fraunces',serif;font-size:14px;font-weight:700;margin-bottom:12px}
+  .descfam{margin-bottom:14px}
+  .descfam .fl{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--amber);font-weight:800;margin-bottom:5px}
+  .descfam .chips{display:flex;flex-wrap:wrap;gap:5px}
+  .chip{font-size:10.5px;padding:3px 9px;background:#fff;border:1px solid var(--line);color:var(--ink2);font-family:'DM Mono',monospace}
+
+  /* ---------- MARIDAJE ---------- */
+  .pairing{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+  .pair{border:1.5px solid var(--ink);background:var(--paper2);padding:0;display:flex;flex-direction:column;min-height:200px}
+  .pair .ph{padding:9px 12px;color:#fff;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.05em}
+  .pair.p1 .ph{background:#8B3200}
+  .pair.p2 .ph{background:#9B6800}
+  .pair.p3 .ph{background:#4A0F1E}
+  .pair.p4 .ph{background:#3E2A12}
+  .pair.p5 .ph{background:#7E3500}
+  .pair .pb{padding:12px;display:flex;flex-direction:column;gap:9px;flex:1}
+  .pair .pl{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--grayd);font-weight:700}
+  .pair .pn{font-family:'Fraunces',serif;font-size:13px;font-weight:600;line-height:1.2;letter-spacing:-.01em}
+  .pair .pdiv{border-top:1px dashed var(--line);margin:2px 0}
+
+  /* ---------- GANTT ---------- */
+  .gantt{border:1.5px solid var(--ink);overflow:hidden;background:var(--paper2)}
+  .gweeks{display:grid;grid-template-columns:170px repeat(12,1fr);background:var(--ink);color:var(--gray)}
+  .gweeks div{font-size:9px;text-align:center;padding:6px 0;font-family:'DM Mono',monospace;
+    border-right:1px solid rgba(255,255,255,.08)}
+  .gweeks div:first-child{text-align:left;padding-left:14px;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+  .grow{display:grid;grid-template-columns:170px repeat(12,1fr);border-top:1px solid var(--line2);
+    align-items:center;min-height:46px;background:#fff}
+  .grow:nth-child(even){background:var(--paper2)}
+  .grow .gname{font-size:11.5px;font-weight:700;padding:8px 14px;text-transform:uppercase;letter-spacing:.02em;line-height:1.2}
+  .grow .gname small{display:block;font-weight:500;color:var(--grayd);font-size:9.5px;letter-spacing:0;text-transform:none;margin-top:2px;font-family:'Fraunces',serif;font-style:italic}
+  .gtrack{grid-column:2 / -1;position:relative;height:100%;display:flex;align-items:center}
+  .gbarwrap{position:absolute;height:18px}
+  .gbar{height:100%;background:var(--ink);transform:scaleX(0);transform-origin:left;
+    animation:grow .8s forwards cubic-bezier(.2,.8,.2,1)}
+  .gbar.amber{background:var(--amber)}
+  .gbar.gold{background:var(--gold)}
+  .gbar.olive{background:var(--olive)}
+  .gbar.coral{background:var(--coral)}
+  .gbar.crimson{background:var(--crimson)}
+  @keyframes grow{to{transform:scaleX(1)}}
+  .glab{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:9px;color:#fff;
+    font-weight:700;white-space:nowrap;letter-spacing:.03em;pointer-events:none;font-family:'DM Mono',monospace}
+  .gbar.gold + .glab{color:var(--ink)}
+
+  /* ---------- REGISTRO DE LOTES ---------- */
+  .save-status{margin-bottom:14px;padding:12px 16px;border:1.5px solid var(--ink);background:var(--paper2);
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .save-status .sdot{width:10px;height:10px;border-radius:50%;background:var(--olive);flex:none;
+    box-shadow:0 0 0 3px rgba(107,127,78,.2)}
+  .save-status .smain{flex:1;min-width:200px}
+  .save-status .stitle{font-family:'Fraunces',serif;font-weight:700;font-size:14px;letter-spacing:-.01em}
+  .save-status .ssub{font-size:11px;color:var(--grayd);margin-top:2px;font-family:'DM Mono',monospace}
+  .save-status .sbrowser{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;
+    padding:4px 9px;background:var(--ink);color:#fff;font-weight:600}
+  .toggle{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--ink2);cursor:pointer;user-select:none}
+  .toggle input{appearance:none;width:34px;height:18px;background:var(--line);border:1.5px solid var(--ink);
+    position:relative;cursor:pointer;transition:.2s;flex:none}
+  .toggle input::after{content:"";position:absolute;left:1px;top:1px;width:12px;height:12px;
+    background:var(--ink);transition:.2s}
+  .toggle input:checked{background:var(--amber)}
+  .toggle input:checked::after{left:18px;background:#fff}
+  .toast{position:fixed;bottom:30px;right:30px;background:var(--ink);color:#fff;padding:13px 22px;
+    font-family:'DM Mono',monospace;font-size:12px;font-weight:600;letter-spacing:.04em;
+    box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:1000;opacity:0;transform:translateY(20px);
+    transition:opacity .25s,transform .25s;pointer-events:none;border-left:4px solid var(--olive)}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .toast.warn{border-left-color:var(--gold)}
+  .toast.error{border-left-color:var(--coral)}
+  .first-warn{margin-bottom:16px;padding:14px 16px;background:#FFF6D6;border:1.5px solid var(--gold);
+    font-size:12.5px;line-height:1.55;color:var(--ink2)}
+  .first-warn b{color:var(--ink)}
+  .first-warn button{font-family:inherit;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    padding:5px 11px;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;margin-top:8px}
+  .first-warn button:hover{background:var(--ink);color:#fff}
+
+  .ledger-ctrl{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+  .ledger-ctrl button{font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.08em;
+    text-transform:uppercase;padding:9px 18px;border:1.5px solid var(--ink);cursor:pointer;transition:.15s}
+  .ledger-ctrl .pr{background:var(--ink);color:#fff}
+  .ledger-ctrl .pr:hover{background:var(--amber);border-color:var(--amber)}
+  .ledger-ctrl .sc{background:transparent;color:var(--ink)}
+  .ledger-ctrl .sc:hover{background:var(--line2)}
+  .ledger-ctrl .count{margin-left:auto;font-family:'DM Mono',monospace;font-size:11px;color:var(--grayd)}
+  .batchform{border:1.5px solid var(--ink);background:var(--paper2);padding:22px;margin-bottom:22px}
+  .batchform h4{font-family:'Fraunces',serif;font-size:17px;font-weight:700;margin-bottom:18px;letter-spacing:-.01em}
+  .fgroup{margin-bottom:16px}
+  .fgroup .glabel{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--amber);
+    font-weight:800;margin-bottom:9px;padding-bottom:5px;border-bottom:1px solid var(--line2)}
+  .fgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .inp{display:flex;flex-direction:column;gap:4px}
+  .inp label{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--grayd);font-weight:700}
+  .inp input,.inp select,.inp textarea{font-family:'DM Mono',monospace;font-size:12.5px;padding:8px 10px;
+    border:1px solid var(--line);background:#fff;color:var(--ink);width:100%;outline:none;transition:.15s}
+  .inp input:focus,.inp select:focus,.inp textarea:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(181,86,10,.1)}
+  .inp textarea{font-family:'Archivo',sans-serif;min-height:66px;resize:vertical;line-height:1.45}
+  .inp.wide{grid-column:span 2}
+  .inp.full{grid-column:span 4}
+  .formrow{display:flex;gap:10px;margin-top:18px;border-top:1px solid var(--line2);padding-top:16px}
+
+  .batchgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .batch{border:1.5px solid var(--ink);background:var(--paper2);display:flex;flex-direction:column;overflow:hidden}
+  .batch .bhd{display:flex;align-items:center;gap:10px;padding:10px 14px;color:#fff}
+  .batch.r1 .bhd{background:#8B3200}.batch.r2 .bhd{background:#9B6800}
+  .batch.r3 .bhd{background:#4A0F1E}.batch.r4 .bhd{background:#3E2A12}.batch.r5 .bhd{background:#7E3500}
+  .batch .bcode{font-family:'DM Mono',monospace;font-size:11.5px;font-weight:600;letter-spacing:.04em}
+  .batch .bdate{font-family:'DM Mono',monospace;font-size:10.5px;opacity:.85;margin-left:auto}
+  .batch .bverdict{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;padding:3px 7px;
+    background:rgba(255,255,255,.18);font-weight:700;color:#fff;border:1px solid rgba(255,255,255,.45)}
+  .batch .bverdict.descartar{background:rgba(0,0,0,.4);border-color:rgba(255,255,255,.4)}
+  .batch .bverdict.escalar{background:#FFE680;color:var(--ink);border-color:#FFE680}
+  .batch .bverdict.iterar{background:rgba(255,255,255,.3)}
+  .batch .bbody{padding:13px 15px;flex:1;display:flex;flex-direction:column;gap:10px}
+  .batch .brecipe{font-family:'Fraunces',serif;font-size:13.5px;font-weight:600;letter-spacing:-.01em}
+  .batch .bstrain{font-family:'DM Mono',monospace;font-size:10.5px;color:var(--amber);font-style:normal;margin-left:4px}
+  .batch .bgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .batch .bstat{display:flex;flex-direction:column;gap:2px}
+  .batch .bstat .k{font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--grayd);font-weight:700}
+  .batch .bstat .v{font-family:'DM Mono',monospace;font-size:12.5px;color:var(--ink);font-weight:500}
+  .batch .bnote{font-size:11.5px;color:var(--ink2);line-height:1.5;border-top:1px dashed var(--line);padding-top:9px}
+  .batch .bnote b{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;font-weight:700;margin-right:6px}
+  .batch .bactions{display:flex;gap:8px;padding:9px 14px;border-top:1px solid var(--line2);background:var(--paper)}
+  .batch .bactions button{font-family:inherit;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    padding:5px 11px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;transition:.15s}
+  .batch .bactions button:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .batch .bactions .del:hover{background:var(--coral);border-color:var(--coral);color:#fff}
+  .emptybox{text-align:center;padding:52px 20px;border:1.5px dashed var(--line);background:var(--paper2);
+    font-family:'Fraunces',serif;font-style:italic;color:var(--grayd);font-size:15px}
+  .emptybox b{color:var(--ink);font-family:'Archivo',sans-serif;font-style:normal;font-weight:700}
+
+  @media(max-width:760px){
+    .fgrid{grid-template-columns:repeat(2,1fr)}.inp.wide,.inp.full{grid-column:span 2}
+    .batchgrid{grid-template-columns:1fr}.batch .bgrid{grid-template-columns:repeat(2,1fr)}
+  }
+  @media print{
+    .ledger-ctrl,.batchform,.batch .bactions{display:none}
+    .batchgrid{grid-template-columns:repeat(2,1fr)}
+    .emptybox{display:none}
+  }
+
+  /* ---------- ACTIONS ---------- */
+  .actions{display:flex;gap:10px;margin:24px 0 0;flex-wrap:wrap}
+  .actions button{font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.08em;
+    text-transform:uppercase;padding:11px 20px;border:1.5px solid var(--ink);cursor:pointer;transition:.15s}
+  .actions .pr{background:var(--ink);color:#fff}
+  .actions .pr:hover{background:var(--amber);border-color:var(--amber)}
+  .actions .sc{background:transparent;color:var(--ink)}
+  .actions .sc:hover{background:var(--line2)}
+
+  /* ---------- NOTE / FOOTER ---------- */
+  .note{margin-top:30px;border-left:4px solid var(--amber);background:var(--paper2);
+    padding:16px 18px;font-size:12px;color:var(--ink2);line-height:1.6}
+  .note b{color:var(--amber)}
+  footer{margin-top:50px;padding-top:20px;border-top:1.5px solid var(--ink);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
+    font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--grayd);font-weight:600}
+
+  @media(max-width:900px){
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .kpi:nth-child(2){border-right:0}
+    .kpi:nth-child(1),.kpi:nth-child(2){border-bottom:1.5px solid var(--ink)}
+    .bases,.pairing{grid-template-columns:repeat(2,1fr)}
+    .pgrid{grid-template-columns:1fr}
+    .obj{grid-template-columns:1fr}.obj .col{border-right:0;border-bottom:1px solid var(--line2)}
+    .catagrid{grid-template-columns:1fr}
+    .frow{grid-template-columns:repeat(2,1fr)}.field.wide{grid-column:span 2}.field.full{grid-column:span 2}
+    .gweeks,.grow{grid-template-columns:110px repeat(12,1fr)}.gweeks div:nth-child(even){display:none}
+  }
+  @media print{
+    body{background:#fff;background-image:none}
+    .actions{display:none}
+    .sec{break-inside:avoid-page}
+    .ficha{break-before:page}
+    .cell,.gbar,.kpi{animation:none!important;opacity:1!important;transform:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="meta">
+      <span><b>Oba</b> · I+D y Fermentación · Casas Ibáñez</span>
+      <span class="pill">Proyecto GT·OBA</span>
+      <span>v 1.0 · <b id="today"></b></span>
+    </div>
+    <div class="amberbar"></div>
+    <h1>Garum <em>de Atún</em><br><span style="font-size:.55em;letter-spacing:-.02em">GT <span class="x">×</span> Oba</span></h1>
+    <p class="lede">Un programa de fermentación proteica a partir de cinco cortes del atún rojo — autólisis enzimática controlada en sal, maduración en cámara y destilación de umami líquido hacia un condimento de alta cocina para la mesa de Oba.</p>
+    <p class="deck">Cinco cortes definidos · lomo, ventresca, sangre y vísceras, cola, albacore · fermentación halófila con bacterias endógenas · variables clave: sal%, temperatura, TAN, pH y AW · cronograma de 6–12 meses.</p>
+  </header>
+
+  <!-- 01 RESUMEN -->
+  <section class="sec">
+    <div class="sechd"><span class="no">01 ·</span><h2>Resumen</h2><span class="tag">Panel de control</span></div>
+    <div class="kpis">
+      <div class="kpi" style="animation-delay:.05s"><div class="lab">Cortes (bases)</div><div class="val">5</div><div class="sub">Lomo · ventresca · sangre · cola · albacore</div></div>
+      <div class="kpi amber" style="animation-delay:.12s"><div class="lab">Sal óptima</div><div class="val">20<small style="font-size:.45em;color:rgba(255,255,255,.7)"> %</small></div><div class="sub">Rango 15–30 % NaCl</div></div>
+      <div class="kpi gold" style="animation-delay:.19s"><div class="val">50<small style="font-size:.45em;color:rgba(0,0,0,.5)"> °C</small></div><div class="lab">Temperatura acelerada</div><div class="sub">o 25 °C ambiente · 37 °C cámara</div></div>
+      <div class="kpi dark" style="animation-delay:.26s"><div class="lab">Maduración mínima</div><div class="val">3<small style="font-size:.45em;color:var(--gray)"> MES</small></div><div class="sub">Óptimo 6–12 meses</div></div>
+    </div>
+
+    <div class="obj">
+      <div class="col">
+        <h4>Objetivo</h4>
+        <p>Desarrollar un garum de atún de alta cocina para Oba: un condimento líquido umami obtenido por fermentación halófila y autólisis enzimática de diferentes cortes del atún, con perfil sensorial definido por corte y protocolo replicable en producción propia.</p>
+      </div>
+      <div class="col">
+        <h4>Hipótesis</h4>
+        <p>Las enzimas endógenas del atún (proteasas, lipasas) actúan sobre las proteínas y lípidos generando péptidos umami (TAN &gt; 300 mg N/100 mL), aminoácidos libres y ácidos grasos de cadena corta. La sal actúa de conservante selectivo favoreciendo bacterias halófilas beneficiosas.</p>
+      </div>
+      <div class="col">
+        <h4>Criterios de éxito</h4>
+        <p>TAN &gt; 300 mg N/100 mL · pH 5,5–6,5 · AW &lt; 0,90 · sin patógenos (Salmonella, Listeria) · perfil aromático complejo pero limpio · validación organoléptica positiva por cocina Oba en al menos 3 elaboraciones del menú.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 CORTES -->
+  <section class="sec">
+    <div class="sechd"><span class="no">02 ·</span><h2>Cortes · 5 bases</h2><span class="tag">Diferentes perfiles proteicos y grasos</span></div>
+    <div class="bases">
+      <div class="base b1">
+        <div class="swatch">L<span class="badge">MÚSCULO</span></div>
+        <div class="body">
+          <div class="code">GT·LOM · C01</div>
+          <div class="nm">Lomo</div>
+          <div class="notes">Músculo rojo oscuro, bajo en grasa y alto en proteína miofibrilar. Alto contenido en mioglobina. Produce garum oscuro, intenso, muy salino y limpio. El más «clásico» y referencial.</div>
+          <div class="specs">
+            <div><span class="k">Proteína</span><span class="v">~28 g/100 g</span></div>
+            <div><span class="k">Grasa</span><span class="v">~5 g/100 g</span></div>
+            <div><span class="k">Color</span><span class="v">Ámbar oscuro</span></div>
+            <div><span class="k">Perfil</span><span class="v">Marino intenso</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="base b2">
+        <div class="swatch">V<span class="badge">GRASA</span></div>
+        <div class="body">
+          <div class="code">GT·VEN · C02</div>
+          <div class="nm">Ventresca</div>
+          <div class="notes">Vientre del atún, rico en grasa intramuscular (Omega-3). Las lipasas generan ácidos grasos aromáticos durante la fermentación. Garum más untuoso, con notas de curado y mayor persistencia.</div>
+          <div class="specs">
+            <div><span class="k">Proteína</span><span class="v">~22 g/100 g</span></div>
+            <div><span class="k">Grasa</span><span class="v">~22 g/100 g</span></div>
+            <div><span class="k">Color</span><span class="v">Ámbar dorado</span></div>
+            <div><span class="k">Perfil</span><span class="v">Untuoso, curado</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="base b3">
+        <div class="swatch">S<span class="badge">VISCERAL</span></div>
+        <div class="body">
+          <div class="code">GT·SAN · C03</div>
+          <div class="nm">Sangre y vísceras</div>
+          <div class="notes">Combinación de sangre y vísceras (hígado, corazón, bazo). Alto contenido enzimático endógeno que acelera la autólisis. Produce el garum más complejo y profundo, con notas fermentativas pronunciadas.</div>
+          <div class="specs">
+            <div><span class="k">Enzimas</span><span class="v">Muy alto</span></div>
+            <div><span class="k">Hierro</span><span class="v">~3 mg/100 g</span></div>
+            <div><span class="k">Color</span><span class="v">Rojo oscuro</span></div>
+            <div><span class="k">Perfil</span><span class="v">Profundo, mineral</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="base b4">
+        <div class="swatch">C<span class="badge">COLÁGENO</span></div>
+        <div class="body">
+          <div class="code">GT·COL · C04</div>
+          <div class="nm">Cola</div>
+          <div class="notes">Músculo blanco de cola, con tejido conectivo y colágeno. La gelatina que genera el colágeno da cuerpo y viscosidad al líquido resultante. Notas más suaves, textura más densa.</div>
+          <div class="specs">
+            <div><span class="k">Proteína</span><span class="v">~25 g/100 g</span></div>
+            <div><span class="k">Colágeno</span><span class="v">Alto</span></div>
+            <div><span class="k">Color</span><span class="v">Marrón tostado</span></div>
+            <div><span class="k">Perfil</span><span class="v">Cuerpo, gelatinoso</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="base b5">
+        <div class="swatch">A<span class="badge">BLEND</span></div>
+        <div class="body">
+          <div class="code">GT·ALB · C05</div>
+          <div class="nm">Albacore blend</div>
+          <div class="notes">Mezcla de cortes de atún blanco (albacore), perfil más suave y claro que el rojo. Proteína de alto valor, menor contenido en myoglobina. Garum más delicado, apto para elaboraciones sutiles.</div>
+          <div class="specs">
+            <div><span class="k">Proteína</span><span class="v">~26 g/100 g</span></div>
+            <div><span class="k">Grasa</span><span class="v">~7 g/100 g</span></div>
+            <div><span class="k">Color</span><span class="v">Ámbar claro</span></div>
+            <div><span class="k">Perfil</span><span class="v">Suave, limpio</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p style="margin-top:12px;font-size:11px;color:var(--grayd);line-height:1.5">
+      <b style="color:var(--ink)">Notación:</b> <span class="mono">TAN</span> = Total Amino Nitrogen (nitrógeno alfa-amino total), indicador de madurez del garum · objetivo &gt; 300 mg N/100 mL · <span class="mono">AW</span> = actividad de agua, controla la seguridad microbiológica.
+    </p>
+  </section>
+
+  <!-- 03 PROTOCOLOS -->
+  <section class="sec">
+    <div class="sechd"><span class="no">03 ·</span><h2>Protocolos de elaboración</h2><span class="tag">3 vías · enzimas · sal · tiempo</span></div>
+    <div class="pgrid">
+      <div class="pgroup sal">
+        <div class="ghd"><span class="gt">Sal y conservación</span><span class="gs">NaCl</span></div>
+        <ul>
+          <li><span class="sk">S-15</span><span><span class="nm">Sal 15 %</span><span class="nt">Mínimo inhibitorio. Fermentación más activa, mayor riesgo. Rápido.</span></span></li>
+          <li><span class="sk">S-20</span><span><span class="nm">Sal 20 %</span><span class="nt">Referencia estándar garum clásico. Balance seguridad/actividad.</span></span></li>
+          <li><span class="sk">S-25</span><span><span class="nm">Sal 25 %</span><span class="nt">Alta salinidad. Seguro, lento. Notas más concentradas y persistentes.</span></span></li>
+          <li><span class="sk">S-30</span><span><span class="nm">Sal 30 %</span><span class="nt">Máxima inhibición. Proceso muy lento (12+ meses), resultado estable.</span></span></li>
+          <li><span class="sk">MIX</span><span><span class="nm">Sal + azúcar</span><span class="nt">Sal 20 % + 5 % azúcar. Estimula bacterias halófilas lácticas.</span></span></li>
+        </ul>
+      </div>
+      <div class="pgroup temp">
+        <div class="ghd"><span class="gt">Temperatura</span><span class="gs">°C</span></div>
+        <ul>
+          <li><span class="sk">T-04</span><span><span class="nm">Cámara fría (4 °C)</span><span class="nt">Muy lento, máxima pureza aromática. 12+ meses.</span></span></li>
+          <li><span class="sk">T-25</span><span><span class="nm">Ambiente (25 °C)</span><span class="nt">Estándar. 6–9 meses. Referencia romana (garum tradicional).</span></span></li>
+          <li><span class="sk">T-37</span><span><span class="nm">Cámara (37 °C)</span><span class="nt">Acelerado moderado. 3–6 meses. Compromiso calidad/tiempo.</span></span></li>
+          <li><span class="sk">T-50</span><span><span class="nm">Baño María (50 °C)</span><span class="nt">Acelerado fuerte. 4–8 semanas. Perfil diferente — más cocinado.</span></span></li>
+          <li><span class="sk">CICLO</span><span><span class="nm">Ciclo 37/25 °C</span><span class="nt">Día a 37 °C, noche a 25 °C. Imita maduración estival natural.</span></span></li>
+        </ul>
+      </div>
+      <div class="pgroup enz">
+        <div class="ghd"><span class="gt">Enzimas añadidas</span><span class="gs">Aceleración</span></div>
+        <ul>
+          <li><span class="sk">PA</span><span><span class="nm">Proteasa alcalina</span><span class="nt">Acelera hidrólisis proteica. Añadir al inicio.</span></span></li>
+          <li><span class="sk">PB</span><span><span class="nm">Proteasa neutra</span><span class="nt">Actúa en pH 6–7. Más selectiva, menos amargo.</span></span></li>
+          <li><span class="sk">LIP</span><span><span class="nm">Lipasa</span><span class="nt">Libera ácidos grasos aromáticos de la ventresca.</span></span></li>
+          <li><span class="sk">KJI</span><span><span class="nm">Koji (A. oryzae)</span><span class="nt">Mezcla de proteasas + amilasas. Añade complejidad.</span></span></li>
+          <li><span class="sk">AUTO</span><span><span class="nm">Solo autólisis</span><span class="nt">Sin enzimas externas. Solo enzimas endógenas del atún.</span></span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 VARIABLES -->
+  <section class="sec">
+    <div class="sechd"><span class="no">04 ·</span><h2>Variables de proceso</h2><span class="tag">5 parámetros críticos</span></div>
+    <div class="vargrid">
+      <div class="vcat">
+        <div class="bt">parámetro</div><div class="bn">Sal (%)</div>
+        <ul>
+          <li>15 % — mínimo seguro</li>
+          <li>20 % — referencia clásica</li>
+          <li>25 % — alta conservación</li>
+          <li>30 % — máxima estabilidad</li>
+          <li>Mezcla marina (NaCl + KCl)</li>
+        </ul>
+      </div>
+      <div class="vcat">
+        <div class="bt">parámetro</div><div class="bn">Temp. (°C)</div>
+        <ul>
+          <li>4 °C — cámara refrigerada</li>
+          <li>25 °C — ambiente</li>
+          <li>37 °C — cámara caliente</li>
+          <li>50 °C — baño María</li>
+          <li>Ciclo día/noche</li>
+        </ul>
+      </div>
+      <div class="vcat">
+        <div class="bt">parámetro</div><div class="bn">TAN</div>
+        <ul>
+          <li>Inicio: 50–80 mg N/100 mL</li>
+          <li>Joven: 100–200 mg N/100 mL</li>
+          <li>Maduro: 200–300 mg N/100 mL</li>
+          <li>Óptimo: &gt; 300 mg N/100 mL</li>
+          <li>Medición: cada 2–4 semanas</li>
+        </ul>
+      </div>
+      <div class="vcat">
+        <div class="bt">parámetro</div><div class="bn">pH</div>
+        <ul>
+          <li>Inicio: pH 6,0–6,5</li>
+          <li>Evolución: descenso gradual</li>
+          <li>Objetivo: pH 5,5–6,0</li>
+          <li>Alarma: pH &lt; 5,0</li>
+          <li>Ajuste: bicarbonato si &lt; 5,2</li>
+        </ul>
+      </div>
+      <div class="vcat">
+        <div class="bt">parámetro</div><div class="bn">AW</div>
+        <ul>
+          <li>Inicio: ~0,96–0,98</li>
+          <li>Con sal 20 %: ~0,88</li>
+          <li>Con sal 25 %: ~0,84</li>
+          <li>Objetivo: AW &lt; 0,90</li>
+          <li>Control: higrómetro de punto de rocío</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 MATRIZ -->
+  <section class="sec">
+    <div class="sechd"><span class="no">05 ·</span><h2>Matriz de experimentos</h2><span class="tag">Pulsa cada celda para avanzar el estado</span></div>
+    <div class="matrixwrap">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th style="background:var(--paper);color:var(--ink);text-align:left;padding-left:12px">Corte ↓ · Tratamiento →</th>
+            <th>Sal 15 %<span class="ab">T25 · AUTO</span></th>
+            <th>Sal 20 %<span class="ab">T25 · AUTO</span></th>
+            <th>Sal 25 %<span class="ab">T25 · AUTO</span></th>
+            <th>Sal 20 %<span class="ab">T50 · ACE</span></th>
+            <th>Sal 20 %<span class="ab">T37 · KOJI</span></th>
+            <th>Sal 20 %<span class="ab">T37 · PA</span></th>
+          </tr>
+        </thead>
+        <tbody id="mbody"></tbody>
+      </table>
+    </div>
+    <div class="stkey">
+      <span><i></i> Sin definir</span>
+      <span><i class="s1"></i> Planificado</span>
+      <span><i class="s2"></i> En curso</span>
+      <span><i class="s3"></i> Catado</span>
+      <span><i class="s4"></i> Seleccionado</span>
+      <span style="margin-left:auto" class="mono"><b id="cnt">0</b> de 30 ensayos marcados</span>
+    </div>
+    <p style="margin-top:14px;font-size:11.5px;color:var(--grayd);line-height:1.6">
+      <b style="color:var(--ink)">Sistema de códigos:</b> <span class="mono" style="color:var(--amber)">GT-[CORTE]-[SAL%]-[TEMP]-[##]</span> · ejemplo <span class="mono" style="color:var(--amber)">GT-LOM-20-T37-01</span> = Garum Atún de Lomo, 20 % sal, 37 °C, primer lote. Cada ensayo se replica n=3 mínimo.
+    </p>
+  </section>
+
+  <!-- 06 REGISTRO -->
+  <section class="sec">
+    <div class="sechd"><span class="no">06 ·</span><h2>Registro de lotes</h2><span class="tag">Diario digital · sincronizado en la nube</span></div>
+
+    <div class="save-status">
+      <div class="sdot" id="sdot"></div>
+      <div class="smain">
+        <div class="stitle" id="stitle">— lotes guardados</div>
+        <div class="ssub" id="ssub">Último cambio: —</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <button id="linkFileBtn" class="sc" style="padding:6px 12px;font-size:10.5px" onclick="linkFile()">Vincular JSON</button>
+        <span id="linkFileInfo" style="display:none;font-family:'DM Mono',monospace;font-size:10px;opacity:.75"></span>
+      </div>
+      <span class="sbrowser" id="sbrowser">—</span>
+    </div>
+
+    <div class="first-warn" id="firstwarn" style="display:none">
+      <b>Este navegador no tiene lotes guardados todavía.</b><br>
+      Los datos del registro se guardan dentro del navegador en el que trabajas. Si tenías lotes guardados en otro navegador u ordenador, pulsa <b>"Restaurar JSON"</b> y elige tu último backup.
+      <br><button onclick="dismissFirstWarn()">Entendido</button>
+    </div>
+
+    <div class="ledger-ctrl">
+      <button class="pr" onclick="toggleForm()">+ Nuevo lote</button>
+      <button class="sc" onclick="exportJSON()">Backup JSON</button>
+      <button class="sc" onclick="document.getElementById('jsonimport').click()">Restaurar JSON</button>
+      <button class="sc" onclick="exportCSV()">CSV</button>
+      <button class="sc" onclick="clearAllBatches()">Vaciar</button>
+      <input type="file" id="jsonimport" accept=".json,application/json" style="display:none" onchange="importJSON(event)">
+      <span class="count" id="bcount">0 lotes</span>
+    </div>
+
+    <div class="batchform" id="batchform" style="display:none">
+      <h4 id="formTitle">Nuevo lote</h4>
+
+      <div class="fgroup">
+        <div class="glabel">Identificación</div>
+        <div class="fgrid">
+          <div class="inp"><label>Código de muestra</label><input id="f_code" placeholder="GT-LOM-20-T37-01"></div>
+          <div class="inp"><label>Corte / base</label><select id="f_recipe">
+            <option value="">— Elegir —</option>
+            <option value="C01">C01 · Lomo</option>
+            <option value="C02">C02 · Ventresca</option>
+            <option value="C03">C03 · Sangre y vísceras</option>
+            <option value="C04">C04 · Cola</option>
+            <option value="C05">C05 · Albacore blend</option>
+          </select></div>
+          <div class="inp"><label>Fecha inicio</label><input type="date" id="f_date"></div>
+          <div class="inp"><label>Réplica</label><input id="f_replica" placeholder="1 / 3"></div>
+        </div>
+      </div>
+
+      <div class="fgroup">
+        <div class="glabel">Formulación</div>
+        <div class="fgrid">
+          <div class="inp"><label>Sal (%)</label><input id="f_sal" type="number" step="0.5" placeholder="20"></div>
+          <div class="inp"><label>Temp. ferment. (°C)</label><input id="f_temp" type="number" step="0.5" placeholder="37"></div>
+          <div class="inp"><label>Peso muestra (g)</label><input id="f_vol" type="number" step="10" placeholder="500"></div>
+          <div class="inp"><label>Enzimas añadidas</label><input id="f_strain" placeholder="Koji / PA / AUTO"></div>
+          <div class="inp wide"><label>Botánico / aditivo</label><input id="f_bot" placeholder="Ej: 2 % koji de cebada · proteasa neutra 0,1 %"></div>
+          <div class="inp"><label>Dosis enzima</label><input id="f_dose" placeholder="0,1 % p/p"></div>
+        </div>
+      </div>
+
+      <div class="fgroup">
+        <div class="glabel">Parámetros analíticos</div>
+        <div class="fgrid">
+          <div class="inp"><label>pH inicial</label><input id="f_ph0" type="number" step="0.01"></div>
+          <div class="inp"><label>pH final</label><input id="f_ph1" type="number" step="0.01"></div>
+          <div class="inp"><label>TAN inicial (mg N/100 mL)</label><input id="f_b0" type="number" step="1"></div>
+          <div class="inp"><label>TAN final (mg N/100 mL)</label><input id="f_b1" type="number" step="1"></div>
+          <div class="inp"><label>AW</label><input id="f_abv" type="number" step="0.001" placeholder="0.88"></div>
+          <div class="inp"><label>TA (g NaCl/100 mL)</label><input id="f_ta" type="number" step="0.1"></div>
+          <div class="inp"><label>Duración</label><input id="f_dur" placeholder="8 semanas"></div>
+          <div class="inp"><label>Color / aspecto</label><input id="f_co2" placeholder="ámbar oscuro, claro…"></div>
+        </div>
+      </div>
+
+      <div class="fgroup">
+        <div class="glabel">Evaluación</div>
+        <div class="fgrid">
+          <div class="inp full"><label>Notas de cata</label><textarea id="f_tasting" placeholder="Aroma · gusto · umami · salinidad · amargor · persistencia · notas marinas · defectos…"></textarea></div>
+          <div class="inp full"><label>Observaciones técnicas</label><textarea id="f_notes" placeholder="Incidencias durante la fermentación, desvíos, aspecto visual, evolución TAN, próximos pasos"></textarea></div>
+          <div class="inp wide"><label>Veredicto</label><select id="f_verdict">
+            <option value="pendiente">Pendiente</option>
+            <option value="descartar">Descartar</option>
+            <option value="repetir">Repetir</option>
+            <option value="iterar">Iterar</option>
+            <option value="escalar">Escalar</option>
+          </select></div>
+          <div class="inp wide"><label>Uso sugerido en cocina</label><input id="f_pair" placeholder="Tartar · crudo · salsa · fondo…"></div>
+        </div>
+      </div>
+
+      <div class="formrow">
+        <button class="pr" onclick="saveBatch()" style="font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:11px 22px;border:1.5px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer">Guardar lote</button>
+        <button class="sc" onclick="cancelForm()" style="font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:11px 22px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer">Cancelar</button>
+      </div>
+    </div>
+
+    <div class="batchgrid" id="batchgrid"></div>
+    <div class="emptybox" id="batchempty">Aún no has registrado ningún lote. Pulsa <b>+ Nuevo lote</b> para empezar el diario.</div>
+  </section>
+
+  <!-- 07 FICHA FERMENTACIÓN -->
+  <section class="sec">
+    <div class="sechd"><span class="no">07 ·</span><h2>Ficha de fermentación</h2><span class="tag">Plantilla A4 imprimible</span></div>
+    <div class="ficha">
+      <div class="fhd">
+        <div class="ft"><div class="l">Código de muestra</div><div class="v">GT-___-__-____-__<small>CORTE · SAL% · TEMP · LOTE</small></div></div>
+        <div class="ft"><div class="l">Operario</div><div class="v">__________________<small>Iniciales · fecha de inicio</small></div></div>
+        <div class="ft"><div class="l">Réplica</div><div class="v">n = ___ / ___<small>De un total de réplicas</small></div></div>
+      </div>
+
+      <div class="fsec">
+        <h5>Materia prima</h5>
+        <div class="frow">
+          <div class="field"><div class="fl">Corte</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">Peso bruto (g)</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">Peso neto (g)</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">Proveedor / origen</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">Sal añadida (%)</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">Tipo de sal</div><div class="fv"></div></div>
+          <div class="field wide"><div class="fl">Enzimas / aditivos</div><div class="fv"></div></div>
+        </div>
+      </div>
+
+      <div class="fsec">
+        <h5>Condiciones de fermentación</h5>
+        <div class="frow">
+          <div class="field"><div class="fl">Temperatura (°C)</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">Recipiente</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">Sellado / tapado</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">Volteos / semana</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">Humedad relativa (%)</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">Iluminación</div><div class="fv"></div></div>
+          <div class="field wide"><div class="fl">Observaciones iniciales</div><div class="fv"></div></div>
+        </div>
+      </div>
+
+      <div class="fsec">
+        <h5>Parámetros iniciales (T0)</h5>
+        <div class="frow">
+          <div class="field"><div class="fl">pH₀</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">TAN₀ (mg N/100 mL)</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">AW₀</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">NaCl (%)</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">Color visual</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">Aspecto / turbidez</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">Aroma inicial</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">Líquido liberado (mL)</div><div class="fv"></div></div>
+        </div>
+      </div>
+
+      <div class="fsec">
+        <h5>Curva de maduración</h5>
+        <table class="curva">
+          <thead><tr><th>Semana</th><th>pH</th><th>TAN (mg N)</th><th>AW</th><th>Temp. (°C)</th><th>Aroma</th><th>Acción</th></tr></thead>
+          <tbody>
+            <tr><td>S0</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>S2</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>S4</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>S8</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>S12</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>S16</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>S24</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>Final</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="fsec">
+        <h5>Filtrado y acabado</h5>
+        <div class="frow">
+          <div class="field"><div class="fl">Rendimiento (mL)</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">% rendimiento</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">Filtración (µm)</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">pH final</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">TAN final</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">AW final</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">Color final</div><div class="fv"></div></div>
+          <div class="field"><div class="fl">Pasteurización</div><div class="fv"></div></div>
+        </div>
+      </div>
+
+      <div class="fsec">
+        <h5>Veredicto</h5>
+        <div class="frow">
+          <div class="field full"><div class="fl">Conclusión técnica</div><div class="fv" style="height:38px"></div></div>
+          <div class="field wide"><div class="fl">Continuidad</div><div class="fv">□ Descartar  □ Repetir  □ Iterar  □ Escalar</div></div>
+          <div class="field wide"><div class="fl">Siguiente paso</div><div class="fv"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="pr" onclick="window.print()">Imprimir ficha + dosier</button>
+      <button class="sc" onclick="resetMatrix()">Reiniciar matriz</button>
+    </div>
+  </section>
+
+  <!-- 08 CATA SENSORIAL -->
+  <section class="sec">
+    <div class="sechd"><span class="no">08 ·</span><h2>Evaluación sensorial</h2><span class="tag">Hoja de cata</span></div>
+    <div class="catagrid">
+      <div class="radarbox">
+        <h4>Perfil sensorial · radar</h4>
+        <svg class="radar" viewBox="0 0 460 460" id="radar" xmlns="http://www.w3.org/2000/svg"></svg>
+        <p>Escala 0–5 en 8 ejes. Trazado de referencia (línea discontinua) sobre el que dibujar el perfil real de cada muestra. Imprimible para anotar en cata ciega.</p>
+      </div>
+      <div class="descbox">
+        <h4>Léxico aromático del garum</h4>
+        <div class="descfam">
+          <div class="fl">Umami / sabroso</div>
+          <div class="chips">
+            <span class="chip">caldo de pescado</span><span class="chip">carne curada</span><span class="chip">salazón</span>
+            <span class="chip">parmesano</span><span class="chip">katsuobushi</span><span class="chip">soja</span>
+          </div>
+        </div>
+        <div class="descfam">
+          <div class="fl">Marino</div>
+          <div class="chips">
+            <span class="chip">mar abierto</span><span class="chip">alga seca</span><span class="chip">yodo</span>
+            <span class="chip">ostra</span><span class="chip">caviar</span><span class="chip">sal de roca</span>
+          </div>
+        </div>
+        <div class="descfam">
+          <div class="fl">Fermentativo</div>
+          <div class="chips">
+            <span class="chip">ahumado suave</span><span class="chip">caramelo salado</span><span class="chip">vinagre suave</span>
+            <span class="chip">nuez</span><span class="chip">tostado</span><span class="chip">ancho</span>
+          </div>
+        </div>
+        <div class="descfam">
+          <div class="fl">Graso / untuoso</div>
+          <div class="chips">
+            <span class="chip">mantequilla tostada</span><span class="chip">omega-3</span><span class="chip">seboso</span>
+            <span class="chip">noisette</span><span class="chip">aceite de oliva</span>
+          </div>
+        </div>
+        <div class="descfam">
+          <div class="fl">Defectos a vigilar</div>
+          <div class="chips">
+            <span class="chip" style="border-color:var(--coral);color:var(--coral)">rancio</span>
+            <span class="chip" style="border-color:var(--coral);color:var(--coral)">podrido</span>
+            <span class="chip" style="border-color:var(--coral);color:var(--coral)">amoniacal</span>
+            <span class="chip" style="border-color:var(--coral);color:var(--coral)">sulfuroso</span>
+            <span class="chip" style="border-color:var(--coral);color:var(--coral)">metálico</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 09 MARIDAJE -->
+  <section class="sec">
+    <div class="sechd"><span class="no">09 ·</span><h2>Aplicaciones en cocina</h2><span class="tag">Cinco cortes · cocina Oba</span></div>
+    <div class="pairing">
+      <div class="pair p1"><div class="ph">C01 · LOMO</div><div class="pb">
+        <div><div class="pl">Carácter</div><div class="pn">Marino intenso, umami puro, salino, limpio y persistente</div></div>
+        <div class="pdiv"></div>
+        <div><div class="pl">Aplicación</div><div class="pn">Tartar de res · crudo de vieira · salsa de pasta · aliño de crudités · unas gotas en caldo de pollo para potenciar umami</div></div>
+        <div class="pdiv"></div>
+        <div><div class="pl">Dosis</div><div class="pn">5–15 mL por ración · sustituto parcial de sal</div></div>
+      </div></div>
+      <div class="pair p2"><div class="ph">C02 · VENTRESCA</div><div class="pb">
+        <div><div class="pl">Carácter</div><div class="pn">Untuoso, graso, curado, Omega-3, mayor cuerpo y persistencia</div></div>
+        <div class="pdiv"></div>
+        <div><div class="pl">Aplicación</div><div class="pn">Crema de marisco · bisque de bogavante · risotto · maionesa negra · mantequilla compuesta de mar</div></div>
+        <div class="pdiv"></div>
+        <div><div class="pl">Dosis</div><div class="pn">10–20 mL · ideal para salsas emulsionadas</div></div>
+      </div></div>
+      <div class="pair p3"><div class="ph">C03 · SANGRE Y VÍSCERAS</div><div class="pb">
+        <div><div class="pl">Carácter</div><div class="pn">Profundo, mineral, cárnico, umami oscuro, complejo y punzante</div></div>
+        <div class="pdiv"></div>
+        <div><div class="pl">Aplicación</div><div class="pn">Fondos oscuros de carne · salsas de caza · morcilla · jugo de asado · adobo de carnes rojas</div></div>
+        <div class="pdiv"></div>
+        <div><div class="pl">Dosis</div><div class="pn">3–8 mL · usar con cautela, muy intenso</div></div>
+      </div></div>
+      <div class="pair p4"><div class="ph">C04 · COLA</div><div class="pb">
+        <div><div class="pl">Carácter</div><div class="pn">Gelatinoso, suave, cuerpo sedoso, umami delicado y limpio</div></div>
+        <div class="pdiv"></div>
+        <div><div class="pl">Aplicación</div><div class="pn">Consomés · sopas de miso · dashi · gelées · lácteos salados · noquis en mantequilla</div></div>
+        <div class="pdiv"></div>
+        <div><div class="pl">Dosis</div><div class="pn">10–25 mL · ideal para caldos y sopas</div></div>
+      </div></div>
+      <div class="pair p5"><div class="ph">C05 · ALBACORE BLEND</div><div class="pb">
+        <div><div class="pl">Carácter</div><div class="pn">Suave, delicado, limpio, umami claro sin notas pesadas</div></div>
+        <div class="pdiv"></div>
+        <div><div class="pl">Aplicación</div><div class="pn">Ceviches · escabeches · vegetales al vapor · aliños de ensalada · sashimi · vinagretas de mar</div></div>
+        <div class="pdiv"></div>
+        <div><div class="pl">Dosis</div><div class="pn">5–15 mL · la versión más versátil de la paleta</div></div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 10 CRONOGRAMA -->
+  <section class="sec">
+    <div class="sechd"><span class="no">10 ·</span><h2>Cronograma</h2><span class="tag">12 meses · 5 fases</span></div>
+    <div class="gantt">
+      <div class="gweeks" id="gweeks"></div>
+      <div id="grows"></div>
+    </div>
+  </section>
+
+  <div class="note">
+    <b>Notas de seguridad alimentaria.</b> El garum casero requiere una concentración mínima de <b>sal del 15 % p/p</b> para inhibir patógenos. Toda fermentación debe realizarse con utensilios esterilizados y en recipientes de vidrio o cerámica no porosa. Controlar pH y AW cada 2 semanas. Si el producto desarrolla olores amónicales intensos, color verdoso o moho visible, descartar inmediatamente. Para uso en servicio al público, validar microbiológicamente (Salmonella, Listeria, Estafilococo) antes de introducir en el menú. El garum terminado se conserva en refrigeración (4 °C) o pasteurizado (70 °C / 30 min) para larga vida útil.
+  </div>
+
+  <footer>
+    <span>Oba · I+D &amp; Fermentación</span>
+    <span>Proyecto GT × OBA · Garum de Atún</span>
+    <span>v 1.0 · 2026</span>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+/* ---------- FIREBASE ---------- */
+const GT_FB_CFG = {
+  apiKey: "AIzaSyAUUgLnKnh1xUbCjis4nPoEzoLLrJp9loY",
+  authDomain: "intranet-oba.firebaseapp.com",
+  projectId: "intranet-oba",
+  storageBucket: "intranet-oba.firebasestorage.app",
+  messagingSenderId: "603055689454",
+  appId: "1:603055689454:web:4e25c2a58f6a42c9c0adff"
+};
+let gtDb;
+try {
+  firebase.app('gt-oba');
+  gtDb = firebase.firestore(firebase.app('gt-oba'));
+} catch(e) {
+  firebase.initializeApp(GT_FB_CFG, 'gt-oba');
+  gtDb = firebase.firestore(firebase.app('gt-oba'));
+}
+const GT_COL = 'gt_batches';
+
+/* ---------- DATA ---------- */
+const BASES = [
+  {code:'LOM', name:'Lomo',              color:'#8B3200'},
+  {code:'VEN', name:'Ventresca',         color:'#9B6800'},
+  {code:'SAN', name:'Sangre y vísceras', color:'#4A0F1E'},
+  {code:'COL', name:'Cola',              color:'#3E2A12'},
+  {code:'ALB', name:'Albacore blend',    color:'#7E3500'},
+];
+const TRTS = ['S15-T25','S20-T25','S25-T25','S20-T50','S20-KOJI','S20-PA'];
+
+const PHASES = [
+  ['Fase 1 · Diseño',       'Bibliografía · protocolos · sourcing', 0, 1,'amber'],
+  ['Fase 2 · Piloto',       'Primeros 5 lotes · 500 g cada uno',    1, 3,'gold'],
+  ['Fase 3 · Maduración',   'Fermentación controlada · medición TAN',3,8,'olive'],
+  ['Fase 4 · Cata',         'Evaluación sensorial · selección',      8,10,'coral'],
+  ['Fase 5 · Escalado',     'Producción · integración en menú Oba', 10,12,'crimson'],
+];
+
+/* ---------- HOY ---------- */
+document.getElementById('today').textContent = new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'});
+
+/* ---------- MATRIZ ---------- */
+let mState = {};
+try { const s=localStorage.getItem('gt_oba_matrix_v1'); if(s) mState=JSON.parse(s); } catch(e){}
+function saveM(){ try{ localStorage.setItem('gt_oba_matrix_v1', JSON.stringify(mState)); }catch(e){} }
+const ICONS = ['○','◐','◑','●','★'];
+function renderMatrix(){
+  const tb = document.getElementById('mbody');
+  tb.innerHTML = BASES.map(b => `
+    <tr>
+      <th>${b.name}<small>GT·${b.code}</small></th>
+      ${TRTS.map(t => {
+        const k = b.code+'·'+t;
+        const st = mState[k] || 0;
+        return `<td><div class="cell" data-st="${st}" data-k="${k}" onclick="bumpCell('${k}')">
+          <div class="ico">${ICONS[st]}</div>
+          <div class="id">${b.code}·${t}</div>
+        </div></td>`;
+      }).join('')}
+    </tr>`).join('');
+  updateCnt();
+}
+function bumpCell(k){
+  const cur = mState[k] || 0;
+  mState[k] = (cur+1) % 5;
+  if (mState[k]===0) delete mState[k];
+  saveM(); renderMatrix();
+}
+function updateCnt(){
+  const n = Object.values(mState).filter(v => v>0).length;
+  document.getElementById('cnt').textContent = n;
+}
+function resetMatrix(){
+  if(confirm('¿Reiniciar todas las celdas de la matriz?')){
+    mState={}; saveM(); renderMatrix();
+  }
+}
+renderMatrix();
+
+/* ---------- RADAR ---------- */
+(function radar(){
+  const cx=230, cy=230, R=130, axes=['Umami','Salinidad','Amargor','Cuerpo','Aroma marino','Persistencia','Intensidad','Limpieza'];
+  const N=axes.length;
+  let svg='';
+  for(let r=1;r<=5;r++){
+    const rr = R*r/5;
+    let pts='';
+    for(let i=0;i<N;i++){
+      const a = -Math.PI/2 + i*2*Math.PI/N;
+      pts += (cx+rr*Math.cos(a))+','+(cy+rr*Math.sin(a))+' ';
+    }
+    svg += `<polygon points="${pts.trim()}" fill="none" stroke="${r===5?'#0E1922':'#D8D3C4'}" stroke-width="${r===5?'1.5':'1'}"/>`;
+  }
+  for(let i=0;i<N;i++){
+    const a = -Math.PI/2 + i*2*Math.PI/N;
+    const x2 = cx+R*Math.cos(a), y2 = cy+R*Math.sin(a);
+    svg += `<line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="#D8D3C4" stroke-width="1"/>`;
+    const lx = cx+(R+30)*Math.cos(a), ly = cy+(R+30)*Math.sin(a);
+    const anchor = Math.abs(Math.cos(a))<0.2?'middle':(Math.cos(a)>0?'start':'end');
+    svg += `<text x="${lx}" y="${ly+4}" font-family="Archivo" font-size="11" font-weight="700" fill="#0E1922" text-anchor="${anchor}">${axes[i].toUpperCase()}</text>`;
+  }
+  const sample=[4,3,2,4,4,4,3,3];
+  let p='';
+  for(let i=0;i<N;i++){
+    const a = -Math.PI/2 + i*2*Math.PI/N;
+    const rr = R*sample[i]/5;
+    p += (cx+rr*Math.cos(a))+','+(cy+rr*Math.sin(a))+' ';
+  }
+  svg += `<polygon points="${p.trim()}" fill="rgba(181,86,10,.08)" stroke="#B5560A" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+  for(let i=0;i<N;i++){
+    const a = -Math.PI/2 + i*2*Math.PI/N;
+    const rr = R*sample[i]/5;
+    svg += `<circle cx="${cx+rr*Math.cos(a)}" cy="${cy+rr*Math.sin(a)}" r="3" fill="#C9A227"/>`;
+  }
+  for(let r=1;r<=5;r++){
+    svg += `<text x="${cx+3}" y="${cy-R*r/5+3}" font-family="DM Mono" font-size="8" fill="#A8A296">${r}</text>`;
+  }
+  document.getElementById('radar').innerHTML = svg;
+})();
+
+/* ---------- GANTT ---------- */
+const NM=12;
+let gw='<div>Fase</div>'; for(let i=1;i<=NM;i++) gw+=`<div>M${String(i).padStart(2,'0')}</div>`;
+document.getElementById('gweeks').innerHTML = gw;
+document.getElementById('grows').innerHTML = PHASES.map(([name,sub,start,end,cls],i)=>{
+  const left = start/NM*100, width = (end-start)/NM*100;
+  return `<div class="grow">
+    <div class="gname">${name}<small>${sub}</small></div>
+    <div class="gtrack">
+      <div class="gbarwrap" style="left:${left}%;width:${width}%">
+        <div class="gbar ${cls}" style="animation-delay:${.15+i*.1}s"></div>
+        <span class="glab">M${start+1}–M${end}</span>
+      </div>
+    </div>
+  </div>`;
+}).join('');
+
+/* ---------- REGISTRO DE LOTES ---------- */
+const RECIPE_NAMES = {C01:'Lomo',C02:'Ventresca',C03:'Sangre y vísceras',C04:'Cola',C05:'Albacore blend'};
+const RECIPE_CLASS = {C01:'r1',C02:'r2',C03:'r3',C04:'r4',C05:'r5'};
+const RECIPE_DEFAULTS = {
+  C01:{strain:'AUTO',  bot:'Solo autólisis',            sal:20, code:'LOM'},
+  C02:{strain:'LIP',   bot:'Lipasa + autólisis',        sal:20, code:'VEN'},
+  C03:{strain:'PA',    bot:'Proteasa alcalina 0,1 %',   sal:20, code:'SAN'},
+  C04:{strain:'AUTO',  bot:'Solo autólisis',            sal:20, code:'COL'},
+  C05:{strain:'KOJI',  bot:'Koji de cebada 5 %',        sal:20, code:'ALB'},
+};
+const FIELDS = ['code','recipe','date','replica','sal','temp','vol','strain','bot','dose','ph0','ph1','b0','b1','abv','ta','dur','co2','tasting','notes','verdict','pair'];
+
+let batches = [];
+let editId = null;
+let lastSavedAt = null;
+let fileHandle = null;
+
+function _idb(){
+  return new Promise((res,rej)=>{
+    const r=indexedDB.open('gt_oba_fsa_v1',1);
+    r.onupgradeneeded=e=>e.target.result.createObjectStore('h');
+    r.onsuccess=e=>res(e.target.result);
+    r.onerror=e=>rej(e.target.error);
+  });
+}
+async function _saveHandle(h){ const db=await _idb(); const tx=db.transaction('h','readwrite'); tx.objectStore('h').put(h,'fh'); return new Promise((res,rej)=>{tx.oncomplete=res;tx.onerror=e=>rej(e.target.error);}); }
+async function _loadHandle(){ const db=await _idb(); const tx=db.transaction('h','readonly'); const r=tx.objectStore('h').get('fh'); return new Promise((res,rej)=>{r.onsuccess=e=>res(e.target.result);r.onerror=e=>rej(e.target.error);}); }
+async function _clearHandle(){ const db=await _idb(); const tx=db.transaction('h','readwrite'); tx.objectStore('h').delete('fh'); }
+
+async function initFileLink(){
+  if(!('showSaveFilePicker' in window)) return;
+  try{
+    const h=await _loadHandle(); if(!h) return;
+    const perm=await h.queryPermission({mode:'readwrite'});
+    if(perm==='granted'||perm==='prompt'){ fileHandle=h; updateFileLinkStatus(); }
+  }catch(e){}
+}
+
+async function linkFile(){
+  if(!('showSaveFilePicker' in window)){ toast('Tu navegador no soporta esta función · usa Chrome o Edge','warn',4000); return; }
+  try{
+    const h=await window.showSaveFilePicker({
+      suggestedName:'gt_oba_backup.json',
+      types:[{description:'JSON backup',accept:{'application/json':['.json']}}]
+    });
+    fileHandle=h; await _saveHandle(h); updateFileLinkStatus();
+    toast('Vinculado: '+h.name+' · se actualizará solo al guardar','',3000);
+    if(batches.length) await writeToLinkedFile(true);
+  }catch(e){ if(e.name!=='AbortError') toast('Error: '+e.message,'error',4000); }
+}
+
+async function unlinkFile(){
+  fileHandle=null; await _clearHandle(); updateFileLinkStatus();
+  toast('Archivo desvinculado','warn',2500);
+}
+
+function updateFileLinkStatus(){
+  const btn=document.getElementById('linkFileBtn');
+  const info=document.getElementById('linkFileInfo');
+  if(!btn) return;
+  if(fileHandle){
+    btn.textContent='Desvincular'; btn.onclick=unlinkFile;
+    if(info){ info.textContent='auto · '+fileHandle.name; info.style.display='inline'; }
+  } else {
+    btn.textContent='Vincular JSON'; btn.onclick=linkFile;
+    if(info) info.style.display='none';
+  }
+}
+
+async function writeToLinkedFile(silent){
+  if(!fileHandle) return;
+  try{
+    const perm=await fileHandle.requestPermission({mode:'readwrite'});
+    if(perm!=='granted') return;
+    const data={version:1,exported:new Date().toISOString(),batches};
+    const w=await fileHandle.createWritable();
+    await w.write(JSON.stringify(data,null,2));
+    await w.close();
+    const info=document.getElementById('linkFileInfo');
+    if(info) info.textContent='auto · '+fileHandle.name;
+    if(!silent) toast('JSON actualizado','',1500);
+  }catch(e){ toast('Error al escribir en archivo: '+e.message,'error',4000); }
+}
+
+try{ const s=localStorage.getItem('gt_oba_batches_v1'); if(s) batches=JSON.parse(s); } catch(e){}
+try{ const t=localStorage.getItem('gt_oba_lastsaved_v1'); if(t) lastSavedAt=t; } catch(e){}
+const firstVisit = !localStorage.getItem('gt_oba_visited_v1');
+try{ localStorage.setItem('gt_oba_visited_v1','1'); } catch(e){}
+
+/* ---------- FIRESTORE SYNC ---------- */
+let _fsReady = false;
+
+async function _fsSave(){
+  try{
+    const fbBatch = gtDb.batch();
+    const snap = await gtDb.collection(GT_COL).get();
+    snap.docs.forEach(d => fbBatch.delete(d.ref));
+    batches.forEach((item, i) => {
+      fbBatch.set(gtDb.collection(GT_COL).doc(item.id), {...item, _i: i});
+    });
+    await fbBatch.commit();
+  } catch(e){ console.warn('GT Firestore save:', e); }
+}
+
+gtDb.collection(GT_COL).orderBy('_i').onSnapshot(snap => {
+  if(snap.metadata.hasPendingWrites) return;
+  const incoming = snap.docs.map(d => { const o={...d.data()}; delete o._i; return o; });
+  if(incoming.length > 0){
+    batches = incoming;
+    try{ localStorage.setItem('gt_oba_batches_v1', JSON.stringify(batches)); }catch(e){}
+    lastSavedAt = new Date().toISOString();
+    renderBatches(); updateSaveStatus();
+  } else if(!_fsReady && batches.length > 0){
+    _fsSave();
+  }
+  _fsReady = true;
+  const sub = document.getElementById('ssub');
+  if(sub) sub.textContent = 'Sincronizado · ' + new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+}, err => console.warn('GT onSnapshot:', err));
+
+function detectBrowser(){
+  const ua = navigator.userAgent;
+  if(/Edg\//.test(ua)) return 'Edge';
+  if(/Chrome\//.test(ua) && !/Edg\//.test(ua)) return 'Chrome';
+  if(/Firefox\//.test(ua)) return 'Firefox';
+  if(/Safari\//.test(ua) && !/Chrome\//.test(ua)) return 'Safari';
+  return 'navegador';
+}
+
+function saveBatches(){
+  try{
+    localStorage.setItem('gt_oba_batches_v1', JSON.stringify(batches));
+    lastSavedAt = new Date().toISOString();
+    localStorage.setItem('gt_oba_lastsaved_v1', lastSavedAt);
+    updateSaveStatus();
+    if(fileHandle && batches.length) writeToLinkedFile(true);
+    _fsSave();
+    return true;
+  } catch(e){
+    toast('Error al guardar: '+e.message, 'error', 6000);
+    return false;
+  }
+}
+
+function toast(msg, kind, ms){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show'+(kind?' '+kind:'');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>{ el.className = el.className.replace(' show',''); }, ms||2200);
+}
+
+function relTime(iso){
+  if(!iso) return '—';
+  const diff = (Date.now() - new Date(iso).getTime())/1000;
+  if(diff<10) return 'ahora mismo';
+  if(diff<60) return 'hace '+Math.round(diff)+' s';
+  if(diff<3600) return 'hace '+Math.round(diff/60)+' min';
+  if(diff<86400) return 'hace '+Math.round(diff/3600)+' h';
+  return new Date(iso).toLocaleString('es-ES',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+}
+
+function updateSaveStatus(){
+  document.getElementById('stitle').textContent = batches.length+' lote'+(batches.length===1?'':'s')+' guardado'+(batches.length===1?'':'s')+' ✓';
+  document.getElementById('ssub').textContent = 'Último cambio: '+relTime(lastSavedAt);
+  document.getElementById('sbrowser').textContent = detectBrowser();
+}
+
+function dismissFirstWarn(){ document.getElementById('firstwarn').style.display='none'; }
+
+function esc(s){ return String(s||'').replace(/[<>&"']/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function toggleForm(){
+  const f = document.getElementById('batchform');
+  if(f.style.display==='none'){
+    editId = null;
+    document.getElementById('formTitle').textContent = 'Nuevo lote';
+    FIELDS.forEach(k => { const el=document.getElementById('f_'+k); if(el) el.value=''; });
+    document.getElementById('f_date').value = new Date().toISOString().slice(0,10);
+    document.getElementById('f_verdict').value = 'pendiente';
+    f.style.display='block';
+    f.scrollIntoView({behavior:'smooth',block:'start'});
+  } else { f.style.display='none'; }
+}
+function cancelForm(){ document.getElementById('batchform').style.display='none'; editId=null; }
+
+document.getElementById('f_recipe').addEventListener('change', e => {
+  const r = e.target.value; const d = RECIPE_DEFAULTS[r]; if(!d) return;
+  if(!document.getElementById('f_strain').value) document.getElementById('f_strain').value = d.strain;
+  if(!document.getElementById('f_bot').value) document.getElementById('f_bot').value = d.bot;
+  if(!document.getElementById('f_sal').value) document.getElementById('f_sal').value = d.sal;
+  if(!document.getElementById('f_code').value){
+    const n = batches.filter(b => b.recipe===r).length + 1;
+    document.getElementById('f_code').value = `GT-${d.code}-20-T37-${String(n).padStart(2,'0')}`;
+  }
+});
+
+function saveBatch(){
+  const data = {};
+  FIELDS.forEach(k => { const el=document.getElementById('f_'+k); data[k]=el?el.value:''; });
+  if(!data.code){ toast('Falta el código de muestra', 'error', 3000); return; }
+  const isNew = !editId;
+  if(editId){
+    const idx = batches.findIndex(b => b.id===editId);
+    if(idx>=0) batches[idx] = {...batches[idx], ...data, id:editId};
+  } else {
+    data.id = 'b_'+Date.now();
+    batches.unshift(data);
+  }
+  if(saveBatches()){
+    toast(isNew ? 'Lote '+data.code+' guardado' : 'Lote '+data.code+' actualizado');
+    renderBatches(); cancelForm();
+  }
+}
+
+function editBatch(id){
+  const b = batches.find(x => x.id===id); if(!b) return;
+  editId = id;
+  document.getElementById('formTitle').textContent = 'Editar lote · '+b.code;
+  FIELDS.forEach(k => { const el=document.getElementById('f_'+k); if(el) el.value = b[k]||''; });
+  const f = document.getElementById('batchform');
+  f.style.display='block'; f.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function deleteBatch(id){
+  const b = batches.find(x => x.id===id); if(!b) return;
+  if(!confirm('¿Borrar el lote '+b.code+'?')) return;
+  batches = batches.filter(x => x.id!==id);
+  saveBatches(); renderBatches();
+  toast('Lote '+b.code+' borrado', 'warn');
+}
+
+function clearAllBatches(){
+  if(!batches.length){ toast('No hay lotes que borrar', 'warn'); return; }
+  if(!confirm('¿Borrar TODOS los lotes? Esta acción no se puede deshacer.')) return;
+  const n = batches.length;
+  batches = []; saveBatches(); renderBatches();
+  toast(n+' lotes borrados', 'warn');
+}
+
+function renderBatches(){
+  const grid = document.getElementById('batchgrid');
+  const empty = document.getElementById('batchempty');
+  document.getElementById('bcount').textContent = batches.length+' lote'+(batches.length===1?'':'s');
+  if(!batches.length){ grid.innerHTML=''; empty.style.display=''; return; }
+  empty.style.display='none';
+  grid.innerHTML = batches.map(b => {
+    const cls = RECIPE_CLASS[b.recipe] || 'r1';
+    const rname = RECIPE_NAMES[b.recipe] || b.recipe || '—';
+    const vCls = ['descartar','escalar','iterar'].includes(b.verdict)?b.verdict:'';
+    return `<div class="batch ${cls}">
+      <div class="bhd">
+        <span class="bcode">${esc(b.code)}</span>
+        <span class="bdate">${b.date||'—'}</span>
+        ${b.verdict&&b.verdict!=='pendiente'?`<span class="bverdict ${vCls}">${esc(b.verdict)}</span>`:''}
+      </div>
+      <div class="bbody">
+        <div class="brecipe">${esc(rname)}<span class="bstrain">${esc(b.strain||'')}</span></div>
+        <div class="bgrid">
+          <div class="bstat"><div class="k">Sal %</div><div class="v">${b.sal||'—'} %</div></div>
+          <div class="bstat"><div class="k">Temp.</div><div class="v">${b.temp||'—'} °C</div></div>
+          <div class="bstat"><div class="k">pH</div><div class="v">${b.ph0||'—'} → ${b.ph1||'—'}</div></div>
+          <div class="bstat"><div class="k">TAN final</div><div class="v">${b.b1||'—'}</div></div>
+        </div>
+        ${b.tasting||b.notes?`<div class="bnote">${b.tasting?`<b>CATA</b>${esc(b.tasting)}`:''}${b.notes?`${b.tasting?'<br>':''}<b>NOTAS</b>${esc(b.notes)}`:''}${b.pair?`<br><b>USO</b>${esc(b.pair)}`:''}</div>`:''}
+      </div>
+      <div class="bactions">
+        <button onclick="editBatch('${b.id}')">Editar</button>
+        <button class="del" onclick="deleteBatch('${b.id}')">Borrar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function exportJSON(){
+  const data = {version:1, project:'GT-OBA', exported:new Date().toISOString(), batches};
+  const a = document.createElement('a');
+  a.href = 'data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(data,null,2));
+  a.download = 'gt_oba_backup_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  toast('Backup JSON descargado');
+}
+
+function exportCSV(){
+  const cols = FIELDS;
+  const rows = [cols.join(','), ...batches.map(b => cols.map(k => '"'+(b[k]||'').toString().replace(/"/g,'""')+'"').join(','))];
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent(rows.join('\n'));
+  a.download = 'gt_oba_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  toast('CSV descargado');
+}
+
+function importJSON(event){
+  const file = event.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      const data = JSON.parse(e.target.result);
+      const imported = Array.isArray(data) ? data : (data.batches||[]);
+      if(!imported.length){ toast('El archivo no contiene lotes', 'warn'); return; }
+      if(!confirm(`¿Importar ${imported.length} lotes? Esto reemplazará los datos actuales.`)) return;
+      batches = imported;
+      saveBatches(); renderBatches();
+      toast(imported.length+' lotes importados');
+    }catch(err){ toast('Error al leer el JSON', 'error', 4000); }
+  };
+  reader.readAsText(file);
+  event.target.value='';
+}
+
+/* ---------- INIT ---------- */
+renderBatches();
+updateSaveStatus();
+if(firstVisit && !batches.length) document.getElementById('firstwarn').style.display='';
+initFileLink();
+</script>
+</body>
+</html>
