@@ -5996,126 +5996,229 @@ function fctGenerateReport(month, year) {
     return;
   }
 
-  const total = invoices.reduce((s, f) => s + (f.total_factura || 0), 0);
+  const totalConIva  = invoices.reduce((s,f) => s + (f.total_factura  || 0), 0);
+  const totalBase    = invoices.reduce((s,f) => s + (f.base_imponible || 0), 0);
+  const totalIva     = invoices.reduce((s,f) => s + (f.iva_total      || 0), 0);
+  const numFacturas  = invoices.length;
+
+  // Agrupación por proveedor
   const byProv = {};
   invoices.forEach(f => {
     const p = f.proveedor || "Sin proveedor";
-    if (!byProv[p]) byProv[p] = { invoices: [], total: 0 };
+    if (!byProv[p]) byProv[p] = { invoices: [], total: 0, base: 0, iva: 0 };
     byProv[p].invoices.push(f);
-    byProv[p].total += f.total_factura || 0;
+    byProv[p].total += f.total_factura  || 0;
+    byProv[p].base  += f.base_imponible || 0;
+    byProv[p].iva   += f.iva_total      || 0;
   });
+  const provSorted = Object.entries(byProv).sort((a,b) => b[1].total - a[1].total);
+  const maxProvTotal = provSorted[0]?.[1].total || 1;
 
-  const summaryRows = Object.entries(byProv).sort((a,b) => b[1].total - a[1].total).map(([prov, d]) => `
-    <tr>
-      <td>${escHtml(prov)}</td>
-      <td style="text-align:center">${d.invoices.length}</td>
-      <td style="text-align:right;font-weight:600">${d.total.toFixed(2)} €</td>
-      <td style="text-align:right;color:#888">${total > 0 ? Math.round(d.total/total*100) : 0}%</td>
-    </tr>`).join("");
+  // Paleta de colores para proveedores
+  const COLORS = ["#1a1a2e","#16213e","#0f3460","#533483","#e94560","#457b9d","#1d3557","#2b2d42"];
 
-  const detailSections = Object.entries(byProv).sort((a,b) => b[1].total - a[1].total).map(([prov, d]) => {
-    const invRows = d.invoices.map(f => {
-      const lineRows = (f.lineas||[]).map(l => `
-        <tr style="font-size:12px;color:#555">
-          <td style="padding-left:16px;color:#333">${escHtml(l.producto||"—")}</td>
-          <td style="text-align:center">${l.cantidad != null ? l.cantidad + " " + (l.unidad||"") : "—"}</td>
-          <td style="text-align:right">${l.precio_unitario != null ? l.precio_unitario.toFixed(2)+" €" : "—"}</td>
-          <td style="text-align:right">${l.precio_total != null ? l.precio_total.toFixed(2)+" €" : "—"}</td>
-        </tr>`).join("");
-      return `
-        <tr style="background:#f8f8f8">
-          <td style="font-weight:600;padding:6px 8px">${escHtml(f.numero_factura ? "Fac. "+f.numero_factura : "Sin número")}</td>
-          <td style="text-align:center;color:#666">${f.fecha||"—"}</td>
-          <td></td>
-          <td style="text-align:right;font-weight:700">${f.total_factura != null ? f.total_factura.toFixed(2)+" €" : "—"}</td>
-        </tr>
-        ${lineRows}`;
-    }).join("");
+  // ── Gráfico de barras horizontal por proveedor ──
+  const barRows = provSorted.map(([prov, d], i) => {
+    const pct = Math.round(d.total / totalConIva * 100);
+    const barW = Math.round(d.total / maxProvTotal * 100);
+    const color = COLORS[i % COLORS.length];
     return `
-      <div style="margin-bottom:28px">
-        <div style="font-size:15px;font-weight:700;color:#1a1a1a;padding:8px 0;border-bottom:2px solid #1a1a1a;margin-bottom:8px">${escHtml(prov)} <span style="font-weight:400;font-size:13px;color:#666">— ${d.total.toFixed(2)} €</span></div>
-        <table style="width:100%;border-collapse:collapse;font-size:13px">
-          <thead><tr style="color:#888;font-size:11px;text-transform:uppercase">
-            <th style="text-align:left;padding:4px 8px">Concepto</th>
-            <th style="text-align:center">Cantidad</th>
-            <th style="text-align:right">P.Unit.</th>
-            <th style="text-align:right">Total</th>
-          </tr></thead>
-          <tbody>${invRows}</tbody>
-        </table>
+      <div style="display:grid;grid-template-columns:160px 1fr 90px 44px;gap:10px;align-items:center;margin-bottom:11px">
+        <div style="font-size:12px;font-weight:600;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escHtml(prov)}">${escHtml(prov)}</div>
+        <div style="background:#f0f0f0;border-radius:4px;height:18px;overflow:hidden">
+          <div style="width:${barW}%;height:100%;background:${color};border-radius:4px;transition:width .3s"></div>
+        </div>
+        <div style="font-size:13px;font-weight:700;text-align:right;color:#1a1a1a">${d.total.toFixed(2)} €</div>
+        <div style="font-size:11px;color:#888;text-align:right">${pct}%</div>
       </div>`;
   }).join("");
 
+  // ── Top productos (por frecuencia) ──
+  const ingFreq = {};
+  invoices.forEach(f => (f.lineas||[]).forEach(l => {
+    const k = l.alias || l.producto || "";
+    if (k) ingFreq[k] = (ingFreq[k] || 0) + 1;
+  }));
+  const topIngs = Object.entries(ingFreq).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const topIngHtml = topIngs.map(([name, n]) =>
+    `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:12px">
+      <span style="color:#333">${escHtml(name)}</span>
+      <span style="font-weight:600;color:#1a1a1a">${n}×</span>
+    </div>`).join("");
+
+  // ── Detalle por proveedor (páginas siguientes) ──
+  const detailSections = provSorted.map(([prov, d], pi) => {
+    const color = COLORS[pi % COLORS.length];
+    const invSections = d.invoices.map(f => {
+      const lineRows = (f.lineas||[]).map(l => `
+        <tr>
+          <td style="padding-left:12px;color:#333;font-size:11.5px">${escHtml(l.alias || l.producto || "—")}</td>
+          <td style="text-align:center;font-size:11.5px;color:#555">${l.cantidad != null ? l.cantidad + " " + (l.unidad||"") : "—"}</td>
+          <td style="text-align:right;font-size:11.5px;color:#555">${l.precio_unitario != null ? l.precio_unitario.toFixed(2)+" €" : "—"}</td>
+          <td style="text-align:right;font-size:11.5px;font-weight:600">${l.precio_total != null ? l.precio_total.toFixed(2)+" €" : "—"}</td>
+        </tr>`).join("");
+      return `
+        <tr style="background:#fafafa">
+          <td style="font-weight:700;font-size:12px;padding:7px 8px;color:#1a1a1a">
+            ${escHtml(f.numero_factura ? "Factura " + f.numero_factura : "Sin número")}
+          </td>
+          <td style="text-align:center;font-size:12px;color:#666">${f.fecha || "—"}</td>
+          <td style="text-align:right;font-size:12px;color:#666">${f.base_imponible != null ? f.base_imponible.toFixed(2)+" €" : "—"}</td>
+          <td style="text-align:right;font-size:12px;font-weight:700;color:#1a1a1a">${f.total_factura != null ? f.total_factura.toFixed(2)+" €" : "—"}</td>
+        </tr>
+        ${lineRows}
+        <tr><td colspan="4" style="padding:0;height:6px"></td></tr>`;
+    }).join("");
+
+    return `
+      <div style="page-break-before:${pi===0?"always":"auto"};margin-bottom:36px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:10px;border-bottom:3px solid ${color}">
+          <div style="width:10px;height:32px;background:${color};border-radius:3px;flex-shrink:0"></div>
+          <div>
+            <div style="font-size:17px;font-weight:800;color:#1a1a1a">${escHtml(prov)}</div>
+            <div style="font-size:12px;color:#888">${d.invoices.length} factura${d.invoices.length!==1?"s":""} · Base ${d.base.toFixed(2)} € · IVA ${d.iva.toFixed(2)} € · <strong>Total ${d.total.toFixed(2)} €</strong></div>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr style="background:${color}08">
+              <th style="text-align:left;padding:6px 8px;font-size:10px;text-transform:uppercase;color:#888;border-bottom:1px solid #e0e0e0;font-weight:700">Concepto / Producto</th>
+              <th style="text-align:center;padding:6px 8px;font-size:10px;text-transform:uppercase;color:#888;border-bottom:1px solid #e0e0e0;font-weight:700">Cant.</th>
+              <th style="text-align:right;padding:6px 8px;font-size:10px;text-transform:uppercase;color:#888;border-bottom:1px solid #e0e0e0;font-weight:700">P. Unit.</th>
+              <th style="text-align:right;padding:6px 8px;font-size:10px;text-transform:uppercase;color:#888;border-bottom:1px solid #e0e0e0;font-weight:700">Total</th>
+            </tr>
+          </thead>
+          <tbody>${invSections}</tbody>
+        </table>
+        <div style="text-align:right;margin-top:10px;font-size:13px;color:#888">
+          Subtotal ${escHtml(prov)}: <strong style="color:#1a1a1a">${d.total.toFixed(2)} €</strong>
+        </div>
+      </div>`;
+  }).join("");
+
+  const fmt = n => n.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2});
+
   const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
-    <title>Informe de compras ${months[month-1]} ${year} — Oba</title>
+    <title>Informe ${months[month-1]} ${year} — Oba</title>
     <style>
       *{box-sizing:border-box;margin:0;padding:0}
-      body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;color:#1a1a1a;padding:32px;max-width:800px;margin:0 auto;font-size:13px;line-height:1.5}
-      h1{font-size:26px;font-weight:800;letter-spacing:-0.5px}
-      .subtitle{color:#666;font-size:14px;margin-top:2px}
-      .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1a1a1a;padding-bottom:16px;margin-bottom:24px}
-      .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px}
-      @media(max-width:500px){.kpis{grid-template-columns:repeat(2,1fr)}}
-      .kpi{background:#f5f5f5;border-radius:10px;padding:14px 16px}
-      .kpi-label{font-size:11px;text-transform:uppercase;color:#888;font-weight:600;letter-spacing:.5px}
-      .kpi-value{font-size:22px;font-weight:800;margin-top:2px}
-      .section-title{font-size:16px;font-weight:700;margin-bottom:10px;margin-top:28px}
-      table{width:100%;border-collapse:collapse}
-      th{text-align:left;padding:6px 8px;font-size:11px;text-transform:uppercase;color:#888;border-bottom:1px solid #ddd;font-weight:600}
-      td{padding:7px 8px;border-bottom:1px solid #eee;vertical-align:top}
-      tr:last-child td{border-bottom:none}
-      .total-row{font-size:16px;font-weight:800;margin-top:24px;text-align:right;padding-top:16px;border-top:2px solid #1a1a1a}
-      .footer{margin-top:40px;padding-top:16px;border-top:1px solid #ddd;color:#aaa;font-size:11px;display:flex;justify-content:space-between}
-      @media print{body{padding:0} @page{margin:20mm}}
+      body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;color:#1a1a1a;background:#fff;font-size:13px;line-height:1.5}
+      .page{max-width:794px;margin:0 auto;padding:40px 48px}
+      @media print{
+        .page{padding:0;max-width:none}
+        @page{margin:16mm 18mm;size:A4}
+        .no-print{display:none}
+      }
     </style>
   </head><body>
-    <div class="header">
+
+  <!-- ══════════ PÁGINA 1: PORTADA VISUAL ══════════ -->
+  <div class="page">
+
+    <!-- Cabecera -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:32px;padding-bottom:20px;border-bottom:4px solid #1a1a2e">
       <div>
-        <div style="font-size:28px;font-weight:900;letter-spacing:-1px">oba-</div>
-        <h1 style="font-size:20px;font-weight:700;margin-top:4px">Informe de Compras</h1>
-        <div class="subtitle">${months[month-1]} ${year}</div>
+        <div style="font-size:36px;font-weight:900;letter-spacing:-2px;color:#1a1a2e;line-height:1">oba-</div>
+        <div style="font-size:13px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:1.5px;margin-top:4px">Informe de Compras</div>
       </div>
-      <div style="text-align:right;color:#888;font-size:12px">
-        Generado el ${new Date().toLocaleDateString("es-ES",{day:"2-digit",month:"long",year:"numeric"})}<br>
-        Restaurante Oba
+      <div style="text-align:right">
+        <div style="font-size:28px;font-weight:800;color:#1a1a2e;letter-spacing:-1px">${months[month-1]} ${year}</div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px">Generado el ${new Date().toLocaleDateString("es-ES",{day:"2-digit",month:"long",year:"numeric"})}</div>
       </div>
     </div>
 
-    <div class="kpis">
-      <div class="kpi"><div class="kpi-label">Base imponible</div><div class="kpi-value">${invoices.reduce((s,f)=>s+(f.base_imponible||0),0).toFixed(2)} €</div></div>
-      <div class="kpi"><div class="kpi-label">IVA total</div><div class="kpi-value">${invoices.reduce((s,f)=>s+(f.iva_total||0),0).toFixed(2)} €</div></div>
-      <div class="kpi"><div class="kpi-label">Total con IVA</div><div class="kpi-value">${total.toFixed(2)} €</div></div>
-      <div class="kpi"><div class="kpi-label">Facturas</div><div class="kpi-value">${invoices.length}</div></div>
-      <div class="kpi"><div class="kpi-label">Proveedores</div><div class="kpi-value">${Object.keys(byProv).length}</div></div>
+    <!-- KPIs principales -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:36px">
+      <div style="background:#1a1a2e;color:#fff;border-radius:14px;padding:20px 18px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;opacity:.6;font-weight:600">Total con IVA</div>
+        <div style="font-size:24px;font-weight:900;margin-top:6px;letter-spacing:-1px">${fmt(totalConIva)} €</div>
+      </div>
+      <div style="background:#f5f5f8;border-radius:14px;padding:20px 18px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#888;font-weight:600">Base imponible</div>
+        <div style="font-size:22px;font-weight:800;margin-top:6px;letter-spacing:-0.5px">${fmt(totalBase)} €</div>
+      </div>
+      <div style="background:#f5f5f8;border-radius:14px;padding:20px 18px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#888;font-weight:600">IVA total</div>
+        <div style="font-size:22px;font-weight:800;margin-top:6px;letter-spacing:-0.5px">${fmt(totalIva)} €</div>
+      </div>
+      <div style="background:#f5f5f8;border-radius:14px;padding:20px 18px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#888;font-weight:600">Facturas</div>
+        <div style="font-size:22px;font-weight:800;margin-top:6px">${numFacturas}</div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px">${Object.keys(byProv).length} proveedores</div>
+      </div>
     </div>
 
-    <div class="section-title">Resumen por proveedor</div>
-    <table>
-      <thead><tr><th>Proveedor</th><th style="text-align:center">Facturas</th><th style="text-align:right">Base imp.</th><th style="text-align:right">IVA</th><th style="text-align:right">Total</th></tr></thead>
-      <tbody>${Object.entries(byProv).sort((a,b)=>b[1].total-a[1].total).map(([prov,d])=>`
-        <tr>
-          <td>${escHtml(prov)}</td>
-          <td style="text-align:center">${d.invoices.length}</td>
-          <td style="text-align:right">${d.invoices.reduce((s,f)=>s+(f.base_imponible||0),0).toFixed(2)} €</td>
-          <td style="text-align:right">${d.invoices.reduce((s,f)=>s+(f.iva_total||0),0).toFixed(2)} €</td>
-          <td style="text-align:right;font-weight:700">${d.total.toFixed(2)} €</td>
-        </tr>`).join("")}</tbody>
-    </table>
+    <!-- Gráfico de barras -->
+    <div style="margin-bottom:32px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#888;margin-bottom:16px">Gasto por proveedor</div>
+      ${barRows}
+    </div>
 
-    <div class="section-title" style="margin-top:32px">Detalle de facturas</div>
+    <!-- Dos columnas: tabla resumen + top productos -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:8px">
+
+      <!-- Tabla resumen proveedores -->
+      <div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#888;margin-bottom:12px">Resumen</div>
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr>
+            <th style="font-size:10px;text-transform:uppercase;color:#aaa;font-weight:600;padding:4px 0;border-bottom:1px solid #e8e8e8;text-align:left">Proveedor</th>
+            <th style="font-size:10px;text-transform:uppercase;color:#aaa;font-weight:600;padding:4px 0;border-bottom:1px solid #e8e8e8;text-align:center">Fact.</th>
+            <th style="font-size:10px;text-transform:uppercase;color:#aaa;font-weight:600;padding:4px 0;border-bottom:1px solid #e8e8e8;text-align:right">Total</th>
+          </tr></thead>
+          <tbody>
+            ${provSorted.map(([prov,d])=>`
+            <tr>
+              <td style="padding:6px 0;font-size:12px;border-bottom:1px solid #f5f5f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px">${escHtml(prov)}</td>
+              <td style="padding:6px 0;font-size:12px;border-bottom:1px solid #f5f5f5;text-align:center;color:#888">${d.invoices.length}</td>
+              <td style="padding:6px 0;font-size:12px;border-bottom:1px solid #f5f5f5;text-align:right;font-weight:700">${d.total.toFixed(2)} €</td>
+            </tr>`).join("")}
+            <tr style="border-top:2px solid #1a1a2e">
+              <td style="padding:8px 0;font-size:13px;font-weight:800">TOTAL</td>
+              <td style="padding:8px 0;font-size:13px;text-align:center;color:#888">${numFacturas}</td>
+              <td style="padding:8px 0;font-size:13px;font-weight:900;text-align:right">${fmt(totalConIva)} €</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Top productos -->
+      <div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#888;margin-bottom:12px">Productos más comprados</div>
+        ${topIngHtml || '<div style="color:#aaa;font-size:12px">Sin datos de líneas</div>'}
+      </div>
+    </div>
+
+    <!-- Footer página 1 -->
+    <div style="margin-top:40px;padding-top:14px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:10px;color:#bbb">
+      <span>Oba Restaurante · Intranet de gestión interna</span>
+      <span>Datos extraídos con IA a partir de facturas escaneadas</span>
+    </div>
+  </div>
+
+  <!-- ══════════ PÁGINAS SIGUIENTES: DETALLE ══════════ -->
+  <div class="page">
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#aaa;font-weight:700;margin-bottom:24px">
+      Detalle de facturas · ${months[month-1]} ${year}
+    </div>
     ${detailSections}
 
-    <div class="total-row">
-      Base imponible: ${invoices.reduce((s,f)=>s+(f.base_imponible||0),0).toFixed(2)} € &nbsp;·&nbsp;
-      IVA: ${invoices.reduce((s,f)=>s+(f.iva_total||0),0).toFixed(2)} € &nbsp;·&nbsp;
-      <strong>Total ${months[month-1]} ${year}: ${total.toFixed(2)} €</strong>
+    <!-- Total final -->
+    <div style="page-break-inside:avoid;margin-top:32px;padding:18px 20px;background:#1a1a2e;color:#fff;border-radius:14px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:13px;font-weight:600;opacity:.7">Total ${months[month-1]} ${year}</div>
+      <div>
+        <span style="font-size:12px;opacity:.6">Base ${fmt(totalBase)} €  ·  IVA ${fmt(totalIva)} €  ·  </span>
+        <span style="font-size:20px;font-weight:900;letter-spacing:-0.5px">${fmt(totalConIva)} €</span>
+      </div>
     </div>
 
-    <div class="footer">
-      <span>Oba Restaurante · Intranet de gestión</span>
-      <span>Datos extraídos automáticamente de facturas escaneadas con IA</span>
+    <div style="margin-top:28px;padding-top:14px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:10px;color:#bbb">
+      <span>Oba Restaurante · Intranet de gestión interna</span>
+      <span>Datos extraídos con IA a partir de facturas escaneadas</span>
     </div>
-    <script>window.onload=()=>window.print();<\/script>
+  </div>
+
+  <script>window.onload=()=>window.print();<\/script>
   </body></html>`;
 
   const win = window.open("", "_blank");
