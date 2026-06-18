@@ -4982,18 +4982,30 @@ function fctBuildPriceIndex() {
   sorted.forEach(inv => {
     (inv.lineas || []).forEach(l => {
       if (!l.producto) return;
-      const key = fctNorm(l.producto);
-      if (!key) return;
-      if (!fctPriceIndex[key]) fctPriceIndex[key] = [];
-      fctPriceIndex[key].push({
+      const entry = {
         proveedor: inv.proveedor || "—",
         fecha: inv.fecha || null,
         precio_unitario: l.precio_unitario ?? null,
         precio_total: l.precio_total ?? null,
         cantidad: l.cantidad ?? null,
         unidad: l.unidad || null,
-        rawName: l.producto,
-      });
+        rawName: l.alias || l.producto,
+        alias: l.alias || null,
+      };
+      // Index by product name
+      const key = fctNorm(l.producto);
+      if (key) {
+        if (!fctPriceIndex[key]) fctPriceIndex[key] = [];
+        fctPriceIndex[key].push(entry);
+      }
+      // Also index by alias so pedidos matching finds it by kitchen name
+      if (l.alias) {
+        const aliasKey = fctNorm(l.alias);
+        if (aliasKey && aliasKey !== key) {
+          if (!fctPriceIndex[aliasKey]) fctPriceIndex[aliasKey] = [];
+          fctPriceIndex[aliasKey].push(entry);
+        }
+      }
     });
   });
 }
@@ -5195,7 +5207,10 @@ function fctRenderLines(lines) {
   const tbody = document.getElementById("fct-lines-body");
   tbody.innerHTML = lines.map((l, i) => `
     <tr id="fct-line-${i}">
-      <td><input value="${escHtml(l.producto || "")}" placeholder="Producto" oninput="fctLineChange(${i},'producto',this.value)"></td>
+      <td>
+        <input value="${escHtml(l.producto || "")}" placeholder="Producto" oninput="fctLineChange(${i},'producto',this.value)">
+        <input value="${escHtml(l.alias || "")}" placeholder="Nombre en cocina (opcional)" class="fct-alias-input" oninput="fctLineChange(${i},'alias',this.value)">
+      </td>
       <td><input type="number" step="0.001" value="${l.cantidad ?? ""}" placeholder="—" style="width:72px" oninput="fctLineChange(${i},'cantidad',this.value)"></td>
       <td><input value="${escHtml(l.unidad || "")}" placeholder="kg" style="width:52px" oninput="fctLineChange(${i},'unidad',this.value)"></td>
       <td><input type="number" step="0.001" value="${l.precio_unitario ?? ""}" placeholder="—" style="width:80px" oninput="fctLineChange(${i},'precio_unitario',this.value)"></td>
@@ -5207,7 +5222,7 @@ function fctRenderLines(lines) {
 function fctLineChange(idx, field, value) {
   if (!fctExtracted) return;
   if (!fctExtracted.lineas[idx]) return;
-  fctExtracted.lineas[idx][field] = (field === "producto" || field === "unidad") ? value : (value === "" ? null : Number(value));
+  fctExtracted.lineas[idx][field] = (field === "producto" || field === "unidad" || field === "alias") ? value : (value === "" ? null : Number(value));
 }
 
 function fctDeleteLine(idx) {
