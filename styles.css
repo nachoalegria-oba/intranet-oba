@@ -3013,6 +3013,12 @@ p, span, div, label, td, th, input, select, textarea, button{
 }
 
 /* ── Facturas: tabs ─────────────────────────────────── */
+.fct-thumb-strip{display:flex;gap:10px;flex-wrap:wrap;padding:12px 0 4px}
+.fct-thumb{position:relative;flex-shrink:0}
+.fct-thumb-img{width:80px;height:110px;object-fit:cover;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.15);display:block}
+.fct-thumb-label{display:block;text-align:center;font-size:11px;color:var(--muted);margin-top:3px}
+.fct-thumb-del{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;border:none;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.fct-thumb-actions{display:flex;gap:8px;padding:4px 0 12px}
 .fct-inv-view{background:none;border:none;font-size:16px;cursor:pointer;padding:2px 4px;border-radius:6px;line-height:1;opacity:.7;transition:opacity .15s}.fct-inv-view:hover{opacity:1}
 .fct-cfg-row-main{display:flex;align-items:center;gap:8px;padding:10px 0 14px;border-bottom:1px solid var(--separator);margin-bottom:16px}
 .fct-cfg-row-main .fct-url-input{flex:1;min-width:0}

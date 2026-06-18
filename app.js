@@ -4950,10 +4950,10 @@ const FCT_COL = "facturas";
 const PRECIOS_COL = "precios";
 const FCT_URL_KEY = "fct_url_v1";
 
-let fctFile = null;
+let fctFiles = [];       // array de { file, dataUrl }
 let fctExtracted = null;
 let fctInvoices = [];
-let fctImageDataUrl = null;
+let fctImageDataUrl = null; // kept for compat
 // fctPriceIndex: Map normalizedName → [{proveedor,fecha,precio_unitario,precio_total,cantidad,unidad,rawName}] (newest first)
 let fctPriceIndex = {};
 
@@ -5068,62 +5068,94 @@ function fctDragLeave() {
 function fctDrop(e) {
   e.preventDefault();
   document.getElementById("fct-drop").classList.remove("drag-over");
-  const file = e.dataTransfer?.files?.[0];
-  if (file) fctLoadFile(file);
+  const files = [...(e.dataTransfer?.files || [])];
+  if (files.length) fctAddFiles(files);
 }
 function fctFileChosen(e) {
-  const file = e.target.files?.[0];
-  if (file) fctLoadFile(file);
+  const files = [...(e.target.files || [])];
+  e.target.value = "";
+  if (files.length) fctAddFiles(files);
 }
 
-function fctLoadFile(file) {
-  if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
-    showToast("Formato no compatible. Usa JPG, PNG, HEIC o PDF.", "error");
-    return;
-  }
-  fctFile = file;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    fctImageDataUrl = e.target.result;
-    document.getElementById("fct-img").src = fctImageDataUrl;
-    document.getElementById("fct-drop").style.display = "none";
-    document.getElementById("fct-preview-area").style.display = "";
-    document.getElementById("fct-result").style.display = "none";
-    document.getElementById("fct-scan-status").textContent = `${file.name} — lista para escanear`;
-    fctExtracted = null;
-  };
-  reader.readAsDataURL(file);
+function fctAddFiles(files) {
+  const valid = files.filter(f => f.type.startsWith("image/") || f.type === "application/pdf");
+  if (!valid.length) { showToast("Formato no compatible. Usa JPG, PNG o HEIC.", "error"); return; }
+  let loaded = 0;
+  valid.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      fctFiles.push({ file, dataUrl: e.target.result });
+      loaded++;
+      if (loaded === valid.length) {
+        fctExtracted = null;
+        document.getElementById("fct-drop").style.display = "none";
+        document.getElementById("fct-preview-area").style.display = "";
+        document.getElementById("fct-result").style.display = "none";
+        fctRenderThumbs();
+        const n = fctFiles.length;
+        document.getElementById("fct-scan-status").textContent =
+          n === 1 ? "1 página lista para escanear" : `${n} páginas listas para escanear`;
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function fctRenderThumbs() {
+  const strip = document.getElementById("fct-thumb-strip");
+  if (!strip) return;
+  strip.innerHTML = fctFiles.map((f, i) => `
+    <div class="fct-thumb">
+      <img src="${f.dataUrl}" class="fct-thumb-img" alt="Página ${i+1}">
+      <span class="fct-thumb-label">Pág. ${i+1}</span>
+      <button class="fct-thumb-del" onclick="fctRemovePage(${i})" title="Quitar">✕</button>
+    </div>`).join("");
+}
+
+function fctRemovePage(idx) {
+  fctFiles.splice(idx, 1);
+  if (!fctFiles.length) { fctReset(); return; }
+  fctRenderThumbs();
+  const n = fctFiles.length;
+  document.getElementById("fct-scan-status").textContent =
+    n === 1 ? "1 página lista para escanear" : `${n} páginas listas para escanear`;
 }
 
 function fctReset() {
-  fctFile = null;
+  fctFiles = [];
   fctExtracted = null;
   fctImageDataUrl = null;
   document.getElementById("fct-drop").style.display = "";
   document.getElementById("fct-preview-area").style.display = "none";
   document.getElementById("fct-result").style.display = "none";
   document.getElementById("fct-file").value = "";
+  const strip = document.getElementById("fct-thumb-strip");
+  if (strip) strip.innerHTML = "";
 }
 
 /* ── Escanear con IA ── */
 async function fctScan() {
   const url = (document.getElementById("fct-url")?.value || "").trim();
   if (!url) {
-    showToast("Introduce la URL de la Cloud Function primero.", "warn");
+    showToast("Introduce la URL del worker primero.", "warn");
     document.getElementById("fct-url").focus();
     return;
   }
-  if (!fctFile) return;
+  if (!fctFiles.length) return;
 
   const btn = document.getElementById("fct-scan-btn");
   const status = document.getElementById("fct-scan-status");
   btn.disabled = true;
+  const n = fctFiles.length;
   btn.innerHTML = '<span class="fct-spinner"></span> Analizando…';
-  status.textContent = "Claude está leyendo la factura…";
+  status.textContent = n === 1 ? "Claude está leyendo la factura…" : `Claude está leyendo ${n} páginas…`;
 
   try {
-    const base64 = await fctToBase64(fctFile);
-    const mediaType = fctFile.type === "application/pdf" ? "image/jpeg" : fctFile.type;
+    // Build images array from all pages
+    const images = await Promise.all(fctFiles.map(async f => ({
+      base64: (await fctToBase64(f.file)),
+      mediaType: f.file.type.startsWith("image/") ? f.file.type : "image/jpeg",
+    })));
 
     const res = await fetch(url, {
       method: "POST",
@@ -5131,7 +5163,7 @@ async function fctScan() {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${INVOICE_SECRET}`,
       },
-      body: JSON.stringify({ imageBase64: base64, mediaType }),
+      body: JSON.stringify({ images }),
     });
 
     if (!res.ok) {
@@ -5250,11 +5282,12 @@ async function fctSave() {
     return;
   }
 
-  // Comprimir imagen y añadirla al documento
-  if (fctFile) {
+  // Comprimir todas las páginas y añadirlas al documento
+  if (fctFiles.length) {
     try {
-      const compressed = await fctCompressImage(fctFile);
-      if (compressed) data.imagenBase64 = compressed;
+      const compressed = await Promise.all(fctFiles.map(f => fctCompressImage(f.file)));
+      data.imagenesBase64 = compressed.filter(Boolean);
+      if (data.imagenesBase64.length === 1) data.imagenBase64 = data.imagenesBase64[0];
     } catch(e) {}
   }
 
@@ -5340,28 +5373,63 @@ async function fctDeleteInvoice(id) {
 /* ── Ver / descargar imagen original ── */
 function fctViewImage(id) {
   const inv = fctInvoices.find(f => f.id === id);
-  const dataUrl = inv?.imagenBase64 || localStorage.getItem("fct_img_" + id);
-  if (!dataUrl) { showToast("Imagen no disponible", "warn"); return; }
+  const pages = inv?.imagenesBase64 || (inv?.imagenBase64 ? [inv.imagenBase64] : null)
+             || (localStorage.getItem("fct_img_" + id) ? [localStorage.getItem("fct_img_" + id)] : null);
+  if (!pages?.length) { showToast("Imagen no disponible", "warn"); return; }
+
+  let current = 0;
   const modal = document.createElement("div");
-  modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px";
+  modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px";
   modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+
+  const pageLabel = document.createElement("div");
+  pageLabel.style.cssText = "color:#fff;font-size:13px;font-weight:600;opacity:.7";
+
   const img = document.createElement("img");
-  img.src = dataUrl;
-  img.style.cssText = "max-width:100%;max-height:80vh;border-radius:12px;box-shadow:0 4px 32px rgba(0,0,0,.5)";
+  img.style.cssText = "max-width:100%;max-height:75vh;border-radius:12px;box-shadow:0 4px 32px rgba(0,0,0,.5)";
+
+  const navRow = document.createElement("div");
+  navRow.style.cssText = "display:flex;align-items:center;gap:10px";
+
   const btnRow = document.createElement("div");
   btnRow.style.cssText = "display:flex;gap:10px";
+
+  function render() {
+    img.src = pages[current];
+    pageLabel.textContent = pages.length > 1 ? `Página ${current + 1} de ${pages.length}` : "";
+    navRow.innerHTML = "";
+    if (pages.length > 1) {
+      const prev = document.createElement("button");
+      prev.textContent = "←";
+      prev.disabled = current === 0;
+      prev.style.cssText = "background:rgba(255,255,255,.2);color:#fff;border:none;padding:8px 16px;border-radius:16px;font-size:18px;cursor:pointer;disabled:opacity:.3";
+      prev.onclick = () => { current--; render(); };
+      const next = document.createElement("button");
+      next.textContent = "→";
+      next.disabled = current === pages.length - 1;
+      next.style.cssText = prev.style.cssText;
+      next.onclick = () => { current++; render(); };
+      navRow.append(prev, next);
+    }
+  }
+
   const dlBtn = document.createElement("a");
-  dlBtn.href = dataUrl;
-  dlBtn.download = "factura_" + id + "." + (dataUrl.includes("png") ? "png" : "jpg");
   dlBtn.textContent = "Descargar";
-  dlBtn.style.cssText = "background:#007AFF;color:#fff;padding:10px 22px;border-radius:20px;font-weight:600;font-size:14px;text-decoration:none";
+  dlBtn.style.cssText = "background:#007AFF;color:#fff;padding:10px 22px;border-radius:20px;font-weight:600;font-size:14px;text-decoration:none;cursor:pointer";
+  dlBtn.onclick = () => {
+    const a = document.createElement("a");
+    a.href = pages[current];
+    a.download = `factura_${id}_p${current+1}.jpg`;
+    a.click();
+  };
   const closeBtn = document.createElement("button");
   closeBtn.textContent = "Cerrar";
   closeBtn.style.cssText = "background:rgba(255,255,255,.15);color:#fff;border:none;padding:10px 22px;border-radius:20px;font-weight:600;font-size:14px;cursor:pointer";
   closeBtn.onclick = () => modal.remove();
   btnRow.append(dlBtn, closeBtn);
-  modal.append(img, btnRow);
+  modal.append(pageLabel, img, navRow, btnRow);
   document.body.appendChild(modal);
+  render();
 }
 
 /* ── Renderizar historial ── */
@@ -5390,7 +5458,7 @@ function fctRenderHistory() {
           <span class="fct-inv-fecha">${f.fecha || "—"}</span>
           <span class="fct-inv-num">${f.numero_factura ? "Fac. " + escHtml(f.numero_factura) : ""}</span>
           ${f.total_factura != null ? `<span class="fct-inv-total">${Number(f.total_factura).toFixed(2)} €</span>` : ""}
-          ${(f.imagenBase64 || localStorage.getItem("fct_img_" + f.id)) ? `<button class="fct-inv-view" onclick="fctViewImage('${f.id}')" title="Ver original">🖼</button>` : ""}
+          ${((f.imagenesBase64?.length || f.imagenBase64) || localStorage.getItem("fct_img_" + f.id)) ? `<button class="fct-inv-view" onclick="fctViewImage('${f.id}')" title="Ver original">🖼${(f.imagenesBase64?.length||0) > 1 ? ` ${f.imagenesBase64.length}p` : ""}</button>` : ""}
           <button class="fct-inv-del" onclick="fctDeleteInvoice('${f.id}')" title="Borrar">✕</button>
         </div>
         ${linesSummary ? `<div class="fct-inv-body"><div class="fct-inv-lines">${linesSummary}${more}</div></div>` : ""}

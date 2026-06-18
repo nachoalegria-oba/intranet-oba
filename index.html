@@ -400,23 +400,27 @@
         <div class="fct-tab-content" id="fct-tab-escanear">
           <!-- Uploader -->
           <div class="fct-upload-area" id="fct-drop" onclick="document.getElementById('fct-file').click()" ondragover="fctDragOver(event)" ondragleave="fctDragLeave(event)" ondrop="fctDrop(event)">
-            <input type="file" id="fct-file" accept="image/*" capture="environment" style="display:none" onchange="fctFileChosen(event)">
+            <input type="file" id="fct-file" accept="image/*" multiple style="display:none" onchange="fctFileChosen(event)">
             <i class="ph-fill ph-camera" style="font-size:32px;color:var(--muted)"></i>
-            <div class="fct-upload-label">Arrastra una factura aquí o pulsa para abrir la cámara</div>
-            <div class="fct-upload-sub">JPG · PNG · HEIC · PDF (primera página)</div>
+            <div class="fct-upload-label">Arrastra fotos aquí o pulsa para añadir</div>
+            <div class="fct-upload-sub">Puedes añadir varias páginas · JPG · PNG · HEIC</div>
           </div>
 
           <!-- Preview + scan -->
           <div id="fct-preview-area" style="display:none">
-            <div class="fct-preview-row">
-              <img id="fct-img" class="fct-preview-img" src="" alt="Previsualización factura">
-              <div class="fct-scan-panel">
-                <div class="fct-scan-status" id="fct-scan-status">Imagen lista para escanear</div>
-                <button class="primary-btn fct-scan-btn" id="fct-scan-btn" onclick="fctScan()">
-                  <i class="ph-fill ph-sparkle"></i> Escanear con IA
-                </button>
-                <button class="ghost-btn ghost-btn-sm" onclick="fctReset()">Cambiar imagen</button>
-              </div>
+            <!-- Thumbnail strip -->
+            <div class="fct-thumb-strip" id="fct-thumb-strip"></div>
+            <div class="fct-thumb-actions">
+              <button class="ghost-btn ghost-btn-sm" onclick="document.getElementById('fct-file').click()">
+                <i class="ph-fill ph-plus"></i> Añadir más páginas
+              </button>
+              <button class="ghost-btn ghost-btn-sm" onclick="fctReset()">Descartar todo</button>
+            </div>
+            <div class="fct-scan-panel" style="margin-top:12px">
+              <div class="fct-scan-status" id="fct-scan-status">Listo para escanear</div>
+              <button class="primary-btn fct-scan-btn" id="fct-scan-btn" onclick="fctScan()">
+                <i class="ph-fill ph-sparkle"></i> Escanear con IA
+              </button>
             </div>
 
             <!-- Extracted data (editable) -->
