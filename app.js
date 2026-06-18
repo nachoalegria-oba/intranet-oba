@@ -4949,6 +4949,7 @@ document.addEventListener("DOMContentLoaded", () => {
 const INVOICE_SECRET = "oba-facturas-2025";
 const FCT_COL = "facturas";
 const PRECIOS_COL = "precios";
+const IMGS_COL = "factura_imgs";
 const FCT_URL_KEY = "fct_url_v1";
 
 let fctFiles = [];       // array de { file, dataUrl }
@@ -5246,13 +5247,22 @@ function fctCompressImage(file) {
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
-        const MAX = 1200;
+        const MAX = 900;
         let w = img.width, h = img.height;
         if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
         const canvas = document.createElement("canvas");
         canvas.width = w; canvas.height = h;
-        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL("image/jpeg", 0.65));
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        // Convert to grayscale to reduce size
+        const imgData = ctx.getImageData(0, 0, w, h);
+        const d = imgData.data;
+        for (let i = 0; i < d.length; i += 4) {
+          const g = Math.round(0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2]);
+          d[i] = d[i+1] = d[i+2] = g;
+        }
+        ctx.putImageData(imgData, 0, 0);
+        resolve(canvas.toDataURL("image/jpeg", 0.55));
       };
       img.onerror = () => resolve(e.target.result);
       img.src = e.target.result;
@@ -5279,35 +5289,47 @@ async function fctSave() {
     return;
   }
 
-  // Comprimir todas las páginas y añadirlas al documento
+  // Comprimir páginas en escala de grises
+  let compressed = [];
   if (fctFiles.length) {
     try {
-      const compressed = await Promise.all(fctFiles.map(f => fctCompressImage(f.file)));
-      data.imagenesBase64 = compressed.filter(Boolean);
-      if (data.imagenesBase64.length === 1) data.imagenBase64 = data.imagenesBase64[0];
+      compressed = (await Promise.all(fctFiles.map(f => fctCompressImage(f.file)))).filter(Boolean);
+      data.imagenesBase64 = compressed;
+      if (compressed.length === 1) data.imagenBase64 = compressed[0];
     } catch(e) {}
   }
 
-  // Guardar en Firestore si está disponible (sin imágenes — superan el límite de 1MB)
+  // Guardar en Firestore
   if (storageMode === "firebase" && db) {
     try {
+      // Factura sin imágenes (documentos ligeros)
       const { imagenesBase64, imagenBase64, ...dataFirestore } = data;
+      if (compressed.length) dataFirestore.numPaginas = compressed.length;
       await db.collection(FCT_COL).doc(data.id).set({ ...dataFirestore, _i: Date.now() });
-      // Guardar cada línea de precio en colección precios
+
+      // Imágenes en colección separada (un doc por página)
+      if (compressed.length) {
+        const imgBatch = db.batch();
+        compressed.forEach((b64, i) => {
+          const ref = db.collection(IMGS_COL).doc(`${data.id}_${i}`);
+          imgBatch.set(ref, { facturaId: data.id, pagina: i, base64: b64, _i: Date.now() });
+        });
+        await imgBatch.commit();
+        data.numPaginas = compressed.length;
+      }
+
+      // Precios en colección separada
       const batch = db.batch();
       (data.lineas || []).forEach((l, i) => {
         if (!l.producto || (l.precio_unitario == null && l.precio_total == null)) return;
         const ref = db.collection(PRECIOS_COL).doc(`${data.id}_${i}`);
         batch.set(ref, {
-          producto: l.producto,
-          proveedor: data.proveedor,
-          fecha: data.fecha,
+          producto: l.producto, alias: l.alias || null,
+          proveedor: data.proveedor, fecha: data.fecha,
           precio_unitario: l.precio_unitario ?? null,
           precio_total: l.precio_total ?? null,
-          cantidad: l.cantidad ?? null,
-          unidad: l.unidad || null,
-          facturaId: data.id,
-          _i: Date.now(),
+          cantidad: l.cantidad ?? null, unidad: l.unidad || null,
+          facturaId: data.id, _i: Date.now(),
         });
       });
       await batch.commit();
@@ -5381,10 +5403,24 @@ async function fctDeleteInvoice(id) {
 }
 
 /* ── Ver / descargar imagen original ── */
-function fctViewImage(id) {
+async function fctViewImage(id) {
   const inv = fctInvoices.find(f => f.id === id);
-  const pages = inv?.imagenesBase64 || (inv?.imagenBase64 ? [inv.imagenBase64] : null)
-             || (localStorage.getItem("fct_img_" + id) ? [localStorage.getItem("fct_img_" + id)] : null);
+
+  // Try local first (this device scanned it), then Firestore
+  let pages = inv?.imagenesBase64 || (inv?.imagenBase64 ? [inv.imagenBase64] : null);
+
+  if (!pages?.length && storageMode === "firebase" && db) {
+    showToast("Cargando factura…");
+    try {
+      const numPag = inv?.numPaginas ?? 1;
+      const refs = Array.from({ length: numPag }, (_, i) =>
+        db.collection(IMGS_COL).doc(`${id}_${i}`).get()
+      );
+      const snaps = await Promise.all(refs);
+      pages = snaps.filter(s => s.exists).sort((a, b) => a.data().pagina - b.data().pagina).map(s => s.data().base64);
+    } catch(e) { console.warn("fctViewImage Firestore:", e); }
+  }
+
   if (!pages?.length) { showToast("Imagen no disponible", "warn"); return; }
 
   let current = 0;
@@ -5482,7 +5518,7 @@ function fctRenderHistory() {
           <span class="fct-inv-fecha">${f.fecha || "—"}</span>
           <span class="fct-inv-num">${f.numero_factura ? "Fac. " + escHtml(f.numero_factura) : ""}</span>
           ${f.total_factura != null ? `<span class="fct-inv-total">${Number(f.total_factura).toFixed(2)} €</span>` : ""}
-          ${((f.imagenesBase64?.length || f.imagenBase64) || localStorage.getItem("fct_img_" + f.id)) ? `<button class="fct-inv-view" onclick="fctViewImage('${f.id}')" title="Ver original">🖼${(f.imagenesBase64?.length||0) > 1 ? ` ${f.imagenesBase64.length}p` : ""}</button>` : ""}
+          ${(f.numPaginas || f.imagenesBase64?.length || f.imagenBase64) ? `<button class="fct-inv-view" onclick="fctViewImage('${f.id}')">Ver factura</button>` : ""}
           <button class="fct-inv-del" onclick="fctDeleteInvoice('${f.id}')" title="Borrar">✕</button>
         </div>
         ${linesSummary ? `<div class="fct-inv-body"><div class="fct-inv-lines">${linesSummary}${more}</div></div>` : ""}
