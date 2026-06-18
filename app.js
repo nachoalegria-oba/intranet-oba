@@ -3943,7 +3943,8 @@ function rEmpresaDetalle(id, tab) {
         </select>
       </div>
       <div class="rest-rcards" id="rest-rcards-${e.id}">${skeletonCards()}</div>`; // filled by rRestRecetario
-    // Siempre carga directo via REST API (funciona en todos los dispositivos/browsers)
+    // Solo carga si no hay datos ya (evita 429 por demasiadas peticiones a Firestore)
+    if ((D[`${col}_recetas`] || []).length > 0) { setTimeout(() => rRestRecetario(e.id, col), 0); } else
     setTimeout(async () => {
       try {
         const colName = `${col}_recetas`;
