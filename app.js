@@ -1740,8 +1740,10 @@ function rPedHistorial() {
   }
 
   const all = D.pedidosHistorial || [];
+  let statsHtml = "";
+  if (!q && all.length) { try { statsHtml = rPedHistorialStats(all); } catch(e) { console.warn("stats error:", e); } }
   document.getElementById("pp-historial").innerHTML = items.length ? `
-    ${!q ? rPedHistorialStats(all) : ""}
+    ${statsHtml}
     <div class="pedido-history-list">
       ${items.map((entry) => {
         const groups = groupPedidoItems(entry.lineas || []);
