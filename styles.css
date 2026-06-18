@@ -3070,6 +3070,8 @@ p, span, div, label, td, th, input, select, textarea, button{
 .fct-q-done{background:#d4f4dd;color:#1a7a3a}
 .fct-q-err{background:#fde8e8;color:#c0392b}
 .fct-inv-view{background:var(--blue);color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:600;padding:5px 12px;border-radius:8px}.fct-inv-view:hover{opacity:.85}
+.fct-input-error{border-color:var(--red,#e53935)!important;box-shadow:0 0 0 3px rgba(229,57,53,.18)!important;animation:fct-shake .3s}
+@keyframes fct-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 .fct-cfg-row-main{display:flex;align-items:center;gap:8px;padding:10px 0 14px;border-bottom:1px solid var(--separator);margin-bottom:16px}
 .fct-cfg-row-main .fct-url-input{flex:1;min-width:0}
 .fct-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--bg);border-radius:12px;padding:4px}
