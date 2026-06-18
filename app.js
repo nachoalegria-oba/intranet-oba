@@ -4953,6 +4953,7 @@ const FCT_URL_KEY = "fct_url_v1";
 let fctFile = null;
 let fctExtracted = null;
 let fctInvoices = [];
+let fctImageDataUrl = null;
 // fctPriceIndex: Map normalizedName → [{proveedor,fecha,precio_unitario,precio_total,cantidad,unidad,rawName}] (newest first)
 let fctPriceIndex = {};
 
@@ -5083,7 +5084,8 @@ function fctLoadFile(file) {
   fctFile = file;
   const reader = new FileReader();
   reader.onload = (e) => {
-    document.getElementById("fct-img").src = e.target.result;
+    fctImageDataUrl = e.target.result;
+    document.getElementById("fct-img").src = fctImageDataUrl;
     document.getElementById("fct-drop").style.display = "none";
     document.getElementById("fct-preview-area").style.display = "";
     document.getElementById("fct-result").style.display = "none";
@@ -5096,6 +5098,7 @@ function fctLoadFile(file) {
 function fctReset() {
   fctFile = null;
   fctExtracted = null;
+  fctImageDataUrl = null;
   document.getElementById("fct-drop").style.display = "";
   document.getElementById("fct-preview-area").style.display = "none";
   document.getElementById("fct-result").style.display = "none";
@@ -5251,6 +5254,11 @@ async function fctSave() {
     }
   }
 
+  // Guardar imagen original en localStorage (solo en este dispositivo)
+  if (fctImageDataUrl) {
+    try { localStorage.setItem("fct_img_" + data.id, fctImageDataUrl); } catch(e) {}
+  }
+
   // Guardar siempre en localStorage como fallback
   fctInvoices.unshift(data);
   fctPersistLocal();
@@ -5295,11 +5303,38 @@ async function fctDeleteInvoice(id) {
   if (!confirm("¿Borrar esta factura?")) return;
   fctInvoices = fctInvoices.filter(f => f.id !== id);
   fctPersistLocal();
+  try { localStorage.removeItem("fct_img_" + id); } catch(e) {}
   if (storageMode === "firebase" && db) {
     try { await db.collection(FCT_COL).doc(id).delete(); } catch(e) {}
   }
   fctRenderHistory();
   showToast("Factura borrada", "warn");
+}
+
+/* ── Ver / descargar imagen original ── */
+function fctViewImage(id) {
+  const dataUrl = localStorage.getItem("fct_img_" + id);
+  if (!dataUrl) { showToast("Imagen no disponible en este dispositivo", "warn"); return; }
+  const modal = document.createElement("div");
+  modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px";
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+  const img = document.createElement("img");
+  img.src = dataUrl;
+  img.style.cssText = "max-width:100%;max-height:80vh;border-radius:12px;box-shadow:0 4px 32px rgba(0,0,0,.5)";
+  const btnRow = document.createElement("div");
+  btnRow.style.cssText = "display:flex;gap:10px";
+  const dlBtn = document.createElement("a");
+  dlBtn.href = dataUrl;
+  dlBtn.download = "factura_" + id + "." + (dataUrl.includes("png") ? "png" : "jpg");
+  dlBtn.textContent = "Descargar";
+  dlBtn.style.cssText = "background:#007AFF;color:#fff;padding:10px 22px;border-radius:20px;font-weight:600;font-size:14px;text-decoration:none";
+  const closeBtn = document.createElement("button");
+  closeBtn.textContent = "Cerrar";
+  closeBtn.style.cssText = "background:rgba(255,255,255,.15);color:#fff;border:none;padding:10px 22px;border-radius:20px;font-weight:600;font-size:14px;cursor:pointer";
+  closeBtn.onclick = () => modal.remove();
+  btnRow.append(dlBtn, closeBtn);
+  modal.append(img, btnRow);
+  document.body.appendChild(modal);
 }
 
 /* ── Renderizar historial ── */
@@ -5328,6 +5363,7 @@ function fctRenderHistory() {
           <span class="fct-inv-fecha">${f.fecha || "—"}</span>
           <span class="fct-inv-num">${f.numero_factura ? "Fac. " + escHtml(f.numero_factura) : ""}</span>
           ${f.total_factura != null ? `<span class="fct-inv-total">${Number(f.total_factura).toFixed(2)} €</span>` : ""}
+          ${localStorage.getItem("fct_img_" + f.id) ? `<button class="fct-inv-view" onclick="fctViewImage('${f.id}')" title="Ver original">🖼</button>` : ""}
           <button class="fct-inv-del" onclick="fctDeleteInvoice('${f.id}')" title="Borrar">✕</button>
         </div>
         ${linesSummary ? `<div class="fct-inv-body"><div class="fct-inv-lines">${linesSummary}${more}</div></div>` : ""}
