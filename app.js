@@ -5034,11 +5034,13 @@ function fctPriceBadge(name) {
   return `<span class="price-badge price-badge-${tClass}" title="${escHtml(last.proveedor)} · ${last.fecha || "—"}">${trend} ${escHtml(label)}</span>`;
 }
 
+const FCT_DEFAULT_URL = "https://oba-invoice-scanner.obarestaurante.workers.dev";
+
 function initFacturas() {
-  // Restaurar URL guardada
-  const savedUrl = localStorage.getItem(FCT_URL_KEY) || "";
+  // Restaurar URL guardada (o usar la default)
+  const savedUrl = localStorage.getItem(FCT_URL_KEY) || FCT_DEFAULT_URL;
   const urlInput = document.getElementById("fct-url");
-  if (urlInput && savedUrl) urlInput.value = savedUrl;
+  if (urlInput) urlInput.value = savedUrl;
   if (urlInput) urlInput.addEventListener("change", () => {
     localStorage.setItem(FCT_URL_KEY, urlInput.value.trim());
   });
