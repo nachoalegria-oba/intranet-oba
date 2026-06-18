@@ -5208,20 +5208,37 @@ function fctPopulateForm(data) {
   fctRenderLines(data.lineas || []);
 }
 
+function fctPriceAnomaly(l) {
+  if (l.precio_unitario == null) return null;
+  const key = fctMatchKey(l.alias || l.producto || "");
+  if (!key) return null;
+  const hist = fctPriceIndex[key]?.filter(e => e.precio_unitario != null);
+  if (!hist?.length) return null;
+  const avg = hist.slice(0, 5).reduce((s, e) => s + e.precio_unitario, 0) / Math.min(hist.length, 5);
+  const ratio = l.precio_unitario / avg;
+  if (ratio > 2) return `⚠️ Precio ${l.precio_unitario.toFixed(2)} €, histórico ~${avg.toFixed(2)} €. ¿Es precio/ud o total de línea?`;
+  if (ratio < 0.4) return `⚠️ Precio muy bajo vs histórico ~${avg.toFixed(2)} €. Revisa.`;
+  return null;
+}
+
 function fctRenderLines(lines) {
   const tbody = document.getElementById("fct-lines-body");
-  tbody.innerHTML = lines.map((l, i) => `
-    <tr id="fct-line-${i}">
+  tbody.innerHTML = lines.map((l, i) => {
+    const warn = fctPriceAnomaly(l);
+    return `
+    <tr id="fct-line-${i}"${warn ? ' class="fct-line-warn"' : ''}>
       <td>
         <input value="${escHtml(l.producto || "")}" placeholder="Producto" oninput="fctLineChange(${i},'producto',this.value)">
         <input value="${escHtml(l.alias || "")}" placeholder="Nombre en cocina (opcional)" class="fct-alias-input" oninput="fctLineChange(${i},'alias',this.value)">
+        ${warn ? `<div class="fct-line-warn-msg">${warn}</div>` : ""}
       </td>
       <td><input type="number" step="0.001" value="${l.cantidad ?? ""}" placeholder="—" style="width:72px" oninput="fctLineChange(${i},'cantidad',this.value)"></td>
       <td><input value="${escHtml(l.unidad || "")}" placeholder="kg" style="width:52px" oninput="fctLineChange(${i},'unidad',this.value)"></td>
       <td><input type="number" step="0.001" value="${l.precio_unitario ?? ""}" placeholder="—" style="width:80px" oninput="fctLineChange(${i},'precio_unitario',this.value)"></td>
       <td><input type="number" step="0.01" value="${l.precio_total ?? ""}" placeholder="—" style="width:80px" oninput="fctLineChange(${i},'precio_total',this.value)"></td>
       <td class="fct-td-del"><button onclick="fctDeleteLine(${i})" title="Eliminar línea">×</button></td>
-    </tr>`).join("");
+    </tr>`;
+  }).join("");
 }
 
 function fctLineChange(idx, field, value) {
