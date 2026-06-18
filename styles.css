@@ -3012,6 +3012,42 @@ p, span, div, label, td, th, input, select, textarea, button{
   .fct-meta-grid{grid-template-columns:1fr 1fr}
 }
 
+/* ── Facturas: tabs ─────────────────────────────────── */
+.fct-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--bg);border-radius:12px;padding:4px}
+.fct-tab{flex:1;padding:8px 0;border:none;background:transparent;border-radius:9px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
+.fct-tab.active{background:var(--surface);color:var(--label);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+
+/* ── Price badges (Pedidos list) ────────────────────── */
+.price-badge{display:inline-flex;align-items:center;gap:2px;font-size:11px;font-weight:600;padding:1px 6px;border-radius:8px;white-space:nowrap;line-height:1.6;vertical-align:middle}
+.price-badge-up{background:#FFF0EE;color:var(--red)}
+.price-badge-down{background:#EDFBF0;color:var(--green)}
+.price-badge-neutral{background:var(--bg);color:var(--muted)}
+.price-badge-lg{font-size:14px;padding:3px 10px;border-radius:10px}
+
+/* ── Price cards (Precios tab) ──────────────────────── */
+.price-card{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.price-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.price-card-name{font-size:16px;font-weight:700;color:var(--label)}
+.price-card-prov{font-size:12px;color:var(--muted);margin-top:2px}
+.price-card-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+.price-spark{display:flex;align-items:flex-end;gap:3px;height:36px;padding-top:4px}
+.price-spark-bar{width:8px;background:var(--blue);border-radius:3px 3px 0 0;opacity:.7;min-height:3px}
+.price-hist{margin-top:12px;display:flex;flex-direction:column;gap:4px}
+.price-hist-row{display:grid;grid-template-columns:90px 1fr auto;gap:8px;font-size:13px;padding:4px 0;border-top:1px solid var(--separator)}
+.price-hist-date{color:var(--muted);font-variant-numeric:tabular-nums}
+.price-hist-prov{color:var(--label);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.price-hist-price{font-weight:600;color:var(--label);white-space:nowrap}
+
+/* ── Provider cards (Proveedores tab) ───────────────── */
+.prov-card{background:var(--surface);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.prov-card-head{padding:12px 16px;font-size:15px;font-weight:700;background:var(--bg);display:flex;align-items:center;gap:8px}
+.prov-card-count{font-size:12px;font-weight:500;color:var(--muted)}
+.prov-card-body{padding:0 16px 8px}
+.prov-product-row{display:grid;grid-template-columns:1fr 80px auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--separator);font-size:13px}
+.prov-product-row:last-child{border-bottom:none}
+.prov-product-name{font-weight:500;color:var(--label)}
+.prov-product-date{color:var(--muted);font-size:12px;text-align:center}
+
 /* ── Impresión PDF (I+D) ───────────────────────────── */
 @media print{
   body.printing-id *{ visibility:hidden !important; }

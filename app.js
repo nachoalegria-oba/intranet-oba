@@ -1548,6 +1548,7 @@ function rPedLista() {
                   <div class="pedido-item-title-row">
                     <strong>${safeText(item.ing)}</strong>
                     ${bcat(item.cat)}
+                    ${fctPriceBadge(item.ing)}
                   </div>
                   <div class="pedido-item-sub">${safeText(item.platos || "Sin plato asociado")}</div>
                 </div>
@@ -4946,11 +4947,92 @@ document.addEventListener("DOMContentLoaded", () => {
 // Debe coincidir con el valor de firebase functions:secrets:set INTRANET_SECRET
 const INVOICE_SECRET = "oba-facturas-2025";
 const FCT_COL = "facturas";
+const PRECIOS_COL = "precios";
 const FCT_URL_KEY = "fct_url_v1";
 
 let fctFile = null;
 let fctExtracted = null;
 let fctInvoices = [];
+// fctPriceIndex: Map normalizedName → [{proveedor,fecha,precio_unitario,precio_total,cantidad,unidad,rawName}] (newest first)
+let fctPriceIndex = {};
+
+/* ── Tab switching ── */
+function fctTab(name, btn) {
+  ["escanear","precios","proveedores"].forEach(t => {
+    const el = document.getElementById("fct-tab-" + t);
+    if (el) el.style.display = t === name ? "" : "none";
+  });
+  document.querySelectorAll(".fct-tab").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  if (name === "precios") fctRenderPrecios();
+  if (name === "proveedores") fctRenderProveedores();
+}
+
+/* ── Price index helpers ── */
+function fctNorm(s) {
+  return (s || "").toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function fctBuildPriceIndex() {
+  fctPriceIndex = {};
+  const sorted = [...fctInvoices].sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
+  sorted.forEach(inv => {
+    (inv.lineas || []).forEach(l => {
+      if (!l.producto) return;
+      const key = fctNorm(l.producto);
+      if (!key) return;
+      if (!fctPriceIndex[key]) fctPriceIndex[key] = [];
+      fctPriceIndex[key].push({
+        proveedor: inv.proveedor || "—",
+        fecha: inv.fecha || null,
+        precio_unitario: l.precio_unitario ?? null,
+        precio_total: l.precio_total ?? null,
+        cantidad: l.cantidad ?? null,
+        unidad: l.unidad || null,
+        rawName: l.producto,
+      });
+    });
+  });
+}
+
+function fctMatchKey(name) {
+  const norm = fctNorm(name);
+  if (!norm) return null;
+  if (fctPriceIndex[norm]) return norm;
+  const words = norm.split(" ").filter(w => w.length > 2);
+  let best = null, bestScore = 0;
+  Object.keys(fctPriceIndex).forEach(key => {
+    const keyWords = key.split(" ").filter(w => w.length > 2);
+    const common = words.filter(w => keyWords.some(kw => kw.includes(w) || w.includes(kw))).length;
+    const score = common / Math.max(words.length, keyWords.length, 1);
+    if (score > bestScore && score >= 0.5) { best = key; bestScore = score; }
+  });
+  return best;
+}
+
+function fctPriceBadge(name) {
+  const key = fctMatchKey(name);
+  if (!key) return "";
+  const entries = fctPriceIndex[key];
+  if (!entries || !entries.length) return "";
+  const last = entries[0];
+  const price = last.precio_unitario ?? last.precio_total;
+  if (price == null) return "";
+  let trend = "→", tClass = "neutral";
+  if (entries.length >= 2) {
+    const prev = entries[1].precio_unitario ?? entries[1].precio_total;
+    if (prev != null) {
+      if (price > prev) { trend = "↑"; tClass = "up"; }
+      else if (price < prev) { trend = "↓"; tClass = "down"; }
+    }
+  }
+  const label = last.precio_unitario != null
+    ? `${price.toFixed(2)} €/${last.unidad || "ud"}`
+    : `${price.toFixed(2)} € total`;
+  return `<span class="price-badge price-badge-${tClass}" title="${escHtml(last.proveedor)} · ${last.fecha || "—"}">${trend} ${escHtml(label)}</span>`;
+}
 
 function initFacturas() {
   // Restaurar URL guardada
@@ -5137,14 +5219,33 @@ async function fctSave() {
   if (storageMode === "firebase" && db) {
     try {
       await db.collection(FCT_COL).doc(data.id).set({ ...data, _i: Date.now() });
+      // Guardar cada línea de precio en colección precios
+      const batch = db.batch();
+      (data.lineas || []).forEach((l, i) => {
+        if (!l.producto || (l.precio_unitario == null && l.precio_total == null)) return;
+        const ref = db.collection(PRECIOS_COL).doc(`${data.id}_${i}`);
+        batch.set(ref, {
+          producto: l.producto,
+          proveedor: data.proveedor,
+          fecha: data.fecha,
+          precio_unitario: l.precio_unitario ?? null,
+          precio_total: l.precio_total ?? null,
+          cantidad: l.cantidad ?? null,
+          unidad: l.unidad || null,
+          facturaId: data.id,
+          _i: Date.now(),
+        });
+      });
+      await batch.commit();
     } catch (e) {
-      console.warn("Firestore facturas:", e);
+      console.warn("Firestore facturas/precios:", e);
     }
   }
 
   // Guardar siempre en localStorage como fallback
   fctInvoices.unshift(data);
   fctPersistLocal();
+  fctBuildPriceIndex();
   fctRenderHistory();
   showToast(`Factura de ${data.proveedor} guardada ✓`);
   fctReset();
@@ -5163,7 +5264,9 @@ async function fctLoadInvoices() {
       if (!snap.empty) {
         fctInvoices = snap.docs.map(d => { const o = { ...d.data() }; delete o._i; return o; });
         fctPersistLocal();
+        fctBuildPriceIndex();
         fctRenderHistory();
+        if (typeof rPedLista === "function" && document.getElementById("pp-lista")) rPedLista();
         return;
       }
     } catch(e) { console.warn("fctLoadInvoices Firestore:", e); }
@@ -5173,7 +5276,10 @@ async function fctLoadInvoices() {
     const s = localStorage.getItem("fct_invoices_v1");
     if (s) fctInvoices = JSON.parse(s);
   } catch(e) {}
+  fctBuildPriceIndex();
   fctRenderHistory();
+  // Refresh pedidos list so price badges appear without needing a tab switch
+  if (typeof rPedLista === "function" && document.getElementById("pp-lista")) rPedLista();
 }
 
 async function fctDeleteInvoice(id) {
@@ -5217,6 +5323,116 @@ function fctRenderHistory() {
         </div>
         ${linesSummary ? `<div class="fct-inv-body"><div class="fct-inv-lines">${linesSummary}${more}</div></div>` : ""}
       </div>`;
+  }).join("");
+}
+
+/* ── Pestaña Precios ── */
+function fctRenderPrecios() {
+  const container = document.getElementById("fct-precios-list");
+  if (!container) return;
+  const q = fctNorm(document.getElementById("fct-price-search")?.value || "");
+  const keys = Object.keys(fctPriceIndex).filter(k => !q || k.includes(q) || fctNorm(fctPriceIndex[k][0]?.rawName || "").includes(q));
+  keys.sort();
+
+  if (!keys.length) {
+    container.innerHTML = `<div class="fct-empty">${q ? "Sin resultados." : "Aún no hay datos de precios. Escanea y guarda facturas para ver la evolución."}</div>`;
+    return;
+  }
+
+  container.innerHTML = keys.map(key => {
+    const entries = fctPriceIndex[key];
+    const rawName = entries[0].rawName;
+    const last = entries[0];
+    const lastPrice = last.precio_unitario ?? last.precio_total;
+
+    let trend = "→", tClass = "neutral";
+    if (entries.length >= 2) {
+      const prev = entries[1].precio_unitario ?? entries[1].precio_total;
+      if (prev != null && lastPrice != null) {
+        if (lastPrice > prev) { trend = "↑"; tClass = "up"; }
+        else if (lastPrice < prev) { trend = "↓"; tClass = "down"; }
+      }
+    }
+
+    const sparklines = entries.slice(0, 8).reverse().map((e, i, arr) => {
+      const p = e.precio_unitario ?? e.precio_total ?? 0;
+      const maxP = Math.max(...arr.map(x => x.precio_unitario ?? x.precio_total ?? 0), 0.01);
+      const h = Math.round((p / maxP) * 32);
+      return `<div class="price-spark-bar" style="height:${h}px" title="${e.fecha || "—"}: ${p.toFixed(2)} €"></div>`;
+    }).join("");
+
+    const history = entries.slice(0, 6).map(e => {
+      const p = e.precio_unitario ?? e.precio_total;
+      return `<div class="price-hist-row">
+        <span class="price-hist-date">${e.fecha || "—"}</span>
+        <span class="price-hist-prov">${escHtml(e.proveedor)}</span>
+        <span class="price-hist-price">${p != null ? p.toFixed(2) + " €" : "—"}${e.precio_unitario != null && e.unidad ? `/${e.unidad}` : ""}</span>
+      </div>`;
+    }).join("");
+
+    return `<div class="price-card">
+      <div class="price-card-head">
+        <div>
+          <div class="price-card-name">${escHtml(rawName)}</div>
+          <div class="price-card-prov">${escHtml(last.proveedor)} · ${last.fecha || "—"}</div>
+        </div>
+        <div class="price-card-right">
+          <span class="price-badge price-badge-lg price-badge-${tClass}">${trend} ${lastPrice != null ? lastPrice.toFixed(2) + " €" : "—"}</span>
+          <div class="price-spark">${sparklines}</div>
+        </div>
+      </div>
+      <div class="price-hist">${history}</div>
+    </div>`;
+  }).join("");
+}
+
+/* ── Pestaña Proveedores ── */
+function fctRenderProveedores() {
+  const container = document.getElementById("fct-proveedores-list");
+  if (!container) return;
+  const q = fctNorm(document.getElementById("fct-prov-search")?.value || "");
+
+  // Build provider → products map
+  const provMap = {};
+  Object.values(fctPriceIndex).forEach(entries => {
+    entries.forEach(e => {
+      const prov = e.proveedor || "—";
+      if (q && !fctNorm(prov).includes(q)) return;
+      if (!provMap[prov]) provMap[prov] = {};
+      const key = fctNorm(e.rawName);
+      if (!provMap[prov][key]) provMap[prov][key] = { rawName: e.rawName, entries: [] };
+      provMap[prov][key].entries.push(e);
+    });
+  });
+
+  const provs = Object.keys(provMap).sort();
+  if (!provs.length) {
+    container.innerHTML = `<div class="fct-empty">${q ? "Sin resultados." : "Aún no hay datos de proveedores."}</div>`;
+    return;
+  }
+
+  container.innerHTML = provs.map(prov => {
+    const products = Object.values(provMap[prov]).sort((a,b) => a.rawName.localeCompare(b.rawName, "es"));
+    const rows = products.map(p => {
+      const last = p.entries[0];
+      const prev = p.entries[1];
+      const lastP = last.precio_unitario ?? last.precio_total;
+      const prevP = prev ? (prev.precio_unitario ?? prev.precio_total) : null;
+      let trend = "→", tClass = "neutral";
+      if (prevP != null && lastP != null) {
+        if (lastP > prevP) { trend = "↑"; tClass = "up"; }
+        else if (lastP < prevP) { trend = "↓"; tClass = "down"; }
+      }
+      return `<div class="prov-product-row">
+        <span class="prov-product-name">${escHtml(p.rawName)}</span>
+        <span class="prov-product-date">${last.fecha || "—"}</span>
+        <span class="price-badge price-badge-${tClass}">${trend} ${lastP != null ? lastP.toFixed(2) + " €" : "—"}</span>
+      </div>`;
+    }).join("");
+    return `<div class="prov-card">
+      <div class="prov-card-head">${escHtml(prov)} <span class="prov-card-count">${products.length} producto${products.length !== 1 ? "s" : ""}</span></div>
+      <div class="prov-card-body">${rows}</div>
+    </div>`;
   }).join("");
 }
 
