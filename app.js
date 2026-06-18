@@ -4782,7 +4782,7 @@ function registerPWA() {
     hideInstallCardOnly();
   };
   const showInstall = () => {
-    if (isStandaloneMode()) {
+    if (isStandaloneMode() || !supportsManualInstallHint()) {
       hideInstallEverywhere();
       return;
     }
