@@ -398,6 +398,9 @@
 
         <!-- TAB: ESCANEAR -->
         <div class="fct-tab-content" id="fct-tab-escanear">
+          <!-- Batch queue bar (visible only when processing multiple invoices) -->
+          <div id="fct-batch-bar" style="display:none"></div>
+
           <!-- Uploader -->
           <div class="fct-upload-area" id="fct-drop" onclick="document.getElementById('fct-file').click()" ondragover="fctDragOver(event)" ondragleave="fctDragLeave(event)" ondrop="fctDrop(event)">
             <input type="file" id="fct-file" accept="image/*,application/pdf" multiple style="display:none" onchange="fctFileChosen(event)">
@@ -427,7 +430,7 @@
             <div id="fct-result" style="display:none">
               <div class="fct-result-head">
                 <h3 class="fct-result-title">Datos extraídos</h3>
-                <button class="primary-btn" onclick="fctSave()"><i class="ph-fill ph-floppy-disk"></i> Guardar factura</button>
+                <button class="primary-btn" id="fct-save-btn" onclick="fctSave()"><i class="ph-fill ph-floppy-disk"></i> Guardar factura</button>
               </div>
               <div class="fct-meta-grid">
                 <div class="fct-field">

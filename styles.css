@@ -3061,6 +3061,14 @@ p, span, div, label, td, th, input, select, textarea, button{
 .fct-thumb-label{display:block;text-align:center;font-size:11px;color:var(--muted);margin-top:3px}
 .fct-thumb-del{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;border:none;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
 .fct-thumb-actions{display:flex;gap:8px;padding:4px 0 12px}
+/* Batch queue bar */
+#fct-batch-bar{background:var(--surface2,#f5f5fa);border:1px solid var(--separator);border-radius:12px;padding:10px 14px;margin-bottom:12px;display:flex;flex-direction:column;gap:8px}
+.fct-batch-meta{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.fct-batch-chips{display:flex;gap:6px;flex-wrap:wrap}
+.fct-q-chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;padding:4px 10px;border-radius:20px;background:var(--surface3,#e8e8f0);color:var(--secondary-label);white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis}
+.fct-q-cur{background:var(--blue,#007AFF);color:#fff}
+.fct-q-done{background:#d4f4dd;color:#1a7a3a}
+.fct-q-err{background:#fde8e8;color:#c0392b}
 .fct-inv-view{background:var(--blue);color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:600;padding:5px 12px;border-radius:8px}.fct-inv-view:hover{opacity:.85}
 .fct-cfg-row-main{display:flex;align-items:center;gap:8px;padding:10px 0 14px;border-bottom:1px solid var(--separator);margin-bottom:16px}
 .fct-cfg-row-main .fct-url-input{flex:1;min-width:0}
