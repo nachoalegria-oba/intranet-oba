@@ -462,19 +462,13 @@
             </div>
           </div>
 
-          <!-- Config URL (siempre visible) -->
-          <div class="fct-cfg-row fct-cfg-row-main">
-            <span style="font-size:12px;color:var(--muted);white-space:nowrap">URL del worker:</span>
-            <input id="fct-url" class="fct-url-input" type="url" placeholder="https://oba-invoice-scanner.obarestaurante.workers.dev" value="">
-            <button class="ghost-btn ghost-btn-sm" onclick="fctSaveUrl()">Guardar</button>
-          </div>
-
           <!-- Historial facturas -->
           <div class="fct-history-head">
             <h2 class="fct-history-title">Facturas guardadas</h2>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
               <input class="search-input" id="fct-search" type="text" placeholder="Buscar proveedor…" oninput="fctRenderHistory()" style="width:190px">
               <button class="ghost-btn ghost-btn-sm" onclick="fctExportCSV()">Exportar CSV</button>
+              <button class="ghost-btn ghost-btn-sm" onclick="fctOpenReportModal()">📄 Informe mensual</button>
             </div>
           </div>
           <div id="fct-history-list"></div>
