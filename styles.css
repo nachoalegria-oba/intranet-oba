@@ -3013,6 +3013,9 @@ p, span, div, label, td, th, input, select, textarea, button{
 .fct-inv-line-price{font-size:13px;font-weight:700;color:var(--blue);white-space:nowrap;font-family:'Space Mono',monospace}
 .fct-inv-more{display:none}.fct-inv-more.open{display:block}
 .fct-inv-expand{background:none;border:none;color:var(--blue);font-size:12px;font-weight:600;cursor:pointer;padding:6px 0;width:100%;text-align:left}
+.fct-inv-iva-row{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);padding:8px 0;border-top:1px solid var(--line);margin-top:4px}
+.fct-inv-iva-row span b{color:var(--text)}
+.fct-inv-iva-total{margin-left:auto;font-size:13px;color:var(--blue)}
 .fct-inv-actions{display:flex;gap:8px;padding-top:8px;border-top:1px solid var(--line);margin-top:6px}
 .fct-inv-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;padding:5px 10px;border-radius:8px;font-weight:500}
 .fct-inv-del:hover{color:var(--red);background:var(--red-soft)}
