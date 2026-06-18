@@ -5288,10 +5288,11 @@ async function fctSave() {
     } catch(e) {}
   }
 
-  // Guardar en Firestore si está disponible
+  // Guardar en Firestore si está disponible (sin imágenes — superan el límite de 1MB)
   if (storageMode === "firebase" && db) {
     try {
-      await db.collection(FCT_COL).doc(data.id).set({ ...data, _i: Date.now() });
+      const { imagenesBase64, imagenBase64, ...dataFirestore } = data;
+      await db.collection(FCT_COL).doc(data.id).set({ ...dataFirestore, _i: Date.now() });
       // Guardar cada línea de precio en colección precios
       const batch = db.batch();
       (data.lineas || []).forEach((l, i) => {
@@ -5345,7 +5346,20 @@ function fctLoadInvoices() {
   if (storageMode === "firebase" && db && !_fctUnsub) {
     _fctUnsub = db.collection(FCT_COL).orderBy("_i", "desc").limit(200)
       .onSnapshot(snap => {
-        fctInvoices = snap.docs.map(d => { const o = { ...d.data() }; delete o._i; return o; });
+        // Build a map of local images keyed by invoice id so they survive the Firestore sync
+        const localImgs = {};
+        fctInvoices.forEach(f => {
+          if (f.imagenesBase64?.length || f.imagenBase64) {
+            localImgs[f.id] = { imagenesBase64: f.imagenesBase64, imagenBase64: f.imagenBase64 };
+          }
+        });
+        fctInvoices = snap.docs.map(d => {
+          const o = { ...d.data() };
+          delete o._i;
+          // Re-attach local images if this device has them
+          if (localImgs[o.id]) Object.assign(o, localImgs[o.id]);
+          return o;
+        });
         fctPersistLocal();
         fctBuildPriceIndex();
         fctRenderHistory();
