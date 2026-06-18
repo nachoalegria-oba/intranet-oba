@@ -5038,23 +5038,9 @@ function fctPriceBadge(name) {
 const FCT_DEFAULT_URL = "https://oba-invoice-scanner.obarestaurante.workers.dev";
 
 function initFacturas() {
-  // Restaurar URL guardada (o usar la default)
-  const savedUrl = localStorage.getItem(FCT_URL_KEY) || FCT_DEFAULT_URL;
-  const urlInput = document.getElementById("fct-url");
-  if (urlInput) urlInput.value = savedUrl;
-  if (urlInput) urlInput.addEventListener("change", () => {
-    localStorage.setItem(FCT_URL_KEY, urlInput.value.trim());
-  });
-}
-
-function fctSaveUrl() {
-  const urlInput = document.getElementById("fct-url");
-  if (!urlInput) return;
-  localStorage.setItem(FCT_URL_KEY, urlInput.value.trim());
-  showToast("URL guardada ✓");
-
-  // Cargar historial desde Firestore (o localStorage como fallback)
-  fctLoadInvoices();
+  if (!localStorage.getItem(FCT_URL_KEY)) {
+    localStorage.setItem(FCT_URL_KEY, FCT_DEFAULT_URL);
+  }
 }
 
 /* ── Drag & drop helpers ── */
@@ -5135,12 +5121,7 @@ function fctReset() {
 
 /* ── Escanear con IA ── */
 async function fctScan() {
-  const url = (document.getElementById("fct-url")?.value || "").trim();
-  if (!url) {
-    showToast("Introduce la URL del worker primero.", "warn");
-    document.getElementById("fct-url").focus();
-    return;
-  }
+  const url = localStorage.getItem(FCT_URL_KEY) || FCT_DEFAULT_URL;
   if (!fctFiles.length) return;
 
   const btn = document.getElementById("fct-scan-btn");
