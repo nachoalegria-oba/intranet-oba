@@ -5201,6 +5201,9 @@ function fctPopulateForm(data) {
   document.getElementById("fe-proveedor").value = data.proveedor || "";
   document.getElementById("fe-fecha").value = data.fecha || "";
   document.getElementById("fe-numero").value = data.numero_factura || "";
+  document.getElementById("fe-base").value = data.base_imponible ?? "";
+  document.getElementById("fe-iva-pct").value = data.iva_pct ?? "";
+  document.getElementById("fe-iva").value = data.iva_total ?? "";
   document.getElementById("fe-total").value = data.total_factura ?? "";
   fctRenderLines(data.lineas || []);
 }
@@ -5277,6 +5280,9 @@ async function fctSave() {
     proveedor: document.getElementById("fe-proveedor").value.trim() || null,
     fecha: document.getElementById("fe-fecha").value || null,
     numero_factura: document.getElementById("fe-numero").value.trim() || null,
+    base_imponible: parseFloat(document.getElementById("fe-base").value) || null,
+    iva_pct: parseInt(document.getElementById("fe-iva-pct").value) || null,
+    iva_total: parseFloat(document.getElementById("fe-iva").value) || null,
     total_factura: parseFloat(document.getElementById("fe-total").value) || null,
     lineas: fctExtracted?.lineas || [],
     guardadoEn: new Date().toISOString(),
@@ -5533,6 +5539,12 @@ function fctRenderHistory() {
             ${hasMore ? `<div class="fct-inv-more" id="ficm-${f.id}">${rest}</div>
             <button class="fct-inv-expand" id="fice-${f.id}" onclick="fctExpandCard('${f.id}')">Ver los ${lineas.length} ingredientes ▾</button>` : ""}
           </div>
+          ${(f.base_imponible != null || f.iva_total != null) ? `
+          <div class="fct-inv-iva-row">
+            ${f.base_imponible != null ? `<span>Base: <b>${f.base_imponible.toFixed(2)} €</b></span>` : ""}
+            ${f.iva_pct != null ? `<span>IVA ${f.iva_pct}%${f.iva_total != null ? `: <b>${f.iva_total.toFixed(2)} €</b>` : ""}</span>` : ""}
+            ${f.total_factura != null ? `<span class="fct-inv-iva-total">Total: <b>${f.total_factura.toFixed(2)} €</b></span>` : ""}
+          </div>` : ""}
           <div class="fct-inv-actions">
             ${(f.numPaginas || f.imagenesBase64?.length || f.imagenBase64) ? `<button class="fct-inv-view" onclick="event.stopPropagation();fctViewImage('${f.id}')">Ver factura</button>` : ""}
             <button class="fct-inv-del" onclick="event.stopPropagation();fctDeleteInvoice('${f.id}')" title="Borrar">Eliminar</button>
@@ -5776,6 +5788,7 @@ function fctGenerateReport(month, year) {
       .subtitle{color:#666;font-size:14px;margin-top:2px}
       .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1a1a1a;padding-bottom:16px;margin-bottom:24px}
       .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px}
+      @media(max-width:500px){.kpis{grid-template-columns:repeat(2,1fr)}}
       .kpi{background:#f5f5f5;border-radius:10px;padding:14px 16px}
       .kpi-label{font-size:11px;text-transform:uppercase;color:#888;font-weight:600;letter-spacing:.5px}
       .kpi-value{font-size:22px;font-weight:800;margin-top:2px}
@@ -5802,21 +5815,34 @@ function fctGenerateReport(month, year) {
     </div>
 
     <div class="kpis">
-      <div class="kpi"><div class="kpi-label">Total del mes</div><div class="kpi-value">${total.toFixed(2)} €</div></div>
+      <div class="kpi"><div class="kpi-label">Base imponible</div><div class="kpi-value">${invoices.reduce((s,f)=>s+(f.base_imponible||0),0).toFixed(2)} €</div></div>
+      <div class="kpi"><div class="kpi-label">IVA total</div><div class="kpi-value">${invoices.reduce((s,f)=>s+(f.iva_total||0),0).toFixed(2)} €</div></div>
+      <div class="kpi"><div class="kpi-label">Total con IVA</div><div class="kpi-value">${total.toFixed(2)} €</div></div>
       <div class="kpi"><div class="kpi-label">Facturas</div><div class="kpi-value">${invoices.length}</div></div>
       <div class="kpi"><div class="kpi-label">Proveedores</div><div class="kpi-value">${Object.keys(byProv).length}</div></div>
     </div>
 
     <div class="section-title">Resumen por proveedor</div>
     <table>
-      <thead><tr><th>Proveedor</th><th style="text-align:center">Facturas</th><th style="text-align:right">Total</th><th style="text-align:right">% gasto</th></tr></thead>
-      <tbody>${summaryRows}</tbody>
+      <thead><tr><th>Proveedor</th><th style="text-align:center">Facturas</th><th style="text-align:right">Base imp.</th><th style="text-align:right">IVA</th><th style="text-align:right">Total</th></tr></thead>
+      <tbody>${Object.entries(byProv).sort((a,b)=>b[1].total-a[1].total).map(([prov,d])=>`
+        <tr>
+          <td>${escHtml(prov)}</td>
+          <td style="text-align:center">${d.invoices.length}</td>
+          <td style="text-align:right">${d.invoices.reduce((s,f)=>s+(f.base_imponible||0),0).toFixed(2)} €</td>
+          <td style="text-align:right">${d.invoices.reduce((s,f)=>s+(f.iva_total||0),0).toFixed(2)} €</td>
+          <td style="text-align:right;font-weight:700">${d.total.toFixed(2)} €</td>
+        </tr>`).join("")}</tbody>
     </table>
 
     <div class="section-title" style="margin-top:32px">Detalle de facturas</div>
     ${detailSections}
 
-    <div class="total-row">Total compras ${months[month-1]} ${year}: <strong>${total.toFixed(2)} €</strong></div>
+    <div class="total-row">
+      Base imponible: ${invoices.reduce((s,f)=>s+(f.base_imponible||0),0).toFixed(2)} € &nbsp;·&nbsp;
+      IVA: ${invoices.reduce((s,f)=>s+(f.iva_total||0),0).toFixed(2)} € &nbsp;·&nbsp;
+      <strong>Total ${months[month-1]} ${year}: ${total.toFixed(2)} €</strong>
+    </div>
 
     <div class="footer">
       <span>Oba Restaurante · Intranet de gestión</span>
