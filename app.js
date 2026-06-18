@@ -5210,6 +5210,29 @@ function fctAddLine() {
 }
 
 /* ── Guardar en Firestore ── */
+/* Comprime la imagen a max 1200px JPEG 65% para guardar en Firestore (~150-300KB) */
+function fctCompressImage(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 1200;
+        let w = img.width, h = img.height;
+        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.65));
+      };
+      img.onerror = () => resolve(e.target.result);
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve(null);
+    reader.readAsDataURL(file);
+  });
+}
+
 async function fctSave() {
   const data = {
     proveedor: document.getElementById("fe-proveedor").value.trim() || null,
@@ -5225,6 +5248,14 @@ async function fctSave() {
     showToast("Añade al menos el nombre del proveedor antes de guardar.", "warn");
     document.getElementById("fe-proveedor").focus();
     return;
+  }
+
+  // Comprimir imagen y añadirla al documento
+  if (fctFile) {
+    try {
+      const compressed = await fctCompressImage(fctFile);
+      if (compressed) data.imagenBase64 = compressed;
+    } catch(e) {}
   }
 
   // Guardar en Firestore si está disponible
@@ -5252,11 +5283,6 @@ async function fctSave() {
     } catch (e) {
       console.warn("Firestore facturas/precios:", e);
     }
-  }
-
-  // Guardar imagen original en localStorage (solo en este dispositivo)
-  if (fctImageDataUrl) {
-    try { localStorage.setItem("fct_img_" + data.id, fctImageDataUrl); } catch(e) {}
   }
 
   // Guardar siempre en localStorage como fallback
@@ -5313,8 +5339,9 @@ async function fctDeleteInvoice(id) {
 
 /* ── Ver / descargar imagen original ── */
 function fctViewImage(id) {
-  const dataUrl = localStorage.getItem("fct_img_" + id);
-  if (!dataUrl) { showToast("Imagen no disponible en este dispositivo", "warn"); return; }
+  const inv = fctInvoices.find(f => f.id === id);
+  const dataUrl = inv?.imagenBase64 || localStorage.getItem("fct_img_" + id);
+  if (!dataUrl) { showToast("Imagen no disponible", "warn"); return; }
   const modal = document.createElement("div");
   modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px";
   modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
@@ -5363,7 +5390,7 @@ function fctRenderHistory() {
           <span class="fct-inv-fecha">${f.fecha || "—"}</span>
           <span class="fct-inv-num">${f.numero_factura ? "Fac. " + escHtml(f.numero_factura) : ""}</span>
           ${f.total_factura != null ? `<span class="fct-inv-total">${Number(f.total_factura).toFixed(2)} €</span>` : ""}
-          ${localStorage.getItem("fct_img_" + f.id) ? `<button class="fct-inv-view" onclick="fctViewImage('${f.id}')" title="Ver original">🖼</button>` : ""}
+          ${(f.imagenBase64 || localStorage.getItem("fct_img_" + f.id)) ? `<button class="fct-inv-view" onclick="fctViewImage('${f.id}')" title="Ver original">🖼</button>` : ""}
           <button class="fct-inv-del" onclick="fctDeleteInvoice('${f.id}')" title="Borrar">✕</button>
         </div>
         ${linesSummary ? `<div class="fct-inv-body"><div class="fct-inv-lines">${linesSummary}${more}</div></div>` : ""}
