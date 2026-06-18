@@ -5576,6 +5576,168 @@ function fctRenderProveedores() {
   }).join("");
 }
 
+/* ── Informe mensual ── */
+function fctOpenReportModal() {
+  const now = new Date();
+  const months = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  const years = [];
+  const minYear = Math.min(...fctInvoices.map(f => parseInt((f.fecha||"").slice(0,4))).filter(Boolean), now.getFullYear());
+  for (let y = now.getFullYear(); y >= (minYear || now.getFullYear() - 3); y--) years.push(y);
+
+  const modal = document.createElement("div");
+  modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px";
+  modal.onclick = e => { if (e.target === modal) modal.remove(); };
+
+  modal.innerHTML = `
+    <div style="background:var(--surface);border-radius:20px;padding:28px;max-width:340px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.2)">
+      <h2 style="margin:0 0 6px;font-size:20px">Informe mensual</h2>
+      <p style="margin:0 0 20px;font-size:14px;color:var(--muted)">Selecciona el mes para generar el informe PDF para tu gestor.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px">MES</label>
+          <select id="rpt-month" style="width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--separator);background:var(--bg);font-size:14px;font-weight:600">
+            ${months.map((m,i) => `<option value="${i+1}"${i === now.getMonth() ? " selected" : ""}>${m}</option>`).join("")}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px">AÑO</label>
+          <select id="rpt-year" style="width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--separator);background:var(--bg);font-size:14px;font-weight:600">
+            ${years.map(y => `<option value="${y}"${y === now.getFullYear() ? " selected" : ""}>${y}</option>`).join("")}
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--bg);font-size:14px;font-weight:600;cursor:pointer">Cancelar</button>
+        <button onclick="fctGenerateReport(parseInt(document.getElementById('rpt-month').value),parseInt(document.getElementById('rpt-year').value));this.closest('div[style*=fixed]').remove()" style="flex:2;padding:12px;border-radius:12px;border:none;background:var(--blue);color:#fff;font-size:14px;font-weight:600;cursor:pointer">Generar PDF</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function fctGenerateReport(month, year) {
+  const months = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  const monthStr = `${year}-${String(month).padStart(2,"0")}`;
+  const invoices = fctInvoices.filter(f => (f.fecha || "").startsWith(monthStr));
+
+  if (!invoices.length) {
+    showToast(`Sin facturas en ${months[month-1]} ${year}`, "warn");
+    return;
+  }
+
+  const total = invoices.reduce((s, f) => s + (f.total_factura || 0), 0);
+  const byProv = {};
+  invoices.forEach(f => {
+    const p = f.proveedor || "Sin proveedor";
+    if (!byProv[p]) byProv[p] = { invoices: [], total: 0 };
+    byProv[p].invoices.push(f);
+    byProv[p].total += f.total_factura || 0;
+  });
+
+  const summaryRows = Object.entries(byProv).sort((a,b) => b[1].total - a[1].total).map(([prov, d]) => `
+    <tr>
+      <td>${escHtml(prov)}</td>
+      <td style="text-align:center">${d.invoices.length}</td>
+      <td style="text-align:right;font-weight:600">${d.total.toFixed(2)} €</td>
+      <td style="text-align:right;color:#888">${total > 0 ? Math.round(d.total/total*100) : 0}%</td>
+    </tr>`).join("");
+
+  const detailSections = Object.entries(byProv).sort((a,b) => b[1].total - a[1].total).map(([prov, d]) => {
+    const invRows = d.invoices.map(f => {
+      const lineRows = (f.lineas||[]).map(l => `
+        <tr style="font-size:12px;color:#555">
+          <td style="padding-left:16px;color:#333">${escHtml(l.producto||"—")}</td>
+          <td style="text-align:center">${l.cantidad != null ? l.cantidad + " " + (l.unidad||"") : "—"}</td>
+          <td style="text-align:right">${l.precio_unitario != null ? l.precio_unitario.toFixed(2)+" €" : "—"}</td>
+          <td style="text-align:right">${l.precio_total != null ? l.precio_total.toFixed(2)+" €" : "—"}</td>
+        </tr>`).join("");
+      return `
+        <tr style="background:#f8f8f8">
+          <td style="font-weight:600;padding:6px 8px">${escHtml(f.numero_factura ? "Fac. "+f.numero_factura : "Sin número")}</td>
+          <td style="text-align:center;color:#666">${f.fecha||"—"}</td>
+          <td></td>
+          <td style="text-align:right;font-weight:700">${f.total_factura != null ? f.total_factura.toFixed(2)+" €" : "—"}</td>
+        </tr>
+        ${lineRows}`;
+    }).join("");
+    return `
+      <div style="margin-bottom:28px">
+        <div style="font-size:15px;font-weight:700;color:#1a1a1a;padding:8px 0;border-bottom:2px solid #1a1a1a;margin-bottom:8px">${escHtml(prov)} <span style="font-weight:400;font-size:13px;color:#666">— ${d.total.toFixed(2)} €</span></div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="color:#888;font-size:11px;text-transform:uppercase">
+            <th style="text-align:left;padding:4px 8px">Concepto</th>
+            <th style="text-align:center">Cantidad</th>
+            <th style="text-align:right">P.Unit.</th>
+            <th style="text-align:right">Total</th>
+          </tr></thead>
+          <tbody>${invRows}</tbody>
+        </table>
+      </div>`;
+  }).join("");
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+    <title>Informe de compras ${months[month-1]} ${year} — Oba</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;color:#1a1a1a;padding:32px;max-width:800px;margin:0 auto;font-size:13px;line-height:1.5}
+      h1{font-size:26px;font-weight:800;letter-spacing:-0.5px}
+      .subtitle{color:#666;font-size:14px;margin-top:2px}
+      .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1a1a1a;padding-bottom:16px;margin-bottom:24px}
+      .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px}
+      .kpi{background:#f5f5f5;border-radius:10px;padding:14px 16px}
+      .kpi-label{font-size:11px;text-transform:uppercase;color:#888;font-weight:600;letter-spacing:.5px}
+      .kpi-value{font-size:22px;font-weight:800;margin-top:2px}
+      .section-title{font-size:16px;font-weight:700;margin-bottom:10px;margin-top:28px}
+      table{width:100%;border-collapse:collapse}
+      th{text-align:left;padding:6px 8px;font-size:11px;text-transform:uppercase;color:#888;border-bottom:1px solid #ddd;font-weight:600}
+      td{padding:7px 8px;border-bottom:1px solid #eee;vertical-align:top}
+      tr:last-child td{border-bottom:none}
+      .total-row{font-size:16px;font-weight:800;margin-top:24px;text-align:right;padding-top:16px;border-top:2px solid #1a1a1a}
+      .footer{margin-top:40px;padding-top:16px;border-top:1px solid #ddd;color:#aaa;font-size:11px;display:flex;justify-content:space-between}
+      @media print{body{padding:0} @page{margin:20mm}}
+    </style>
+  </head><body>
+    <div class="header">
+      <div>
+        <div style="font-size:28px;font-weight:900;letter-spacing:-1px">oba-</div>
+        <h1 style="font-size:20px;font-weight:700;margin-top:4px">Informe de Compras</h1>
+        <div class="subtitle">${months[month-1]} ${year}</div>
+      </div>
+      <div style="text-align:right;color:#888;font-size:12px">
+        Generado el ${new Date().toLocaleDateString("es-ES",{day:"2-digit",month:"long",year:"numeric"})}<br>
+        Restaurante Oba
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="kpi-label">Total del mes</div><div class="kpi-value">${total.toFixed(2)} €</div></div>
+      <div class="kpi"><div class="kpi-label">Facturas</div><div class="kpi-value">${invoices.length}</div></div>
+      <div class="kpi"><div class="kpi-label">Proveedores</div><div class="kpi-value">${Object.keys(byProv).length}</div></div>
+    </div>
+
+    <div class="section-title">Resumen por proveedor</div>
+    <table>
+      <thead><tr><th>Proveedor</th><th style="text-align:center">Facturas</th><th style="text-align:right">Total</th><th style="text-align:right">% gasto</th></tr></thead>
+      <tbody>${summaryRows}</tbody>
+    </table>
+
+    <div class="section-title" style="margin-top:32px">Detalle de facturas</div>
+    ${detailSections}
+
+    <div class="total-row">Total compras ${months[month-1]} ${year}: <strong>${total.toFixed(2)} €</strong></div>
+
+    <div class="footer">
+      <span>Oba Restaurante · Intranet de gestión</span>
+      <span>Datos extraídos automáticamente de facturas escaneadas con IA</span>
+    </div>
+    <script>window.onload=()=>window.print();<\/script>
+  </body></html>`;
+
+  const win = window.open("", "_blank");
+  if (!win) { showToast("Permite ventanas emergentes para generar el informe", "warn"); return; }
+  win.document.write(html);
+  win.document.close();
+}
+
 /* ── Exportar CSV ── */
 function fctExportCSV() {
   if (!fctInvoices.length) { showToast("No hay facturas para exportar", "warn"); return; }
