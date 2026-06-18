@@ -1,0 +1,12 @@
+{
+  "name": "oba-invoice-function",
+  "description": "Cloud Function que digitaliza facturas/albaranes con Claude para la intranet de Oba",
+  "main": "index.js",
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "firebase-functions": "^5.0.0"
+  },
+  "private": true
+}

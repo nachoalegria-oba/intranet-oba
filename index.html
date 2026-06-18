@@ -64,6 +64,7 @@
       <button class="nav-btn active" data-panel="inicio" onclick="sp('inicio')">Inicio</button>
       <button class="nav-btn" data-panel="recetario" onclick="sp('recetario')">Recetario</button>
       <button class="nav-btn" data-panel="pedidos" onclick="sp('pedidos')">Pedidos</button>
+      <button class="nav-btn" data-panel="facturas" onclick="sp('facturas')">Facturas</button>
       <button class="nav-btn" data-panel="menu" onclick="sp('menu')">Menú</button>
       <button class="nav-btn" data-panel="calendario" onclick="sp('calendario')">Calendario</button>
       <button class="nav-btn" data-panel="practicantes" onclick="sp('practicantes')">Practicantes</button>
@@ -378,6 +379,99 @@
         </div>
       </section>
 
+      <!-- ===== FACTURAS ===== -->
+      <section class="panel" id="panel-facturas">
+        <div class="section-head section-head-lg">
+          <div>
+            <div class="eyebrow">Control de costes</div>
+            <h1>Escáner de facturas</h1>
+            <p>Fotografía o sube una factura y Claude extrae los datos automáticamente.</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <span class="eyebrow" id="fct-status" style="margin:0"></span>
+          </div>
+        </div>
+
+        <!-- Uploader -->
+        <div class="fct-upload-area" id="fct-drop" onclick="document.getElementById('fct-file').click()" ondragover="fctDragOver(event)" ondragleave="fctDragLeave(event)" ondrop="fctDrop(event)">
+          <input type="file" id="fct-file" accept="image/*" capture="environment" style="display:none" onchange="fctFileChosen(event)">
+          <i class="ph-fill ph-camera" style="font-size:32px;color:var(--muted)"></i>
+          <div class="fct-upload-label">Arrastra una factura aquí o pulsa para abrir la cámara</div>
+          <div class="fct-upload-sub">JPG · PNG · HEIC · PDF (primera página)</div>
+        </div>
+
+        <!-- Preview + scan -->
+        <div id="fct-preview-area" style="display:none">
+          <div class="fct-preview-row">
+            <img id="fct-img" class="fct-preview-img" src="" alt="Previsualización factura">
+            <div class="fct-scan-panel">
+              <div class="fct-scan-status" id="fct-scan-status">Imagen lista para escanear</div>
+              <button class="primary-btn fct-scan-btn" id="fct-scan-btn" onclick="fctScan()">
+                <i class="ph-fill ph-sparkle"></i> Escanear con IA
+              </button>
+              <button class="ghost-btn ghost-btn-sm" onclick="fctReset()">Cambiar imagen</button>
+              <div class="fct-cfg-row">
+                <span style="font-size:12px;color:var(--muted)">Cloud Function:</span>
+                <input id="fct-url" class="fct-url-input" type="url" placeholder="https://europe-west1-intranet-oba.cloudfunctions.net/scanInvoice" value="">
+              </div>
+            </div>
+          </div>
+
+          <!-- Extracted data (editable) -->
+          <div id="fct-result" style="display:none">
+            <div class="fct-result-head">
+              <h3 class="fct-result-title">Datos extraídos <span id="fct-confidence"></span></h3>
+              <button class="primary-btn" onclick="fctSave()"><i class="ph-fill ph-floppy-disk"></i> Guardar factura</button>
+            </div>
+
+            <div class="fct-meta-grid">
+              <div class="fct-field">
+                <label class="fct-label">Proveedor</label>
+                <input class="fct-input" id="fe-proveedor" type="text" placeholder="—">
+              </div>
+              <div class="fct-field">
+                <label class="fct-label">Fecha</label>
+                <input class="fct-input" id="fe-fecha" type="date">
+              </div>
+              <div class="fct-field">
+                <label class="fct-label">N.º factura</label>
+                <input class="fct-input" id="fe-numero" type="text" placeholder="—">
+              </div>
+              <div class="fct-field">
+                <label class="fct-label">Total (€)</label>
+                <input class="fct-input" id="fe-total" type="number" step="0.01" placeholder="0.00">
+              </div>
+            </div>
+
+            <div class="fct-lines-wrap">
+              <div class="fct-lines-head">
+                <span class="eyebrow" style="margin:0">Líneas de producto</span>
+                <button class="ghost-btn ghost-btn-sm" onclick="fctAddLine()">+ Añadir línea</button>
+              </div>
+              <div class="fct-table-wrap">
+                <table class="fct-table" id="fct-lines-table">
+                  <thead><tr>
+                    <th>Producto</th><th>Cant.</th><th>Ud.</th><th>P. unit. €</th><th>P. total €</th><th></th>
+                  </tr></thead>
+                  <tbody id="fct-lines-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- History -->
+        <div class="fct-history-head">
+          <h2 class="fct-history-title">Historial de facturas</h2>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input class="search-input" id="fct-search" type="text" placeholder="Buscar proveedor…" oninput="fctRenderHistory()" style="width:200px">
+            <button class="ghost-btn ghost-btn-sm" onclick="fctExportCSV()">Exportar CSV</button>
+          </div>
+        </div>
+        <div id="fct-history-list"></div>
+
+      </section>
+
       <section class="panel" id="panel-ia">
         <div class="section-head section-head-lg">
           <div>
@@ -449,6 +543,7 @@
       <button class="hnav-btn active" data-panel="inicio" onclick="sp('inicio')">Inicio</button>
       <button class="hnav-btn" data-panel="recetario" onclick="sp('recetario')">Recetario</button>
       <button class="hnav-btn" data-panel="pedidos" onclick="sp('pedidos')">Pedidos</button>
+      <button class="hnav-btn" data-panel="facturas" onclick="sp('facturas')">Facturas</button>
       <button class="hnav-btn" data-panel="menu" onclick="sp('menu')">Menú</button>
       <button class="hnav-btn" data-panel="calendario" onclick="sp('calendario')">Calendario</button>
       <button class="hnav-btn" data-panel="practicantes" onclick="sp('practicantes')">Practicantes</button>

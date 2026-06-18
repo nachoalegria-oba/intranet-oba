@@ -4934,5 +4934,334 @@ document.addEventListener("DOMContentLoaded", () => {
   setupPedFloatBar();
   registerPWA();
   initIA();
+  initFacturas();
   initData().catch((error) => showError(error.message));
 });
+
+/* ═══════════════════════════════════════════════════════
+   ESCÁNER DE FACTURAS
+   ═══════════════════════════════════════════════════════ */
+
+// Secreto compartido con la Cloud Function.
+// Debe coincidir con el valor de firebase functions:secrets:set INTRANET_SECRET
+const INVOICE_SECRET = "oba-facturas-2025";
+const FCT_COL = "facturas";
+const FCT_URL_KEY = "fct_url_v1";
+
+let fctFile = null;
+let fctExtracted = null;
+let fctInvoices = [];
+
+function initFacturas() {
+  // Restaurar URL guardada
+  const savedUrl = localStorage.getItem(FCT_URL_KEY) || "";
+  const urlInput = document.getElementById("fct-url");
+  if (urlInput && savedUrl) urlInput.value = savedUrl;
+  if (urlInput) urlInput.addEventListener("change", () => {
+    localStorage.setItem(FCT_URL_KEY, urlInput.value.trim());
+  });
+
+  // Cargar historial desde Firestore (o localStorage como fallback)
+  fctLoadInvoices();
+}
+
+/* ── Drag & drop helpers ── */
+function fctDragOver(e) {
+  e.preventDefault();
+  document.getElementById("fct-drop").classList.add("drag-over");
+}
+function fctDragLeave() {
+  document.getElementById("fct-drop").classList.remove("drag-over");
+}
+function fctDrop(e) {
+  e.preventDefault();
+  document.getElementById("fct-drop").classList.remove("drag-over");
+  const file = e.dataTransfer?.files?.[0];
+  if (file) fctLoadFile(file);
+}
+function fctFileChosen(e) {
+  const file = e.target.files?.[0];
+  if (file) fctLoadFile(file);
+}
+
+function fctLoadFile(file) {
+  if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
+    showToast("Formato no compatible. Usa JPG, PNG, HEIC o PDF.", "error");
+    return;
+  }
+  fctFile = file;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById("fct-img").src = e.target.result;
+    document.getElementById("fct-drop").style.display = "none";
+    document.getElementById("fct-preview-area").style.display = "";
+    document.getElementById("fct-result").style.display = "none";
+    document.getElementById("fct-scan-status").textContent = `${file.name} — lista para escanear`;
+    fctExtracted = null;
+  };
+  reader.readAsDataURL(file);
+}
+
+function fctReset() {
+  fctFile = null;
+  fctExtracted = null;
+  document.getElementById("fct-drop").style.display = "";
+  document.getElementById("fct-preview-area").style.display = "none";
+  document.getElementById("fct-result").style.display = "none";
+  document.getElementById("fct-file").value = "";
+}
+
+/* ── Escanear con IA ── */
+async function fctScan() {
+  const url = (document.getElementById("fct-url")?.value || "").trim();
+  if (!url) {
+    showToast("Introduce la URL de la Cloud Function primero.", "warn");
+    document.getElementById("fct-url").focus();
+    return;
+  }
+  if (!fctFile) return;
+
+  const btn = document.getElementById("fct-scan-btn");
+  const status = document.getElementById("fct-scan-status");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="fct-spinner"></span> Analizando…';
+  status.textContent = "Claude está leyendo la factura…";
+
+  try {
+    const base64 = await fctToBase64(fctFile);
+    const mediaType = fctFile.type === "application/pdf" ? "image/jpeg" : fctFile.type;
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${INVOICE_SECRET}`,
+      },
+      body: JSON.stringify({ imageBase64: base64, mediaType }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
+
+    fctExtracted = await res.json();
+    fctPopulateForm(fctExtracted);
+    document.getElementById("fct-result").style.display = "";
+    status.textContent = "Datos extraídos — revísalos antes de guardar.";
+    localStorage.setItem(FCT_URL_KEY, url);
+
+  } catch (err) {
+    status.textContent = `Error: ${err.message}`;
+    showToast("No se pudo escanear la factura. Revisa la URL y vuelve a intentarlo.", "error");
+    console.error("fctScan:", err);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ph-fill ph-sparkle"></i> Escanear con IA';
+  }
+}
+
+function fctToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      // DataURL format: "data:image/jpeg;base64,XXXX" — queremos solo XXXX
+      const result = reader.result;
+      const b64 = result.split(",")[1];
+      resolve(b64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ── Rellenar formulario editable ── */
+function fctPopulateForm(data) {
+  document.getElementById("fe-proveedor").value = data.proveedor || "";
+  document.getElementById("fe-fecha").value = data.fecha || "";
+  document.getElementById("fe-numero").value = data.numero_factura || "";
+  document.getElementById("fe-total").value = data.total_factura ?? "";
+  fctRenderLines(data.lineas || []);
+}
+
+function fctRenderLines(lines) {
+  const tbody = document.getElementById("fct-lines-body");
+  tbody.innerHTML = lines.map((l, i) => `
+    <tr id="fct-line-${i}">
+      <td><input value="${escHtml(l.producto || "")}" placeholder="Producto" oninput="fctLineChange(${i},'producto',this.value)"></td>
+      <td><input type="number" step="0.001" value="${l.cantidad ?? ""}" placeholder="—" style="width:72px" oninput="fctLineChange(${i},'cantidad',this.value)"></td>
+      <td><input value="${escHtml(l.unidad || "")}" placeholder="kg" style="width:52px" oninput="fctLineChange(${i},'unidad',this.value)"></td>
+      <td><input type="number" step="0.001" value="${l.precio_unitario ?? ""}" placeholder="—" style="width:80px" oninput="fctLineChange(${i},'precio_unitario',this.value)"></td>
+      <td><input type="number" step="0.01" value="${l.precio_total ?? ""}" placeholder="—" style="width:80px" oninput="fctLineChange(${i},'precio_total',this.value)"></td>
+      <td class="fct-td-del"><button onclick="fctDeleteLine(${i})" title="Eliminar línea">×</button></td>
+    </tr>`).join("");
+}
+
+function fctLineChange(idx, field, value) {
+  if (!fctExtracted) return;
+  if (!fctExtracted.lineas[idx]) return;
+  fctExtracted.lineas[idx][field] = (field === "producto" || field === "unidad") ? value : (value === "" ? null : Number(value));
+}
+
+function fctDeleteLine(idx) {
+  if (!fctExtracted) return;
+  fctExtracted.lineas.splice(idx, 1);
+  fctRenderLines(fctExtracted.lineas);
+}
+
+function fctAddLine() {
+  if (!fctExtracted) fctExtracted = { proveedor: null, fecha: null, numero_factura: null, lineas: [], total_factura: null };
+  fctExtracted.lineas.push({ producto: "", cantidad: null, unidad: null, precio_unitario: null, precio_total: null });
+  fctRenderLines(fctExtracted.lineas);
+}
+
+/* ── Guardar en Firestore ── */
+async function fctSave() {
+  const data = {
+    proveedor: document.getElementById("fe-proveedor").value.trim() || null,
+    fecha: document.getElementById("fe-fecha").value || null,
+    numero_factura: document.getElementById("fe-numero").value.trim() || null,
+    total_factura: parseFloat(document.getElementById("fe-total").value) || null,
+    lineas: fctExtracted?.lineas || [],
+    guardadoEn: new Date().toISOString(),
+    id: "f_" + Date.now(),
+  };
+
+  if (!data.proveedor) {
+    showToast("Añade al menos el nombre del proveedor antes de guardar.", "warn");
+    document.getElementById("fe-proveedor").focus();
+    return;
+  }
+
+  // Guardar en Firestore si está disponible
+  if (storageMode === "firebase" && db) {
+    try {
+      await db.collection(FCT_COL).doc(data.id).set({ ...data, _i: Date.now() });
+    } catch (e) {
+      console.warn("Firestore facturas:", e);
+    }
+  }
+
+  // Guardar siempre en localStorage como fallback
+  fctInvoices.unshift(data);
+  fctPersistLocal();
+  fctRenderHistory();
+  showToast(`Factura de ${data.proveedor} guardada ✓`);
+  fctReset();
+}
+
+/* ── Persistencia local ── */
+function fctPersistLocal() {
+  try { localStorage.setItem("fct_invoices_v1", JSON.stringify(fctInvoices)); } catch(e) {}
+}
+
+async function fctLoadInvoices() {
+  // Intentar cargar desde Firestore
+  if (storageMode === "firebase" && db) {
+    try {
+      const snap = await db.collection(FCT_COL).orderBy("_i", "desc").limit(200).get();
+      if (!snap.empty) {
+        fctInvoices = snap.docs.map(d => { const o = { ...d.data() }; delete o._i; return o; });
+        fctPersistLocal();
+        fctRenderHistory();
+        return;
+      }
+    } catch(e) { console.warn("fctLoadInvoices Firestore:", e); }
+  }
+  // Fallback localStorage
+  try {
+    const s = localStorage.getItem("fct_invoices_v1");
+    if (s) fctInvoices = JSON.parse(s);
+  } catch(e) {}
+  fctRenderHistory();
+}
+
+async function fctDeleteInvoice(id) {
+  if (!confirm("¿Borrar esta factura?")) return;
+  fctInvoices = fctInvoices.filter(f => f.id !== id);
+  fctPersistLocal();
+  if (storageMode === "firebase" && db) {
+    try { await db.collection(FCT_COL).doc(id).delete(); } catch(e) {}
+  }
+  fctRenderHistory();
+  showToast("Factura borrada", "warn");
+}
+
+/* ── Renderizar historial ── */
+function fctRenderHistory() {
+  const container = document.getElementById("fct-history-list");
+  if (!container) return;
+  const q = (document.getElementById("fct-search")?.value || "").toLowerCase();
+  const filtered = q
+    ? fctInvoices.filter(f => (f.proveedor || "").toLowerCase().includes(q) || (f.numero_factura || "").toLowerCase().includes(q))
+    : fctInvoices;
+
+  if (!filtered.length) {
+    container.innerHTML = `<div class="fct-empty">${q ? "Sin resultados para esa búsqueda." : "Aún no hay facturas guardadas."}</div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(f => {
+    const linesSummary = (f.lineas || []).slice(0, 5).map(l =>
+      `${escHtml(l.producto || "—")}${l.cantidad != null ? ` · ${l.cantidad} ${l.unidad || ""}` : ""}${l.precio_total != null ? ` · <b>${l.precio_total.toFixed(2)} €</b>` : ""}`
+    ).join("<br>");
+    const more = (f.lineas || []).length > 5 ? `<br><span style="color:var(--muted)">+${f.lineas.length - 5} líneas más</span>` : "";
+    return `
+      <div class="fct-inv-card">
+        <div class="fct-inv-head">
+          <span class="fct-inv-proveedor">${escHtml(f.proveedor || "Proveedor desconocido")}</span>
+          <span class="fct-inv-fecha">${f.fecha || "—"}</span>
+          <span class="fct-inv-num">${f.numero_factura ? "Fac. " + escHtml(f.numero_factura) : ""}</span>
+          ${f.total_factura != null ? `<span class="fct-inv-total">${Number(f.total_factura).toFixed(2)} €</span>` : ""}
+          <button class="fct-inv-del" onclick="fctDeleteInvoice('${f.id}')" title="Borrar">✕</button>
+        </div>
+        ${linesSummary ? `<div class="fct-inv-body"><div class="fct-inv-lines">${linesSummary}${more}</div></div>` : ""}
+      </div>`;
+  }).join("");
+}
+
+/* ── Exportar CSV ── */
+function fctExportCSV() {
+  if (!fctInvoices.length) { showToast("No hay facturas para exportar", "warn"); return; }
+  const rows = [["Proveedor","Fecha","N. Factura","Total €","Producto","Cantidad","Unidad","P.Unit €","P.Total €"]];
+  fctInvoices.forEach(f => {
+    if (!(f.lineas || []).length) {
+      rows.push([f.proveedor||"",f.fecha||"",f.numero_factura||"",f.total_factura||"","","","","",""]);
+    } else {
+      f.lineas.forEach((l, i) => {
+        rows.push([
+          i === 0 ? (f.proveedor||"") : "",
+          i === 0 ? (f.fecha||"") : "",
+          i === 0 ? (f.numero_factura||"") : "",
+          i === 0 ? (f.total_factura||"") : "",
+          l.producto||"", l.cantidad??""  , l.unidad||"", l.precio_unitario??"", l.precio_total??""
+        ]);
+      });
+    }
+  });
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const a = document.createElement("a");
+  a.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+  a.download = "facturas_oba_" + new Date().toISOString().slice(0,10) + ".csv";
+  a.click();
+  showToast("CSV exportado");
+}
+
+function escHtml(s) {
+  return String(s || "").replace(/[<>&"']/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function showToast(msg, kind) {
+  const el = document.getElementById("toast-global") || (() => {
+    const t = document.createElement("div");
+    t.id = "toast-global";
+    t.style.cssText = "position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1c1c1e;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap";
+    document.body.appendChild(t);
+    return t;
+  })();
+  el.textContent = msg;
+  el.style.background = kind === "error" ? "#FF3B30" : kind === "warn" ? "#FF9500" : "#1c1c1e";
+  el.style.opacity = "1";
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.opacity = "0"; }, 2800);
+}
