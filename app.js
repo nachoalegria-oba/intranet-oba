@@ -5019,10 +5019,12 @@ const PRECIOS_COL = "precios";
 const IMGS_COL = "factura_imgs";
 const FCT_URL_KEY = "fct_url_v1";
 
-let fctFiles = [];       // array de { file, dataUrl }
+let fctFiles = [];       // array de { file, dataUrl } — páginas de la factura actual
 let fctExtracted = null;
 let fctInvoices = [];
 let fctImageDataUrl = null; // kept for compat
+let fctQueue = [];      // [{file, name, status:'pending'|'done'|'error'}] — cola de facturas distintas
+let fctQueueIdx = -1;   // -1 = modo normal (no lote)
 // fctPriceIndex: Map normalizedName → [{proveedor,fecha,precio_unitario,precio_total,cantidad,unidad,rawName}] (newest first)
 let fctPriceIndex = {};
 
@@ -5147,6 +5149,14 @@ function fctFileChosen(e) {
 function fctAddFiles(files) {
   const valid = files.filter(f => f.type.startsWith("image/") || f.type === "application/pdf");
   if (!valid.length) { showToast("Formato no compatible. Usa JPG, PNG, HEIC o PDF.", "error"); return; }
+
+  // Múltiples archivos distintos → modo lote (cada archivo = una factura)
+  if (valid.length > 1 && fctQueueIdx === -1) {
+    fctInitBatch(valid);
+    return;
+  }
+
+  // Modo normal: añadir como páginas de la factura actual
   let loaded = 0;
   valid.forEach(file => {
     const reader = new FileReader();
@@ -5166,6 +5176,70 @@ function fctAddFiles(files) {
     };
     reader.readAsDataURL(file);
   });
+}
+
+function fctInitBatch(files) {
+  fctQueue = files.map(f => ({ file: f, name: f.name.replace(/\.[^.]+$/, ""), status: "pending" }));
+  fctQueueIdx = 0;
+  document.getElementById("fct-drop").style.display = "none";
+  document.getElementById("fct-preview-area").style.display = "";
+  document.getElementById("fct-result").style.display = "none";
+  fctRenderBatchBar();
+  fctLoadBatchItem(0);
+}
+
+function fctLoadBatchItem(idx) {
+  const item = fctQueue[idx];
+  if (!item) return;
+  fctFiles = [];
+  fctExtracted = null;
+  document.getElementById("fct-result").style.display = "none";
+  const reader = new FileReader();
+  reader.onload = e => {
+    fctFiles = [{ file: item.file, dataUrl: e.target.result }];
+    fctRenderThumbs();
+    fctRenderBatchBar();
+    document.getElementById("fct-scan-status").textContent =
+      `Factura ${idx + 1} de ${fctQueue.length} — lista para escanear`;
+    const btn = document.getElementById("fct-save-btn");
+    if (btn) btn.innerHTML = idx < fctQueue.length - 1
+      ? '<i class="ph-fill ph-floppy-disk"></i> Guardar y siguiente'
+      : '<i class="ph-fill ph-floppy-disk"></i> Guardar factura';
+  };
+  reader.readAsDataURL(item.file);
+}
+
+function fctRenderBatchBar() {
+  const bar = document.getElementById("fct-batch-bar");
+  if (!bar) return;
+  if (fctQueue.length < 2) { bar.style.display = "none"; return; }
+  bar.style.display = "";
+  const done = fctQueue.filter(q => q.status === "done").length;
+  const chips = fctQueue.map((item, i) => {
+    const s = item.status;
+    const cls = s === "done" ? "fct-q-done" : s === "error" ? "fct-q-err" : i === fctQueueIdx ? "fct-q-cur" : "";
+    const icon = s === "done" ? "✓" : s === "error" ? "✕" : i === fctQueueIdx ? "▶" : `${i + 1}`;
+    const label = item.name.length > 18 ? item.name.slice(0, 18) + "…" : item.name;
+    return `<span class="fct-q-chip ${cls}" title="${escHtml(item.name)}">${icon} ${escHtml(label)}</span>`;
+  }).join("");
+  bar.innerHTML = `<div class="fct-batch-meta"><i class="ph-fill ph-stack"></i> Lote — <b>${done}</b> de <b>${fctQueue.length}</b> guardadas</div><div class="fct-batch-chips">${chips}</div>`;
+}
+
+function fctAdvanceBatch() {
+  if (fctQueueIdx < 0) return;
+  fctQueue[fctQueueIdx].status = "done";
+  const next = fctQueueIdx + 1;
+  if (next < fctQueue.length) {
+    fctQueueIdx = next;
+    fctLoadBatchItem(next);
+    showToast(`Guardada ✓ — Cargando factura ${next + 1} de ${fctQueue.length}…`);
+  } else {
+    const total = fctQueue.length;
+    fctQueue = [];
+    fctQueueIdx = -1;
+    fctReset();
+    showToast(`Lote completo — ${total} facturas guardadas ✓`, "ok");
+  }
 }
 
 function fctRenderThumbs() {
@@ -5193,12 +5267,15 @@ function fctReset() {
   fctFiles = [];
   fctExtracted = null;
   fctImageDataUrl = null;
+  if (fctQueueIdx < 0) { fctQueue = []; }  // solo limpiar si no estamos en medio del lote
   document.getElementById("fct-drop").style.display = "";
   document.getElementById("fct-preview-area").style.display = "none";
   document.getElementById("fct-result").style.display = "none";
   document.getElementById("fct-file").value = "";
   const strip = document.getElementById("fct-thumb-strip");
   if (strip) strip.innerHTML = "";
+  const bar = document.getElementById("fct-batch-bar");
+  if (bar && fctQueue.length < 2) bar.style.display = "none";
 }
 
 /* ── Escanear con IA ── */
@@ -5211,7 +5288,9 @@ async function fctScan() {
   btn.disabled = true;
   const n = fctFiles.length;
   btn.innerHTML = '<span class="fct-spinner"></span> Analizando…';
-  status.textContent = n === 1 ? "Claude está leyendo la factura…" : `Claude está leyendo ${n} páginas…`;
+  status.textContent = fctQueueIdx >= 0
+    ? `Analizando factura ${fctQueueIdx + 1} de ${fctQueue.length}…`
+    : (n === 1 ? "Claude está leyendo la factura…" : `Claude está leyendo ${n} páginas…`);
 
   try {
     // Build images array from all pages
@@ -5237,7 +5316,10 @@ async function fctScan() {
     fctExtracted = await res.json();
     fctPopulateForm(fctExtracted);
     document.getElementById("fct-result").style.display = "";
-    status.textContent = "Datos extraídos — revísalos antes de guardar.";
+    status.textContent = fctQueueIdx >= 0
+      ? `Factura ${fctQueueIdx + 1}/${fctQueue.length} — revisa y guarda`
+      : "Datos extraídos — revísalos antes de guardar.";
+    if (fctQueueIdx >= 0) fctRenderBatchBar();
     localStorage.setItem(FCT_URL_KEY, url);
 
   } catch (err) {
@@ -5442,8 +5524,12 @@ async function fctSave() {
   fctPersistLocal();
   fctBuildPriceIndex();
   fctRenderHistory();
-  showToast(`Factura de ${data.proveedor} guardada ✓`);
-  fctReset();
+  if (fctQueueIdx >= 0) {
+    fctAdvanceBatch();
+  } else {
+    showToast(`Factura de ${data.proveedor} guardada ✓`);
+    fctReset();
+  }
 }
 
 /* ── Persistencia local ── */
