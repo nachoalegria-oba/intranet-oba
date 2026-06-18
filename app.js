@@ -741,6 +741,7 @@ function startApp() {
   });
 
   renderAll();
+  fctLoadInvoices();
   const hash = location.hash;
   if (hash.startsWith("#receta-")) {
     const id = Number(hash.replace("#receta-", ""));
@@ -5328,30 +5329,29 @@ function fctPersistLocal() {
   try { localStorage.setItem("fct_invoices_v1", JSON.stringify(fctInvoices)); } catch(e) {}
 }
 
-async function fctLoadInvoices() {
-  // Intentar cargar desde Firestore
-  if (storageMode === "firebase" && db) {
-    try {
-      const snap = await db.collection(FCT_COL).orderBy("_i", "desc").limit(200).get();
-      if (!snap.empty) {
-        fctInvoices = snap.docs.map(d => { const o = { ...d.data() }; delete o._i; return o; });
-        fctPersistLocal();
-        fctBuildPriceIndex();
-        fctRenderHistory();
-        if (typeof rPedLista === "function" && document.getElementById("pp-lista")) rPedLista();
-        return;
-      }
-    } catch(e) { console.warn("fctLoadInvoices Firestore:", e); }
-  }
-  // Fallback localStorage
+let _fctUnsub = null;
+
+function fctLoadInvoices() {
+  // Fallback: load from localStorage immediately so UI isn't blank
   try {
     const s = localStorage.getItem("fct_invoices_v1");
     if (s) fctInvoices = JSON.parse(s);
   } catch(e) {}
   fctBuildPriceIndex();
   fctRenderHistory();
-  // Refresh pedidos list so price badges appear without needing a tab switch
   if (typeof rPedLista === "function" && document.getElementById("pp-lista")) rPedLista();
+
+  // Real-time Firestore listener — updates all devices instantly
+  if (storageMode === "firebase" && db && !_fctUnsub) {
+    _fctUnsub = db.collection(FCT_COL).orderBy("_i", "desc").limit(200)
+      .onSnapshot(snap => {
+        fctInvoices = snap.docs.map(d => { const o = { ...d.data() }; delete o._i; return o; });
+        fctPersistLocal();
+        fctBuildPriceIndex();
+        fctRenderHistory();
+        if (typeof rPedLista === "function" && document.getElementById("pp-lista")) rPedLista();
+      }, e => console.warn("fctLoadInvoices onSnapshot:", e));
+  }
 }
 
 async function fctDeleteInvoice(id) {
