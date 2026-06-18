@@ -2967,6 +2967,9 @@ p, span, div, label, td, th, input, select, textarea, button{
   font-size:13px;background:transparent;color:var(--ink);transition:border-color .15s;
 }
 .fct-table td input:focus{outline:none;border-color:var(--blue);background:var(--surface)}
+.fct-alias-input{display:block;margin-top:4px;font-size:11px;font-style:italic;color:var(--muted);border-color:transparent;background:transparent;padding:2px 4px}
+.fct-alias-input:focus,.fct-alias-input:not(:placeholder-shown){border-color:var(--line);background:var(--bg);color:var(--text)}
+.fct-alias-input::placeholder{color:var(--muted);opacity:.7}
 .fct-table td.fct-td-del{width:36px;text-align:center}
 .fct-table td.fct-td-del button{
   background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;
