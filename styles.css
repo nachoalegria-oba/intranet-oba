@@ -774,6 +774,25 @@ td select:focus{
 }
 
 .pedido-list-groups,
+.pedh-stats{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:18px;margin-bottom:18px}
+.pedh-stats-head{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:14px}
+.pedh-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.pedh-kpi{background:var(--bg);border-radius:10px;padding:10px 12px;text-align:center}
+.pedh-kpi-val{font-size:22px;font-weight:800;line-height:1}
+.pedh-kpi-label{font-size:11px;color:var(--muted);margin-top:3px}
+.pedh-stats-cols{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.pedh-col-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px}
+.pedh-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.pedh-bar-label{font-size:12px;font-weight:500;width:110px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
+.pedh-bar-track{flex:1;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.pedh-bar-fill{height:100%;background:var(--blue);border-radius:3px;transition:width .4s}
+.pedh-bar-count{font-size:11px;color:var(--muted);font-weight:600;width:24px;text-align:right;flex-shrink:0}
+.pedh-prov-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}
+.pedh-prov-row:last-child{border-bottom:none}
+.pedh-prov-rank{width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pedh-prov-name{flex:1;font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pedh-prov-count{font-size:12px;color:var(--muted);white-space:nowrap}
+@media(max-width:600px){.pedh-kpis{grid-template-columns:repeat(2,1fr)}.pedh-stats-cols{grid-template-columns:1fr}.pedh-bar-label{width:80px}}
 .pedido-history-list{
   display:flex;
   flex-direction:column;

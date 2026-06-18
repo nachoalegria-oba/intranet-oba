@@ -1663,6 +1663,68 @@ function deletePedidoHistorial(id) {
   save("pedidosHistorial");
 }
 
+function rPedHistorialStats(all) {
+  if (!all.length) return "";
+
+  // Ingredient frequency
+  const ingCount = {};
+  const provCount = {};
+  all.forEach(entry => {
+    (entry.lineas || []).forEach(l => {
+      if (l.ing) ingCount[l.ing] = (ingCount[l.ing] || 0) + 1;
+      if (l.prov) provCount[l.prov] = (provCount[l.prov] || 0) + 1;
+    });
+  });
+
+  const topIngs = Object.entries(ingCount).sort((a,b) => b[1]-a[1]).slice(0, 8);
+  const topProvs = Object.entries(provCount).sort((a,b) => b[1]-a[1]).slice(0, 4);
+  const maxIng = topIngs[0]?.[1] || 1;
+
+  // Average lines per order
+  const avgLines = Math.round(all.reduce((s,e) => s + (e.lineas||[]).length, 0) / all.length);
+
+  // Days between orders
+  const dates = all.map(e => new Date(e.creado || e.fecha || 0)).filter(d => d > 0).sort((a,b) => a-b);
+  let avgDays = null;
+  if (dates.length >= 2) {
+    const gaps = [];
+    for (let i = 1; i < dates.length; i++) gaps.push((dates[i]-dates[i-1]) / 86400000);
+    avgDays = Math.round(gaps.reduce((s,g)=>s+g,0) / gaps.length);
+  }
+
+  return `
+    <div class="pedh-stats">
+      <div class="pedh-stats-head">Estadísticas de pedidos</div>
+      <div class="pedh-kpis">
+        <div class="pedh-kpi"><div class="pedh-kpi-val">${all.length}</div><div class="pedh-kpi-label">Pedidos guardados</div></div>
+        <div class="pedh-kpi"><div class="pedh-kpi-val">${avgLines}</div><div class="pedh-kpi-label">Media de líneas</div></div>
+        ${avgDays != null ? `<div class="pedh-kpi"><div class="pedh-kpi-val">${avgDays}d</div><div class="pedh-kpi-label">Entre pedidos</div></div>` : ""}
+        <div class="pedh-kpi"><div class="pedh-kpi-val">${Object.keys(ingCount).length}</div><div class="pedh-kpi-label">Ingredientes distintos</div></div>
+      </div>
+
+      <div class="pedh-stats-cols">
+        <div class="pedh-col">
+          <div class="pedh-col-title">Lo más pedido</div>
+          ${topIngs.map(([ing, n]) => `
+            <div class="pedh-bar-row">
+              <span class="pedh-bar-label">${safeText(ing)}</span>
+              <div class="pedh-bar-track"><div class="pedh-bar-fill" style="width:${Math.round(n/maxIng*100)}%"></div></div>
+              <span class="pedh-bar-count">${n}×</span>
+            </div>`).join("")}
+        </div>
+        <div class="pedh-col">
+          <div class="pedh-col-title">Proveedores frecuentes</div>
+          ${topProvs.map(([prov, n], i) => `
+            <div class="pedh-prov-row">
+              <span class="pedh-prov-rank">${i+1}</span>
+              <span class="pedh-prov-name">${safeText(prov)}</span>
+              <span class="pedh-prov-count">${n} pedido${n!==1?"s":""}</span>
+            </div>`).join("")}
+        </div>
+      </div>
+    </div>`;
+}
+
 function rPedHistorial() {
   const q = pedSearch();
   let items = [...(D.pedidosHistorial || [])].sort((a, b) => new Date(b.creado || b.fecha || 0) - new Date(a.creado || a.fecha || 0));
@@ -1677,7 +1739,9 @@ function rPedHistorial() {
     });
   }
 
+  const all = D.pedidosHistorial || [];
   document.getElementById("pp-historial").innerHTML = items.length ? `
+    ${!q ? rPedHistorialStats(all) : ""}
     <div class="pedido-history-list">
       ${items.map((entry) => {
         const groups = groupPedidoItems(entry.lineas || []);
