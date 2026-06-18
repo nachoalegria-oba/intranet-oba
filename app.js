@@ -5146,7 +5146,7 @@ function fctFileChosen(e) {
 
 function fctAddFiles(files) {
   const valid = files.filter(f => f.type.startsWith("image/") || f.type === "application/pdf");
-  if (!valid.length) { showToast("Formato no compatible. Usa JPG, PNG o HEIC.", "error"); return; }
+  if (!valid.length) { showToast("Formato no compatible. Usa JPG, PNG, HEIC o PDF.", "error"); return; }
   let loaded = 0;
   valid.forEach(file => {
     const reader = new FileReader();
@@ -5171,12 +5171,13 @@ function fctAddFiles(files) {
 function fctRenderThumbs() {
   const strip = document.getElementById("fct-thumb-strip");
   if (!strip) return;
-  strip.innerHTML = fctFiles.map((f, i) => `
-    <div class="fct-thumb">
-      <img src="${f.dataUrl}" class="fct-thumb-img" alt="Página ${i+1}">
-      <span class="fct-thumb-label">Pág. ${i+1}</span>
-      <button class="fct-thumb-del" onclick="fctRemovePage(${i})" title="Quitar">✕</button>
-    </div>`).join("");
+  strip.innerHTML = fctFiles.map((f, i) => {
+    const isPdf = f.file.type === "application/pdf";
+    const thumb = isPdf
+      ? `<div class="fct-thumb-img fct-thumb-pdf"><i class="ph-fill ph-file-pdf" style="font-size:28px"></i><span style="font-size:10px;margin-top:2px">PDF</span></div>`
+      : `<img src="${f.dataUrl}" class="fct-thumb-img" alt="Página ${i+1}">`;
+    return `<div class="fct-thumb">${thumb}<span class="fct-thumb-label">${isPdf ? f.file.name.replace(/\.pdf$/i,"").slice(0,14) : `Pág. ${i+1}`}</span><button class="fct-thumb-del" onclick="fctRemovePage(${i})" title="Quitar">✕</button></div>`;
+  }).join("");
 }
 
 function fctRemovePage(idx) {
@@ -5216,7 +5217,7 @@ async function fctScan() {
     // Build images array from all pages
     const images = await Promise.all(fctFiles.map(async f => ({
       base64: (await fctToBase64(f.file)),
-      mediaType: f.file.type.startsWith("image/") ? f.file.type : "image/jpeg",
+      mediaType: f.file.type || "image/jpeg",
     })));
 
     const res = await fetch(url, {
@@ -5329,6 +5330,14 @@ function fctAddLine() {
 /* ── Guardar en Firestore ── */
 /* Comprime la imagen a max 1200px JPEG 65% para guardar en Firestore (~150-300KB) */
 function fctCompressImage(file) {
+  if (file.type === "application/pdf") {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  }
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -5521,8 +5530,8 @@ async function fctViewImage(id) {
   const pageLabel = document.createElement("div");
   pageLabel.style.cssText = "color:#fff;font-size:13px;font-weight:600;opacity:.7";
 
-  const img = document.createElement("img");
-  img.style.cssText = "max-width:100%;max-height:75vh;border-radius:12px;box-shadow:0 4px 32px rgba(0,0,0,.5)";
+  const viewer = document.createElement("div");
+  viewer.style.cssText = "max-width:100%;max-height:75vh;display:flex;align-items:center;justify-content:center";
 
   const navRow = document.createElement("div");
   navRow.style.cssText = "display:flex;align-items:center;gap:10px";
@@ -5531,7 +5540,21 @@ async function fctViewImage(id) {
   btnRow.style.cssText = "display:flex;gap:10px";
 
   function render() {
-    img.src = pages[current];
+    viewer.innerHTML = "";
+    const src = pages[current];
+    const isPdf = src.startsWith("data:application/pdf");
+    if (isPdf) {
+      const embed = document.createElement("embed");
+      embed.src = src;
+      embed.type = "application/pdf";
+      embed.style.cssText = "width:min(700px,90vw);height:75vh;border-radius:12px;box-shadow:0 4px 32px rgba(0,0,0,.5)";
+      viewer.appendChild(embed);
+    } else {
+      const img = document.createElement("img");
+      img.src = src;
+      img.style.cssText = "max-width:100%;max-height:75vh;border-radius:12px;box-shadow:0 4px 32px rgba(0,0,0,.5)";
+      viewer.appendChild(img);
+    }
     pageLabel.textContent = pages.length > 1 ? `Página ${current + 1} de ${pages.length}` : "";
     navRow.innerHTML = "";
     if (pages.length > 1) {
@@ -5553,9 +5576,11 @@ async function fctViewImage(id) {
   dlBtn.textContent = "Descargar";
   dlBtn.style.cssText = "background:#007AFF;color:#fff;padding:10px 22px;border-radius:20px;font-weight:600;font-size:14px;text-decoration:none;cursor:pointer";
   dlBtn.onclick = () => {
+    const src = pages[current];
+    const isPdf = src.startsWith("data:application/pdf");
     const a = document.createElement("a");
-    a.href = pages[current];
-    a.download = `factura_${id}_p${current+1}.jpg`;
+    a.href = src;
+    a.download = `factura_${id}_p${current+1}.${isPdf ? "pdf" : "jpg"}`;
     a.click();
   };
   const closeBtn = document.createElement("button");
@@ -5563,7 +5588,7 @@ async function fctViewImage(id) {
   closeBtn.style.cssText = "background:rgba(255,255,255,.15);color:#fff;border:none;padding:10px 22px;border-radius:20px;font-weight:600;font-size:14px;cursor:pointer";
   closeBtn.onclick = () => modal.remove();
   btnRow.append(dlBtn, closeBtn);
-  modal.append(pageLabel, img, navRow, btnRow);
+  modal.append(pageLabel, viewer, navRow, btnRow);
   document.body.appendChild(modal);
   render();
 }
