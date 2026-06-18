@@ -5451,8 +5451,11 @@ function fctCompressImage(file) {
 }
 
 async function fctSave() {
+  const provEl = document.getElementById("fe-proveedor");
+  const saveBtn = document.getElementById("fct-save-btn");
+
   const data = {
-    proveedor: document.getElementById("fe-proveedor").value.trim() || null,
+    proveedor: provEl.value.trim() || null,
     fecha: document.getElementById("fe-fecha").value || null,
     numero_factura: document.getElementById("fe-numero").value.trim() || null,
     base_imponible: parseFloat(document.getElementById("fe-base").value) || null,
@@ -5464,47 +5467,76 @@ async function fctSave() {
     id: "f_" + Date.now(),
   };
 
+  // Validación visible
   if (!data.proveedor) {
-    showToast("Añade al menos el nombre del proveedor antes de guardar.", "warn");
-    document.getElementById("fe-proveedor").focus();
+    provEl.classList.add("fct-input-error");
+    provEl.addEventListener("input", () => provEl.classList.remove("fct-input-error"), { once: true });
+    showToast("Escribe el nombre del proveedor antes de guardar.", "warn");
+    provEl.focus();
     return;
   }
 
-  // Comprimir páginas en escala de grises
+  // Botón en estado de carga
+  const btnOriginal = saveBtn?.innerHTML || "";
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<span class="fct-spinner"></span> Guardando…'; }
+
+  // Comprimir / leer imágenes
+  // PDFs: se leen tal cual (dataURL completo). Imágenes: se comprimen en escala de grises.
   let compressed = [];
   if (fctFiles.length) {
     try {
       compressed = (await Promise.all(fctFiles.map(f => fctCompressImage(f.file)))).filter(Boolean);
-      data.imagenesBase64 = compressed;
-      if (compressed.length === 1) data.imagenBase64 = compressed[0];
-    } catch(e) {}
+    } catch(e) { console.warn("fctSave compress:", e); }
   }
 
-  // Guardar en Firestore
-  if (storageMode === "firebase" && db) {
-    try {
-      // Factura sin imágenes (documentos ligeros)
-      const { imagenesBase64, imagenBase64, ...dataFirestore } = data;
-      if (compressed.length) dataFirestore.numPaginas = compressed.length;
-      await db.collection(FCT_COL).doc(data.id).set({ ...dataFirestore, _i: Date.now() });
+  // Límite Firestore: 1 MB por documento. Base64 ~1.33× el tamaño real.
+  // Guardamos imágenes solo si caben (PDFs escaneados pueden ser muy grandes).
+  const FIRESTORE_IMG_LIMIT = 900_000; // ~680 KB real — margen de seguridad
+  const saveableImgs = compressed.filter(b64 => b64.length <= FIRESTORE_IMG_LIMIT);
+  const imgTooBig = compressed.length > 0 && saveableImgs.length === 0;
 
-      // Imágenes en colección separada (un doc por página)
-      if (compressed.length) {
+  if (saveableImgs.length) {
+    data.imagenesBase64 = saveableImgs;
+    if (saveableImgs.length === 1) data.imagenBase64 = saveableImgs[0];
+  }
+
+  // ── Firestore: guardar en bloques independientes para que un fallo no bloquee los demás ──
+  if (storageMode === "firebase" && db) {
+
+    // 1. Documento principal (sin imágenes — siempre ligero)
+    try {
+      const { imagenesBase64, imagenBase64, ...dataFirestore } = data;
+      if (saveableImgs.length) dataFirestore.numPaginas = saveableImgs.length;
+      await db.collection(FCT_COL).doc(data.id).set({ ...dataFirestore, _i: Date.now() });
+    } catch(e) {
+      console.warn("Firestore FCT_COL:", e);
+      showToast("Error al guardar en la nube: " + e.message, "error");
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = btnOriginal; }
+      return; // sin el doc principal no tiene sentido continuar
+    }
+
+    // 2. Imágenes (bloque independiente — fallo aquí no borra la factura)
+    if (saveableImgs.length) {
+      try {
         const imgBatch = db.batch();
-        compressed.forEach((b64, i) => {
-          const ref = db.collection(IMGS_COL).doc(`${data.id}_${i}`);
-          imgBatch.set(ref, { facturaId: data.id, pagina: i, base64: b64, _i: Date.now() });
+        saveableImgs.forEach((b64, i) => {
+          imgBatch.set(db.collection(IMGS_COL).doc(`${data.id}_${i}`),
+            { facturaId: data.id, pagina: i, base64: b64, _i: Date.now() });
         });
         await imgBatch.commit();
-        data.numPaginas = compressed.length;
+        data.numPaginas = saveableImgs.length;
+      } catch(e) {
+        console.warn("Firestore IMGS_COL:", e);
+        // No bloqueamos — la factura ya está guardada, solo falta la imagen
       }
+    }
 
-      // Precios en colección separada
-      const batch = db.batch();
+    // 3. Precios (bloque independiente — siempre se intenta)
+    try {
+      const pBatch = db.batch();
       (data.lineas || []).forEach((l, i) => {
         if (!l.producto || (l.precio_unitario == null && l.precio_total == null)) return;
-        const ref = db.collection(PRECIOS_COL).doc(`${data.id}_${i}`);
-        batch.set(ref, {
+        pBatch.set(db.collection(PRECIOS_COL).doc(`${data.id}_${i}`), {
           producto: l.producto, alias: l.alias || null,
           proveedor: data.proveedor, fecha: data.fecha,
           precio_unitario: l.precio_unitario ?? null,
@@ -5513,28 +5545,48 @@ async function fctSave() {
           facturaId: data.id, _i: Date.now(),
         });
       });
-      await batch.commit();
-    } catch (e) {
-      console.warn("Firestore facturas/precios:", e);
-    }
+      await pBatch.commit();
+    } catch(e) { console.warn("Firestore PRECIOS_COL:", e); }
   }
 
-  // Guardar siempre en localStorage como fallback
-  fctInvoices.unshift(data);
+  // ── localStorage: guardar siempre, pero sin imágenes grandes para no reventar la cuota ──
+  const LOCAL_IMG_LIMIT = 400_000; // ~300 KB real
+  const dataLocal = { ...data };
+  const localImgTooBig = dataLocal.imagenesBase64?.some(b => b.length > LOCAL_IMG_LIMIT)
+    || dataLocal.imagenBase64?.length > LOCAL_IMG_LIMIT;
+  if (localImgTooBig) { delete dataLocal.imagenesBase64; delete dataLocal.imagenBase64; }
+
+  fctInvoices.unshift(dataLocal);
   fctPersistLocal();
   fctBuildPriceIndex();
   fctRenderHistory();
+
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = btnOriginal; }
+
+  if (imgTooBig) {
+    showToast(`Guardada ✓ — PDF grande: datos guardados, imagen no (demasiado pesada para la nube)`, "warn");
+  }
+
   if (fctQueueIdx >= 0) {
     fctAdvanceBatch();
   } else {
-    showToast(`Factura de ${data.proveedor} guardada ✓`);
+    if (!imgTooBig) showToast(`Factura de ${data.proveedor} guardada ✓`);
     fctReset();
   }
 }
 
 /* ── Persistencia local ── */
 function fctPersistLocal() {
-  try { localStorage.setItem("fct_invoices_v1", JSON.stringify(fctInvoices)); } catch(e) {}
+  try {
+    const MAX = 400_000;
+    const slim = fctInvoices.map(f => {
+      const big = f.imagenesBase64?.some(b => b.length > MAX) || f.imagenBase64?.length > MAX;
+      if (!big) return f;
+      const { imagenesBase64, imagenBase64, ...rest } = f;
+      return rest;
+    });
+    localStorage.setItem("fct_invoices_v1", JSON.stringify(slim));
+  } catch(e) { console.warn("fctPersistLocal:", e); }
 }
 
 let _fctUnsub = null;
