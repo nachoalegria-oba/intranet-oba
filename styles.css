@@ -2983,6 +2983,12 @@ p, span, div, label, td, th, input, select, textarea, button{
   border-top:1px solid var(--line);
 }
 .fct-history-title{font-size:18px;font-weight:700}
+.fct-month-header{
+  font-size:13px;font-weight:700;color:var(--muted);
+  padding:16px 4px 8px;letter-spacing:.3px;
+  border-bottom:1px solid var(--line);margin-bottom:10px;
+}
+.fct-month-header:first-child{padding-top:4px}
 .fct-inv-card{
   background:var(--surface);border:1px solid var(--line);
   border-radius:var(--radius-sm);margin-bottom:12px;overflow:hidden;

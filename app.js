@@ -5433,21 +5433,35 @@ function fctRenderHistory() {
   const container = document.getElementById("fct-history-list");
   if (!container) return;
   const q = (document.getElementById("fct-search")?.value || "").toLowerCase();
-  const filtered = q
-    ? fctInvoices.filter(f => (f.proveedor || "").toLowerCase().includes(q) || (f.numero_factura || "").toLowerCase().includes(q))
-    : fctInvoices;
+  const filtered = (q
+    ? fctInvoices.filter(f => (f.proveedor || "").toLowerCase().includes(q) || (f.numero_factura || "").toLowerCase().includes(q) || (f.lineas||[]).some(l => (l.alias||l.producto||"").toLowerCase().includes(q)))
+    : fctInvoices
+  ).slice().sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
 
   if (!filtered.length) {
     container.innerHTML = `<div class="fct-empty">${q ? "Sin resultados para esa búsqueda." : "Aún no hay facturas guardadas."}</div>`;
     return;
   }
 
-  container.innerHTML = filtered.map(f => {
+  const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  let lastMonth = null;
+  const parts = [];
+  filtered.forEach(f => {
+    const monthKey = (f.fecha || "").slice(0, 7); // "YYYY-MM"
+    if (monthKey && monthKey !== lastMonth) {
+      const [y, m] = monthKey.split("-");
+      const label = m ? `${MONTHS[parseInt(m,10)-1]} ${y}` : monthKey;
+      parts.push(`<div class="fct-month-header">${label}</div>`);
+      lastMonth = monthKey;
+    } else if (!monthKey && lastMonth !== "") {
+      parts.push(`<div class="fct-month-header">Sin fecha</div>`);
+      lastMonth = "";
+    }
     const linesSummary = (f.lineas || []).slice(0, 5).map(l =>
-      `${escHtml(l.producto || "—")}${l.cantidad != null ? ` · ${l.cantidad} ${l.unidad || ""}` : ""}${l.precio_total != null ? ` · <b>${l.precio_total.toFixed(2)} €</b>` : ""}`
+      `${escHtml(l.alias || l.producto || "—")}${l.alias ? ` <span style="color:var(--muted);font-size:11px">(${escHtml(l.producto)})</span>` : ""}${l.cantidad != null ? ` · ${l.cantidad} ${l.unidad || ""}` : ""}${l.precio_total != null ? ` · <b>${l.precio_total.toFixed(2)} €</b>` : ""}`
     ).join("<br>");
     const more = (f.lineas || []).length > 5 ? `<br><span style="color:var(--muted)">+${f.lineas.length - 5} líneas más</span>` : "";
-    return `
+    parts.push(`
       <div class="fct-inv-card">
         <div class="fct-inv-head">
           <span class="fct-inv-proveedor">${escHtml(f.proveedor || "Proveedor desconocido")}</span>
@@ -5458,8 +5472,9 @@ function fctRenderHistory() {
           <button class="fct-inv-del" onclick="fctDeleteInvoice('${f.id}')" title="Borrar">✕</button>
         </div>
         ${linesSummary ? `<div class="fct-inv-body"><div class="fct-inv-lines">${linesSummary}${more}</div></div>` : ""}
-      </div>`;
-  }).join("");
+      </div>`);
+  });
+  container.innerHTML = parts.join("");
 }
 
 /* ── Pestaña Precios ── */
