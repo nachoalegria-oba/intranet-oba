@@ -5042,6 +5042,13 @@ function initFacturas() {
   if (urlInput) urlInput.addEventListener("change", () => {
     localStorage.setItem(FCT_URL_KEY, urlInput.value.trim());
   });
+}
+
+function fctSaveUrl() {
+  const urlInput = document.getElementById("fct-url");
+  if (!urlInput) return;
+  localStorage.setItem(FCT_URL_KEY, urlInput.value.trim());
+  showToast("URL guardada ✓");
 
   // Cargar historial desde Firestore (o localStorage como fallback)
   fctLoadInvoices();

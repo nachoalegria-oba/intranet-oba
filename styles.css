@@ -3013,6 +3013,8 @@ p, span, div, label, td, th, input, select, textarea, button{
 }
 
 /* ── Facturas: tabs ─────────────────────────────────── */
+.fct-cfg-row-main{display:flex;align-items:center;gap:8px;padding:10px 0 14px;border-bottom:1px solid var(--separator);margin-bottom:16px}
+.fct-cfg-row-main .fct-url-input{flex:1;min-width:0}
 .fct-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--bg);border-radius:12px;padding:4px}
 .fct-tab{flex:1;padding:8px 0;border:none;background:transparent;border-radius:9px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
 .fct-tab.active{background:var(--surface);color:var(--label);box-shadow:0 1px 4px rgba(0,0,0,.1)}
