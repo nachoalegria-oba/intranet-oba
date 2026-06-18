@@ -5332,7 +5332,27 @@ async function fctScan() {
   }
 }
 
-function fctToBase64(file) {
+/* Strip HTTP response headers that some suppliers (e.g. Hendi) accidentally prepend to PDFs.
+   A valid PDF must start with %PDF-; anything before that is junk. */
+async function fctCleanPdf(file) {
+  if (file.type !== "application/pdf") return file;
+  const buf = await file.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  // Find %PDF signature (0x25 0x50 0x44 0x46)
+  let offset = 0;
+  for (let i = 0; i < Math.min(bytes.length - 4, 4096); i++) {
+    if (bytes[i] === 0x25 && bytes[i+1] === 0x50 && bytes[i+2] === 0x44 && bytes[i+3] === 0x46) {
+      offset = i;
+      break;
+    }
+  }
+  if (offset === 0) return file; // already clean
+  console.info(`fctCleanPdf: stripped ${offset} bytes of junk header from "${file.name}"`);
+  return new File([bytes.slice(offset)], file.name, { type: "application/pdf" });
+}
+
+async function fctToBase64(file) {
+  const cleanFile = file.type === "application/pdf" ? await fctCleanPdf(file) : file;
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -5342,7 +5362,7 @@ function fctToBase64(file) {
       resolve(b64);
     };
     reader.onerror = reject;
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(cleanFile);
   });
 }
 
@@ -5413,12 +5433,12 @@ function fctAddLine() {
 /* Comprime la imagen a max 1200px JPEG 65% para guardar en Firestore (~150-300KB) */
 function fctCompressImage(file) {
   if (file.type === "application/pdf") {
-    return new Promise((resolve) => {
+    return fctCleanPdf(file).then(cleanFile => new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = e => resolve(e.target.result);
       reader.onerror = () => resolve(null);
-      reader.readAsDataURL(file);
-    });
+      reader.readAsDataURL(cleanFile);
+    }));
   }
   return new Promise((resolve) => {
     const reader = new FileReader();
