@@ -5507,24 +5507,56 @@ function fctRenderHistory() {
       parts.push(`<div class="fct-month-header">Sin fecha</div>`);
       lastMonth = "";
     }
-    const linesSummary = (f.lineas || []).slice(0, 5).map(l =>
-      `${escHtml(l.alias || l.producto || "—")}${l.alias ? ` <span style="color:var(--muted);font-size:11px">(${escHtml(l.producto)})</span>` : ""}${l.cantidad != null ? ` · ${l.cantidad} ${l.unidad || ""}` : ""}${l.precio_total != null ? ` · <b>${l.precio_total.toFixed(2)} €</b>` : ""}`
-    ).join("<br>");
-    const more = (f.lineas || []).length > 5 ? `<br><span style="color:var(--muted)">+${f.lineas.length - 5} líneas más</span>` : "";
+    const lineas = f.lineas || [];
+    const renderLine = l =>
+      `<div class="fct-inv-line-row">
+        <span class="fct-inv-line-name">${escHtml(l.alias || l.producto || "—")}${l.alias ? `<span class="fct-inv-line-orig">${escHtml(l.producto)}</span>` : ""}</span>
+        <span class="fct-inv-line-qty">${l.cantidad != null ? `${l.cantidad} ${l.unidad || ""}` : ""}</span>
+        <span class="fct-inv-line-price">${l.precio_total != null ? `${l.precio_total.toFixed(2)} €` : l.precio_unitario != null ? `${l.precio_unitario.toFixed(2)} €/ud` : ""}</span>
+      </div>`;
+    const preview = lineas.slice(0, 3).map(renderLine).join("");
+    const rest = lineas.slice(3).map(renderLine).join("");
+    const hasMore = lineas.length > 3;
     parts.push(`
-      <div class="fct-inv-card">
-        <div class="fct-inv-head">
+      <div class="fct-inv-card" id="fic-${f.id}">
+        <div class="fct-inv-head" onclick="fctToggleCard('${f.id}')" style="cursor:pointer">
           <span class="fct-inv-proveedor">${escHtml(f.proveedor || "Proveedor desconocido")}</span>
           <span class="fct-inv-fecha">${f.fecha || "—"}</span>
           <span class="fct-inv-num">${f.numero_factura ? "Fac. " + escHtml(f.numero_factura) : ""}</span>
           ${f.total_factura != null ? `<span class="fct-inv-total">${Number(f.total_factura).toFixed(2)} €</span>` : ""}
-          ${(f.numPaginas || f.imagenesBase64?.length || f.imagenBase64) ? `<button class="fct-inv-view" onclick="fctViewImage('${f.id}')">Ver factura</button>` : ""}
-          <button class="fct-inv-del" onclick="fctDeleteInvoice('${f.id}')" title="Borrar">✕</button>
+          <span class="fct-inv-chevron">›</span>
         </div>
-        ${linesSummary ? `<div class="fct-inv-body"><div class="fct-inv-lines">${linesSummary}${more}</div></div>` : ""}
+        ${lineas.length ? `
+        <div class="fct-inv-body" id="ficb-${f.id}">
+          <div class="fct-inv-lines-grid">
+            ${preview}
+            ${hasMore ? `<div class="fct-inv-more" id="ficm-${f.id}">${rest}</div>
+            <button class="fct-inv-expand" id="fice-${f.id}" onclick="fctExpandCard('${f.id}')">Ver los ${lineas.length} ingredientes ▾</button>` : ""}
+          </div>
+          <div class="fct-inv-actions">
+            ${(f.numPaginas || f.imagenesBase64?.length || f.imagenBase64) ? `<button class="fct-inv-view" onclick="event.stopPropagation();fctViewImage('${f.id}')">Ver factura</button>` : ""}
+            <button class="fct-inv-del" onclick="event.stopPropagation();fctDeleteInvoice('${f.id}')" title="Borrar">Eliminar</button>
+          </div>
+        </div>` : ""}
       </div>`);
   });
   container.innerHTML = parts.join("");
+}
+
+function fctToggleCard(id) {
+  const body = document.getElementById("ficb-" + id);
+  const chevron = document.querySelector(`#fic-${id} .fct-inv-chevron`);
+  if (!body) return;
+  const open = body.classList.toggle("open");
+  if (chevron) chevron.textContent = open ? "⌄" : "›";
+}
+
+function fctExpandCard(id) {
+  const more = document.getElementById("ficm-" + id);
+  const btn = document.getElementById("fice-" + id);
+  if (!more || !btn) return;
+  more.classList.add("open");
+  btn.remove();
 }
 
 /* ── Pestaña Precios ── */
