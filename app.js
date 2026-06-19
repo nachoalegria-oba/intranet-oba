@@ -818,6 +818,7 @@ function showIDPanel() {
   document.querySelector('.hnav-btn[data-panel="id"]')?.classList.add("active");
   scrollTop();
   closeHamburger();
+  document.getElementById("ped-float-bar")?.classList.remove("visible");
   const unlocked = sessionStorage.getItem(ID_SESSION_KEY) === "1";
   document.getElementById("id-gate").style.display = unlocked ? "none" : "flex";
   document.getElementById("id-content").style.display = unlocked ? "block" : "none";
@@ -3676,6 +3677,7 @@ function showGrupoPanel() {
   document.querySelector('.hnav-btn[data-panel="grupo"]')?.classList.add("active");
   scrollTop();
   closeHamburger();
+  document.getElementById("ped-float-bar")?.classList.remove("visible");
 
   if (sessionStorage.getItem(CANITAS_SESSION_KEY) !== "1") {
     document.getElementById("panel-grupo-body").innerHTML = `
@@ -4963,8 +4965,9 @@ let _pedToolbarHidden = false; // true cuando el toolbar ha salido del viewport
 function updatePedFloatBar() {
   const floatBar = document.getElementById("ped-float-bar");
   if (!floatBar) return;
+  const pedidosActive = document.getElementById("panel-pedidos")?.classList.contains("active");
   const hasItems = D.ingredientes.some((item) => String(item.cant || "").trim());
-  floatBar.classList.toggle("visible", hasItems && _pedToolbarHidden && pedT === "lista");
+  floatBar.classList.toggle("visible", !!pedidosActive && hasItems && _pedToolbarHidden && pedT === "lista");
 }
 
 function setupPedFloatBar() {
