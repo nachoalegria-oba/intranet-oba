@@ -5546,12 +5546,24 @@ async function fctSave() {
     return;
   }
 
+  // ── Detección de duplicados ──
+  if (data.numero_factura) {
+    const dup = fctInvoices.find(f =>
+      f.numero_factura === data.numero_factura &&
+      (f.proveedor || "").toLowerCase() === (data.proveedor || "").toLowerCase()
+    );
+    if (dup) {
+      const dupDate = dup.fecha || dup.guardadoEn?.slice(0, 10) || "fecha desconocida";
+      const ok = confirm(`⚠️ Ya existe una factura con el número "${data.numero_factura}" de ${data.proveedor} (guardada el ${dupDate}).\n\n¿Guardar de todos modos?`);
+      if (!ok) return;
+    }
+  }
+
   // Botón en estado de carga
   const btnOriginal = saveBtn?.innerHTML || "";
   if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<span class="fct-spinner"></span> Guardando…'; }
 
   // Comprimir / leer imágenes
-  // PDFs: se leen tal cual (dataURL completo). Imágenes: se comprimen en escala de grises.
   let compressed = [];
   if (fctFiles.length) {
     try {
@@ -5559,9 +5571,7 @@ async function fctSave() {
     } catch(e) { console.warn("fctSave compress:", e); }
   }
 
-  // Límite Firestore: 1 MB por documento. Base64 ~1.33× el tamaño real.
-  // Guardamos imágenes solo si caben (PDFs escaneados pueden ser muy grandes).
-  const FIRESTORE_IMG_LIMIT = 900_000; // ~680 KB real — margen de seguridad
+  const FIRESTORE_IMG_LIMIT = 900_000;
   const saveableImgs = compressed.filter(b64 => b64.length <= FIRESTORE_IMG_LIMIT);
   const imgTooBig = compressed.length > 0 && saveableImgs.length === 0;
 
@@ -5570,22 +5580,38 @@ async function fctSave() {
     if (saveableImgs.length === 1) data.imagenBase64 = saveableImgs[0];
   }
 
-  // ── Firestore: guardar en bloques independientes para que un fallo no bloquee los demás ──
+  // ── localStorage local (antes del await de Firestore para evitar duplicado por onSnapshot) ──
+  const LOCAL_IMG_LIMIT = 400_000;
+  const dataLocal = { ...data };
+  const localImgTooBig = dataLocal.imagenesBase64?.some(b => b.length > LOCAL_IMG_LIMIT)
+    || dataLocal.imagenBase64?.length > LOCAL_IMG_LIMIT;
+  if (localImgTooBig) { delete dataLocal.imagenesBase64; delete dataLocal.imagenBase64; }
+
+  // Solo unshift si no existe ya (onSnapshot puede haberlo añadido durante un await anterior)
+  if (!fctInvoices.some(f => f.id === data.id)) {
+    fctInvoices.unshift(dataLocal);
+  }
+  fctPersistLocal();
+  fctBuildPriceIndex();
+  fctRenderHistory();
+
+  // ── Firestore: guardar en bloques independientes ──
   if (storageMode === "firebase" && db) {
 
-    // 1. Documento principal (sin imágenes — siempre ligero)
+    // 1. Documento principal
     try {
       const { imagenesBase64, imagenBase64, ...dataFirestore } = data;
       if (saveableImgs.length) dataFirestore.numPaginas = saveableImgs.length;
       await db.collection(FCT_COL).doc(data.id).set({ ...dataFirestore, _i: Date.now() });
+      // onSnapshot fires here — el id ya está en fctInvoices, no se duplicará
     } catch(e) {
       console.warn("Firestore FCT_COL:", e);
       showToast("Error al guardar en la nube: " + e.message, "error");
       if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = btnOriginal; }
-      return; // sin el doc principal no tiene sentido continuar
+      return;
     }
 
-    // 2. Imágenes (bloque independiente — fallo aquí no borra la factura)
+    // 2. Imágenes
     if (saveableImgs.length) {
       try {
         const imgBatch = db.batch();
@@ -5595,13 +5621,10 @@ async function fctSave() {
         });
         await imgBatch.commit();
         data.numPaginas = saveableImgs.length;
-      } catch(e) {
-        console.warn("Firestore IMGS_COL:", e);
-        // No bloqueamos — la factura ya está guardada, solo falta la imagen
-      }
+      } catch(e) { console.warn("Firestore IMGS_COL:", e); }
     }
 
-    // 3. Precios (bloque independiente — siempre se intenta)
+    // 3. Precios
     try {
       const pBatch = db.batch();
       (data.lineas || []).forEach((l, i) => {
@@ -5618,18 +5641,6 @@ async function fctSave() {
       await pBatch.commit();
     } catch(e) { console.warn("Firestore PRECIOS_COL:", e); }
   }
-
-  // ── localStorage: guardar siempre, pero sin imágenes grandes para no reventar la cuota ──
-  const LOCAL_IMG_LIMIT = 400_000; // ~300 KB real
-  const dataLocal = { ...data };
-  const localImgTooBig = dataLocal.imagenesBase64?.some(b => b.length > LOCAL_IMG_LIMIT)
-    || dataLocal.imagenBase64?.length > LOCAL_IMG_LIMIT;
-  if (localImgTooBig) { delete dataLocal.imagenesBase64; delete dataLocal.imagenBase64; }
-
-  fctInvoices.unshift(dataLocal);
-  fctPersistLocal();
-  fctBuildPriceIndex();
-  fctRenderHistory();
 
   if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = btnOriginal; }
 
