@@ -5225,20 +5225,20 @@ function fctRenderBatchBar() {
   bar.innerHTML = `<div class="fct-batch-meta"><i class="ph-fill ph-stack"></i> Lote — <b>${done}</b> de <b>${fctQueue.length}</b> guardadas</div><div class="fct-batch-chips">${chips}</div>`;
 }
 
-function fctAdvanceBatch() {
+function fctAdvanceBatch(warning) {
   if (fctQueueIdx < 0) return;
   fctQueue[fctQueueIdx].status = "done";
   const next = fctQueueIdx + 1;
+  const prefix = warning ? `${warning} · ` : "";
   if (next < fctQueue.length) {
     fctQueueIdx = next;
     fctLoadBatchItem(next);
-    showToast(`Guardada ✓ — Cargando factura ${next + 1} de ${fctQueue.length}…`);
+    showToast(`${prefix}Guardada ✓ — Cargando factura ${next + 1} de ${fctQueue.length}…`, warning ? "warn" : undefined);
   } else {
     const total = fctQueue.length;
-    fctQueue = [];
-    fctQueueIdx = -1;
+    fctQueue = []; fctQueueIdx = -1;
     fctReset();
-    showToast(`Lote completo — ${total} facturas guardadas ✓`, "ok");
+    showToast(`${prefix}Lote completo — ${total} facturas guardadas ✓`, warning ? "warn" : undefined);
   }
 }
 
@@ -5256,7 +5256,26 @@ function fctRenderThumbs() {
 
 function fctRemovePage(idx) {
   fctFiles.splice(idx, 1);
-  if (!fctFiles.length) { fctReset(); return; }
+  if (!fctFiles.length) {
+    if (fctQueueIdx >= 0) {
+      // Mid-batch: omitir esta factura y avanzar a la siguiente
+      fctQueue[fctQueueIdx].status = "error";
+      const next = fctQueueIdx + 1;
+      if (next < fctQueue.length) {
+        fctQueueIdx = next;
+        fctLoadBatchItem(next);
+        showToast("Factura omitida — cargando la siguiente…", "warn");
+      } else {
+        const total = fctQueue.length;
+        fctQueue = []; fctQueueIdx = -1;
+        fctReset();
+        showToast(`Lote finalizado — última factura omitida`, "warn");
+      }
+    } else {
+      fctReset();
+    }
+    return;
+  }
   fctRenderThumbs();
   const n = fctFiles.length;
   document.getElementById("fct-scan-status").textContent =
@@ -5267,7 +5286,6 @@ function fctReset() {
   fctFiles = [];
   fctExtracted = null;
   fctImageDataUrl = null;
-  if (fctQueueIdx < 0) { fctQueue = []; }  // solo limpiar si no estamos en medio del lote
   document.getElementById("fct-drop").style.display = "";
   document.getElementById("fct-preview-area").style.display = "none";
   document.getElementById("fct-result").style.display = "none";
@@ -5275,7 +5293,14 @@ function fctReset() {
   const strip = document.getElementById("fct-thumb-strip");
   if (strip) strip.innerHTML = "";
   const bar = document.getElementById("fct-batch-bar");
-  if (bar && fctQueue.length < 2) bar.style.display = "none";
+  if (bar) bar.style.display = "none";
+}
+
+// Cancela todo: limpia el lote y el formulario actual
+function fctCancelAll() {
+  fctQueue = [];
+  fctQueueIdx = -1;
+  fctReset();
 }
 
 /* ── Escanear con IA ── */
@@ -5583,14 +5608,17 @@ async function fctSave() {
 
   if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = btnOriginal; }
 
-  if (imgTooBig) {
-    showToast(`Guardada ✓ — PDF grande: datos guardados, imagen no (demasiado pesada para la nube)`, "warn");
-  }
+  const bigPdfWarning = imgTooBig ? "PDF grande: imagen no guardada en nube" : null;
 
   if (fctQueueIdx >= 0) {
-    fctAdvanceBatch();
+    fctAdvanceBatch(bigPdfWarning);
   } else {
-    if (!imgTooBig) showToast(`Factura de ${data.proveedor} guardada ✓`);
+    showToast(
+      bigPdfWarning
+        ? `Guardada ✓ — ${bigPdfWarning}`
+        : `Factura de ${data.proveedor} guardada ✓`,
+      bigPdfWarning ? "warn" : undefined
+    );
     fctReset();
   }
 }
@@ -6019,8 +6047,8 @@ function fctGenerateReport(month, year) {
 
   // ── Gráfico de barras horizontal por proveedor ──
   const barRows = provSorted.map(([prov, d], i) => {
-    const pct = Math.round(d.total / totalConIva * 100);
-    const barW = Math.round(d.total / maxProvTotal * 100);
+    const pct = totalConIva > 0 ? Math.round(d.total / totalConIva * 100) : 0;
+    const barW = maxProvTotal > 0 ? Math.round(d.total / maxProvTotal * 100) : 0;
     const color = COLORS[i % COLORS.length];
     return `
       <div style="display:grid;grid-template-columns:160px 1fr 90px 44px;gap:10px;align-items:center;margin-bottom:11px">
