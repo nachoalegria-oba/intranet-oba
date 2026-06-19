@@ -2816,6 +2816,7 @@ p, span, div, label, td, th, input, select, textarea, button{
   background:linear-gradient(135deg, #1c1c1e, #2c2c2e) !important;
   border-radius:16px !important;
 }
+@media(min-width:769px){.install-card{display:none!important}}
 
 /* Scale bar */
 .scale-bar{
