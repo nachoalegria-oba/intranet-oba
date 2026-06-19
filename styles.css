@@ -3164,14 +3164,26 @@ p, span, div, label, td, th, input, select, textarea, button{
 
 /* ── Theme toggle button ────────────────────────────── */
 .theme-toggle-btn{
-  display:flex;align-items:center;justify-content:center;
-  width:34px;height:34px;border-radius:50%;
-  border:none;background:transparent;
-  color:var(--ink);font-size:19px;
-  cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;gap:5px;
+  padding:6px 10px;border-radius:20px;
+  border:1px solid var(--line);background:var(--surface);
+  color:var(--ink);font-size:14px;font-weight:500;
+  cursor:pointer;flex-shrink:0;white-space:nowrap;
+  transition:background .15s,border-color .15s;
+}
+.theme-toggle-btn i{font-size:17px}
+.theme-toggle-btn:hover{background:var(--surface-2)}
+.theme-toggle-label{font-size:13px}
+.hamburger-theme-btn{
+  display:flex;align-items:center;gap:8px;
+  width:100%;padding:10px 14px;border-radius:12px;
+  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);
+  color:rgba(255,255,255,.85);font-size:15px;font-weight:500;
+  cursor:pointer;margin-bottom:10px;
   transition:background .15s;
 }
-.theme-toggle-btn:hover{background:var(--line)}
+.hamburger-theme-btn i{font-size:18px}
+.hamburger-theme-btn:hover{background:rgba(255,255,255,.14)}
 
 /* ── Impresión PDF (I+D) ───────────────────────────── */
 @media print{

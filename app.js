@@ -732,10 +732,15 @@ function initTheme() {
 function applyTheme(theme, silent) {
   document.documentElement.setAttribute("data-theme", theme);
   if (!silent) localStorage.setItem("oba_theme", theme);
-  const icon = document.getElementById("theme-icon");
-  if (icon) icon.className = theme === "dark" ? "ph-fill ph-sun" : "ph-fill ph-moon-stars";
-  const meta = document.getElementById("theme-color-meta");
-  if (meta) meta.content = theme === "dark" ? "#000000" : "#050505";
+  const dark = theme === "dark";
+  const iconCls = dark ? "ph-fill ph-sun" : "ph-fill ph-moon-stars";
+  const el = (id) => document.getElementById(id);
+  if (el("theme-icon"))     el("theme-icon").className = iconCls;
+  if (el("theme-label"))    el("theme-label").textContent = dark ? "Claro" : "Oscuro";
+  if (el("theme-icon-ham")) el("theme-icon-ham").className = iconCls;
+  if (el("theme-label-ham")) el("theme-label-ham").textContent = dark ? "Modo claro" : "Modo oscuro";
+  const meta = el("theme-color-meta");
+  if (meta) meta.content = dark ? "#000000" : "#050505";
 }
 
 function toggleTheme() {
