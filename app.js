@@ -5857,11 +5857,15 @@ function fctRenderHistory() {
     parts.push(`
       <div class="fct-inv-card" id="fic-${f.id}">
         <div class="fct-inv-head" onclick="fctToggleCard('${f.id}')" style="cursor:pointer">
-          <span class="fct-inv-proveedor">${escHtml(f.proveedor || "Proveedor desconocido")}</span>
-          <span class="fct-inv-fecha">${f.fecha || "—"}</span>
-          <span class="fct-inv-num">${f.numero_factura ? "Fac. " + escHtml(f.numero_factura) : ""}</span>
-          ${f.total_factura != null ? `<span class="fct-inv-total">${Number(f.total_factura).toFixed(2)} €</span>` : ""}
-          <span class="fct-inv-chevron">›</span>
+          <div class="fct-inv-top">
+            <span class="fct-inv-proveedor">${escHtml(f.proveedor || "Proveedor desconocido")}</span>
+            <span class="fct-inv-chevron">›</span>
+          </div>
+          <div class="fct-inv-meta">
+            <span class="fct-inv-fecha">${f.fecha || "—"}</span>
+            ${f.numero_factura ? `<span class="fct-inv-num">· Fac. ${escHtml(f.numero_factura)}</span>` : ""}
+            ${f.total_factura != null ? `<span class="fct-inv-total">${Number(f.total_factura).toFixed(2)} €</span>` : ""}
+          </div>
         </div>
         ${lineas.length ? `
         <div class="fct-inv-body" id="ficb-${f.id}">
