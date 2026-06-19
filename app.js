@@ -724,34 +724,7 @@ function seedEmpresas() {
   }
 }
 
-function initTheme() {
-  const saved = localStorage.getItem("oba_theme") || "light";
-  applyTheme(saved, true);
-}
-
-function applyTheme(theme, silent) {
-  document.documentElement.setAttribute("data-theme", theme);
-  if (!silent) localStorage.setItem("oba_theme", theme);
-  const dark = theme === "dark";
-  const iconCls = dark ? "ph-fill ph-sun" : "ph-fill ph-moon-stars";
-  const el = (id) => document.getElementById(id);
-  if (el("theme-icon"))     el("theme-icon").className = iconCls;
-  if (el("theme-label"))    el("theme-label").textContent = dark ? "Claro" : "Oscuro";
-  if (el("theme-icon-ham")) el("theme-icon-ham").className = iconCls;
-  if (el("theme-label-ham")) el("theme-label-ham").textContent = dark ? "Modo claro" : "Modo oscuro";
-  const meta = el("theme-color-meta");
-  if (meta) meta.content = dark ? "#000000" : "#050505";
-}
-
-function toggleTheme() {
-  const current = document.documentElement.getAttribute("data-theme") || "light";
-  const next = current === "dark" ? "light" : "dark";
-  applyTheme(next);
-  localStorage.setItem("oba_theme", next);
-}
-
 function startApp() {
-  initTheme();
   seedHabitaciones();
   seedEmpresas();
   const label = formatLongDate(new Date());
