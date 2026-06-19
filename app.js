@@ -3567,7 +3567,7 @@ function isAndroid() {
 }
 
 function supportsManualInstallHint() {
-  return isIOS() || isAndroid();
+  return (isIOS() || isAndroid()) && window.innerWidth < 769;
 }
 
 function installHelpMarkup() {
