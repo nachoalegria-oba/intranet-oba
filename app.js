@@ -724,7 +724,29 @@ function seedEmpresas() {
   }
 }
 
+function initTheme() {
+  const saved = localStorage.getItem("oba_theme") || "light";
+  applyTheme(saved, true);
+}
+
+function applyTheme(theme, silent) {
+  document.documentElement.setAttribute("data-theme", theme);
+  if (!silent) localStorage.setItem("oba_theme", theme);
+  const icon = document.getElementById("theme-icon");
+  if (icon) icon.className = theme === "dark" ? "ph-fill ph-sun" : "ph-fill ph-moon-stars";
+  const meta = document.getElementById("theme-color-meta");
+  if (meta) meta.content = theme === "dark" ? "#000000" : "#050505";
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute("data-theme") || "light";
+  const next = current === "dark" ? "light" : "dark";
+  applyTheme(next);
+  localStorage.setItem("oba_theme", next);
+}
+
 function startApp() {
+  initTheme();
   seedHabitaciones();
   seedEmpresas();
   const label = formatLongDate(new Date());

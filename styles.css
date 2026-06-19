@@ -21,6 +21,12 @@
   --radius:16px;
   --radius-sm:12px;
   --shadow:0 1px 4px rgba(0,0,0,.05), 0 6px 20px rgba(0,0,0,.06);
+  /* semantic aliases */
+  --label:#000000;
+  --secondary-label:#3C3C43;
+  --separator:rgba(60,60,67,.18);
+  --surface2:#F0F0F5;
+  --surface3:#E8E8F0;
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
@@ -3108,6 +3114,57 @@ p, span, div, label, td, th, input, select, textarea, button{
 .prov-product-row:last-child{border-bottom:none}
 .prov-product-name{font-weight:500;color:var(--label)}
 .prov-product-date{color:var(--muted);font-size:12px;text-align:center}
+
+/* ── Dark mode ─────────────────────────────────────── */
+[data-theme="dark"]{
+  --bg:#000000;
+  --surface:#1C1C1E;
+  --surface-2:#2C2C2E;
+  --panel:#1C1C1E;
+  --ink:#FFFFFF;
+  --ink-2:rgba(235,235,245,.8);
+  --muted:#8E8E93;
+  --line:rgba(255,255,255,.1);
+  --line-strong:rgba(255,255,255,.26);
+  --shadow:0 1px 4px rgba(0,0,0,.5),0 6px 20px rgba(0,0,0,.6);
+  --blue-soft:rgba(0,122,255,.18);
+  --red-soft:rgba(255,59,48,.14);
+  --green-soft:rgba(52,199,89,.12);
+  --label:#FFFFFF;
+  --secondary-label:rgba(235,235,245,.6);
+  --separator:rgba(255,255,255,.1);
+  --surface2:#2C2C2E;
+  --surface3:#3A3A3C;
+  color-scheme:dark;
+}
+[data-theme="dark"] .topbar{
+  background:rgba(28,28,30,.92);
+  border-bottom-color:rgba(255,255,255,.08);
+}
+[data-theme="dark"] .table-shell,
+[data-theme="dark"] .calendar-list .notice{background:var(--surface)}
+[data-theme="dark"] .card{background:var(--surface)}
+[data-theme="dark"] .stat-card{background:var(--surface)}
+[data-theme="dark"] input:not(.login-input),
+[data-theme="dark"] select,
+[data-theme="dark"] textarea{
+  background:var(--surface-2)!important;
+  color:var(--ink)!important;
+  border-color:var(--line)!important;
+}
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder{color:var(--muted)!important}
+
+/* ── Theme toggle button ────────────────────────────── */
+.theme-toggle-btn{
+  display:flex;align-items:center;justify-content:center;
+  width:34px;height:34px;border-radius:50%;
+  border:none;background:transparent;
+  color:var(--ink);font-size:19px;
+  cursor:pointer;flex-shrink:0;
+  transition:background .15s;
+}
+.theme-toggle-btn:hover{background:var(--line)}
 
 /* ── Impresión PDF (I+D) ───────────────────────────── */
 @media print{
