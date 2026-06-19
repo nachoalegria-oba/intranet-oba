@@ -488,12 +488,14 @@
 
           <!-- Historial facturas -->
           <div class="fct-history-head">
-            <h2 class="fct-history-title">Facturas guardadas</h2>
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <input class="search-input" id="fct-search" type="text" placeholder="Buscar proveedor…" oninput="fctRenderHistory()" style="width:190px">
-              <button class="ghost-btn ghost-btn-sm" onclick="fctExportCSV()">Exportar CSV</button>
-              <button class="ghost-btn ghost-btn-sm" onclick="fctOpenReportModal()">📄 Informe mensual</button>
+            <div class="fct-history-head-top">
+              <h2 class="fct-history-title">Facturas guardadas</h2>
+              <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+                <button class="ghost-btn ghost-btn-sm" onclick="fctExportCSV()">Exportar CSV</button>
+                <button class="ghost-btn ghost-btn-sm" onclick="fctOpenReportModal()">📄 Informe</button>
+              </div>
             </div>
+            <input class="search-input" id="fct-search" type="text" placeholder="Buscar proveedor o producto…" oninput="fctRenderHistory()">
           </div>
           <div id="fct-history-list"></div>
         </div>

@@ -3006,10 +3006,14 @@ p, span, div, label, td, th, input, select, textarea, button{
 .fct-table td.fct-td-del button:hover{color:var(--red);background:var(--red-soft)}
 
 .fct-history-head{
-  display:flex;justify-content:space-between;align-items:center;
-  flex-wrap:wrap;gap:12px;margin-bottom:16px;padding-top:24px;
+  display:flex;flex-direction:column;gap:10px;
+  margin-bottom:16px;padding-top:24px;
   border-top:1px solid var(--line);
 }
+.fct-history-head-top{
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+}
+.fct-history-head #fct-search{width:100%}
 .fct-history-title{font-size:18px;font-weight:700}
 .fct-month-header{
   font-size:13px;font-weight:700;color:var(--muted);
