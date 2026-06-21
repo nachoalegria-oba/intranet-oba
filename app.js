@@ -693,6 +693,18 @@ function logout() {
   if (pwd) pwd.value = "";
 }
 
+function seedRestRecetas(col) {
+  const colKey = `${col}_recetas`;
+  const defaults = DEFAULTS[colKey];
+  if (!defaults || !defaults.length) return;
+  if (!confirm(`¿Cargar las ${defaults.length} recetas de fábrica en ${col.toUpperCase()}? Esto reemplazará el recetario actual.`)) return;
+  D[colKey] = JSON.parse(JSON.stringify(defaults));
+  save(colKey);
+  const empId = D.empresas?.find(e => e.theme === col)?.id;
+  if (empId) rEmpresaDetalle(empId, 'recetario');
+  toast(`✓ ${defaults.length} recetas cargadas`);
+}
+
 function seedHabitaciones() {
   if (D.habitaciones.length === 0) {
     D.habitaciones = JSON.parse(JSON.stringify(DEFAULTS.habitaciones));
@@ -4000,6 +4012,7 @@ function rEmpresaDetalle(id, tab) {
         <span id="rest-rcount-${e.id}">${recetas.length} receta${recetas.length !== 1 ? "s" : ""}</span>
         <div style="display:flex;gap:8px">
           <button class="ghost-btn ghost-btn-sm" onclick="reloadRecetario(${e.id},'${col}')" title="Recargar desde Firebase">${ico('arrows-clockwise', 14)}</button>
+          ${DEFAULTS[`${col}_recetas`]?.length && recetas.length === 0 ? `<button class="ghost-btn ghost-btn-sm" onclick="seedRestRecetas('${col}')" title="Cargar recetas de fábrica">${ico('database', 14)} Cargar recetas</button>` : ""}
           <button class="primary-btn" onclick="oRestRM(${e.id},'${col}',null)">+ Nueva receta</button>
         </div>
       </div>
