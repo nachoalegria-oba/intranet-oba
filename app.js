@@ -15,7 +15,7 @@ const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "
 const DS = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"];
 const SKILLS = ["Mise en place", "Fondos y salsas", "Carnes", "Pescados", "Pastelería", "Fermentos", "Limpieza y orden", "Trabajo en equipo"];
 const ALERGEN_LIST = ["Gluten", "Crustáceos", "Huevos", "Pescado", "Cacahuetes", "Soja", "Lácteos", "Frutos de cáscara", "Apio", "Mostaza", "Sésamo", "Dióxido de azufre", "Altramuces", "Moluscos"];
-const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "eventos", "proveedores", "practicantes", "centros", "habitaciones", "pedidosHistorial", "descargables", "empresas", "grupo_descargables", "oba_recetas", "oba_menus", "oba_ideas", "oba_kpis", "ene_recetas", "ene_menus", "ene_ideas", "ene_kpis", "candomo_recetas", "candomo_menus", "candomo_ideas", "candomo_kpis", "canitas_recetas", "canitas_menus", "canitas_ideas", "canitas_kpis", "cebo_recetas", "cebo_menus", "cebo_ideas", "cebo_kpis"];
+const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "eventos", "proveedores", "practicantes", "centros", "habitaciones", "pedidosHistorial", "descargables", "empresas", "grupo_descargables", "oba_recetas", "oba_menus", "oba_ideas", "oba_kpis", "ene_recetas", "ene_menus", "ene_ideas", "ene_kpis", "candomo_recetas", "candomo_menus", "candomo_ideas", "candomo_kpis", "canitas_recetas", "canitas_menus", "canitas_ideas", "canitas_kpis", "cebo_recetas", "cebo_menus", "cebo_ideas", "cebo_kpis", "huerta_plantas"];
 
 const REST_COL_MAP = { oba: "oba", ene: "ene", candomo: "candomo", canitas: "canitas", cebo: "cebo" };
 
@@ -402,6 +402,7 @@ const DEFAULTS = {
   ene_recetas: [], ene_menus: [], ene_ideas: [], ene_kpis: [],
   candomo_recetas: [], candomo_menus: [], candomo_ideas: [], candomo_kpis: [],
   canitas_recetas: [], canitas_menus: [], canitas_ideas: [], canitas_kpis: [],
+  huerta_plantas: [],
   cebo_recetas: [{"_i":1,"nombre":"Snack tartaleta de lechuga de mar y anchoallade","seccion":"Snacks","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Alga codium","c":"","u":""}],"subrecetas":[{"nombre":"Cebo base de tartaleta de lechuga de mar","descripcion":"","ingredientes":[{"i":"Lechuga de mar en sal","c":"","u":""},{"i":"Alga nori seca","c":"","u":""},{"i":"Harina de trigo","c":"","u":""},{"i":"Harina de arroz","c":"","u":""},{"i":"Maizena","c":"","u":""},{"i":"Huevo","c":"","u":""},{"i":"Codium en polvo liofilizado","c":"","u":""},{"i":"Sal fina","c":"","u":""}],"pasos":[]},{"nombre":"Licuado de algas","descripcion":"","ingredientes":[{"i":"Alga kombu deshidratada","c":"","u":""}],"pasos":[]},{"nombre":"Cebo base de anchoallade","descripcion":"","ingredientes":[{"i":"Anchoa ahumada","c":"","u":""},{"i":"Chapata","c":"","u":""},{"i":"Aceite de girasol","c":"","u":""},{"i":"Pepinillo en vinagre","c":"","u":""},{"i":"Alcaparras","c":"","u":""},{"i":"Cebolletas blancas","c":"","u":""},{"i":"Cebollino","c":"","u":""},{"i":"Ajo morado","c":"","u":""},{"i":"Perejil","c":"","u":""},{"i":"Vinagre de jerez","c":"","u":""},{"i":"Alga codium","c":"","u":""}],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":2,"nombre":"Snack crujiente de espina de boquerón","seccion":"Snacks","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Boquerón grande","c":"","u":""}],"subrecetas":[{"nombre":"Cebo crujiente de arroz boquerón","descripcion":"","ingredientes":[{"i":"Arroz SOS","c":"","u":""},{"i":"Katsuo bushi","c":"","u":""}],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":3,"nombre":"Snack anchoa sobada \"López\"","seccion":"Snacks","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Anchoa en salazón","c":"","u":""},{"i":"Aceite de oliva virgen extra","c":"","u":""}],"subrecetas":[],"pasos":[],"notas":"Pendiente: añadir elaboración de desobar","fecha":"2026-06-21","autor":"Cebo"},{"_i":4,"nombre":"Snack de crujiente de piel, rillete de pintada y trufa","seccion":"Snacks","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Trufa T. melanosporum","c":"","u":""}],"subrecetas":[{"nombre":"Cebo crujiente de piel de pollo","descripcion":"","ingredientes":[{"i":"Pieles de pollo","c":"","u":""},{"i":"Cebo caldo de ave oscuro","c":"","u":""},{"i":"Harina de arroz blanco","c":"","u":""},{"i":"Maizena","c":"","u":""},{"i":"Levadura fresca","c":"","u":""},{"i":"Goma xantana","c":"","u":""},{"i":"Katakuriko almidón de patata","c":"","u":""}],"pasos":[]},{"nombre":"Cebo rillete de pintada","descripcion":"","ingredientes":[{"i":"Manteca de cerdo","c":"","u":""},{"i":"Pintada (muslo, contramuslo e interiores)","c":"","u":""},{"i":"Ajo morado","c":"","u":""},{"i":"Laurel","c":"","u":""},{"i":"Romero","c":"","u":""},{"i":"Tomillo","c":"","u":""},{"i":"Pimienta negra en grano","c":"","u":""}],"pasos":[]},{"nombre":"Cebo consomé de pintada","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo caldo de ave claro","descripcion":"","ingredientes":[],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":5,"nombre":"Snack bikini de pintada y queso comté","seccion":"Snacks","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[],"subrecetas":[{"nombre":"Cebo pan de arroz glutinoso y trufa","descripcion":"","ingredientes":[{"i":"Arroz glutinoso","c":"","u":""},{"i":"Leche entera","c":"","u":""},{"i":"Huevos de pollita","c":"","u":""},{"i":"Levadura","c":"","u":""},{"i":"Trufa otoño tuber uncinatum","c":"","u":""},{"i":"Mantequilla","c":"","u":""},{"i":"Azúcar","c":"","u":""}],"pasos":[]},{"nombre":"Cebo crema de queso comté","descripcion":"","ingredientes":[{"i":"Queso Comté 16/24 meses","c":"","u":""},{"i":"Sal","c":"","u":""},{"i":"XP Flaxfiber","c":"","u":""}],"pasos":[]},{"nombre":"Cebo chacina de pintada y trufa","descripcion":"","ingredientes":[{"i":"Pintada (pechuga)","c":"","u":""},{"i":"Pimienta negra molida","c":"","u":""},{"i":"Sal","c":"","u":""},{"i":"Trufa T. melanosporum","c":"","u":""}],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":6,"nombre":"Snack consomé de pintada","seccion":"Snacks","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Manzanilla pasada Pastrana Hidalgo","c":"","u":""},{"i":"Trufa T. melanosporum","c":"","u":""}],"subrecetas":[{"nombre":"Cebo consomé de pintada","descripcion":"","ingredientes":[{"i":"Pintada (carcasa, mollejas y alas)","c":"","u":""},{"i":"Gallina","c":"","u":""},{"i":"Carcasa de pollo limpia","c":"","u":""},{"i":"Tendones de ternera","c":"","u":""},{"i":"Puerros","c":"","u":""},{"i":"Ajo morado","c":"","u":""},{"i":"Apio con hoja","c":"","u":""},{"i":"Garbanzos","c":"","u":""},{"i":"Laurel","c":"","u":""},{"i":"Cebolla","c":"","u":""},{"i":"Perejil","c":"","u":""},{"i":"Zanahoria","c":"","u":""},{"i":"Champiñón botón","c":"","u":""},{"i":"Pimienta negra en grano","c":"","u":""},{"i":"Bayas de enebro","c":"","u":""},{"i":"Cebo caldo de ave claro","c":"","u":""}],"pasos":[]},{"nombre":"Cebo caldo de ave claro","descripcion":"","ingredientes":[{"i":"Ajo morado","c":"","u":""},{"i":"Cebolla","c":"","u":""},{"i":"Carcasas de ave","c":"","u":""},{"i":"Gallina","c":"","u":""},{"i":"Laurel","c":"","u":""}],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":7,"nombre":"Cerdo de bellota - La croqueta de Cañitas","seccion":"Entrantes","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Coppa","c":"","u":""}],"subrecetas":[{"nombre":"Masa croqueta Joselito","descripcion":"","ingredientes":[{"i":"Lingote mantequilla oveja","c":"","u":""},{"i":"Leche entera","c":"","u":""},{"i":"Nata pasteurizada oveja","c":"","u":""},{"i":"Leche oveja","c":"","u":""},{"i":"Harina azul suave floja","c":"","u":""},{"i":"Jamón ibérico en tacos","c":"","u":""},{"i":"Gelatina hoja","c":"","u":""},{"i":"Sal","c":"","u":""},{"i":"Pimienta negra en grano","c":"","u":""}],"pasos":[]},{"nombre":"Empanado de croqueta","descripcion":"","ingredientes":[{"i":"Pan rallado panko","c":"","u":""},{"i":"Huevo","c":"","u":""}],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":8,"nombre":"Tomate embotado - Lácteo de cabra","seccion":"Entrantes","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Quinoa","c":"","u":""},{"i":"Brotes lentejuela","c":"","u":""},{"i":"Brotes mostaza verde","c":"","u":""},{"i":"Brotes albahaca limón","c":"","u":""},{"i":"Brotes remolacha","c":"","u":""},{"i":"Brotes mizuna púrpura","c":"","u":""},{"i":"Brotes rabanito morado","c":"","u":""},{"i":"Brote apio montaña","c":"","u":""},{"i":"Oxalis morado","c":"","u":""},{"i":"Vene cress acedera roja","c":"","u":""}],"subrecetas":[{"nombre":"Embotado de tomate","descripcion":"","ingredientes":[{"i":"Tomate pera gordo","c":"","u":""},{"i":"Sal","c":"","u":""},{"i":"Azúcar","c":"","u":""}],"pasos":[]},{"nombre":"Lácteo de cabra","descripcion":"","ingredientes":[{"i":"Nata pasteurizada oveja","c":"","u":""},{"i":"Queso Payoyo curado con chicharrones","c":"","u":""},{"i":"Gelatina hoja","c":"","u":""},{"i":"Queso crema Ameland","c":"","u":""},{"i":"Goma xantana","c":"","u":""}],"pasos":[]},{"nombre":"Tomate Bloody Mary","descripcion":"","ingredientes":[{"i":"Tomate maduro en rama","c":"","u":""},{"i":"Sal","c":"","u":""},{"i":"Zumo de lima","c":"","u":""},{"i":"Salsa Perrins","c":"","u":""},{"i":"Salsa kimchi Popo Umami","c":"","u":""},{"i":"Apio con hoja","c":"","u":""},{"i":"Pimienta negra en grano","c":"","u":""},{"i":"Vino dulce palo cortado","c":"","u":""}],"pasos":[]},{"nombre":"Aceite de tomate","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Gel de tomate","descripcion":"","ingredientes":[],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":9,"nombre":"Navaja de buceo - Escarcha de marisma","seccion":"Entrantes","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Navaja de buceo fresca","c":"","u":""},{"i":"Almendras peladas","c":"","u":""}],"subrecetas":[{"nombre":"Base caldo de navaja","descripcion":"","ingredientes":[{"i":"Navaja Delta Ebre","c":"","u":""}],"pasos":[]},{"nombre":"Gelee caldo de navaja","descripcion":"","ingredientes":[{"i":"Cebo base caldo navaja","c":"","u":""},{"i":"Salsa kimchi Popo Umami","c":"","u":""},{"i":"Limas","c":"","u":""},{"i":"Agar-agar en polvo","c":"","u":""},{"i":"Sosa Instantgel","c":"","u":""}],"pasos":[]},{"nombre":"Gazpachuelo codium","descripcion":"","ingredientes":[{"i":"Huevos de pollita","c":"","u":""},{"i":"Aceite de girasol","c":"","u":""},{"i":"Limas","c":"","u":""},{"i":"Cebo base caldo navaja","c":"","u":""},{"i":"Sal","c":"","u":""}],"pasos":[]},{"nombre":"Codium escarcha","descripcion":"","ingredientes":[{"i":"Alga codium","c":"","u":""},{"i":"Nitrógeno líquido food","c":"","u":""},{"i":"Gelatina hoja","c":"","u":""}],"pasos":[]},{"nombre":"Cebo aceite de eneldo","descripcion":"","ingredientes":[{"i":"Eneldo","c":"","u":""},{"i":"Aceite de girasol","c":"","u":""}],"pasos":[]},{"nombre":"Licuado de algas","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo navaja de buceo confitada en AOVE","descripcion":"","ingredientes":[{"i":"Navaja de buceo fresca","c":"","u":""},{"i":"Aceite de oliva virgen extra","c":"","u":""},{"i":"Aceite de girasol","c":"","u":""}],"pasos":[]},{"nombre":"Cebo paté de navaja de buceo","descripcion":"","ingredientes":[{"i":"Cebo navaja de buceo confitada en AOVE","c":"","u":""},{"i":"Ajo morado","c":"","u":""},{"i":"Cebolla","c":"","u":""},{"i":"Laurel","c":"","u":""},{"i":"Vino blanco joven El Sotillo","c":"","u":""}],"pasos":[]},{"nombre":"Cebo aceite de ajo","descripcion":"","ingredientes":[{"i":"Aceite de oliva 0,4°","c":"","u":""},{"i":"Ajo morado","c":"","u":""}],"pasos":[]},{"nombre":"Cebo pil pil de navaja","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo caseína de ajo","descripcion":"","ingredientes":[],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":10,"nombre":"Concha fina - Camarón gallego","seccion":"Entrantes","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Camarón rojo","c":"","u":""},{"i":"Concha fina","c":"","u":""},{"i":"Micro zanahoria","c":"","u":""}],"subrecetas":[{"nombre":"Cebo escabeche de zanahorias","descripcion":"","ingredientes":[{"i":"Cebo fumet","c":"","u":""},{"i":"Aceite de oliva 0,4°","c":"","u":""},{"i":"Ajo morado","c":"","u":""},{"i":"Laurel","c":"","u":""},{"i":"Cebolla","c":"","u":""},{"i":"Pimienta negra en grano","c":"","u":""},{"i":"Vinagre de sidra","c":"","u":""},{"i":"Vinagre de jerez","c":"","u":""},{"i":"Zanahoria","c":"","u":""}],"pasos":[]},{"nombre":"Cebo fumet","descripcion":"","ingredientes":[{"i":"Cabeza de rape grande","c":"","u":""},{"i":"Espinas de pescado","c":"","u":""},{"i":"Zanahoria","c":"","u":""},{"i":"Cebolla de Figueres","c":"","u":""},{"i":"Puerros","c":"","u":""},{"i":"Ajos pelados","c":"","u":""},{"i":"Tomate pera gordo","c":"","u":""},{"i":"Vino fino La Ina","c":"","u":""},{"i":"Licor sake","c":"","u":""},{"i":"Mejillón gallego","c":"","u":""}],"pasos":[]},{"nombre":"Cebo base encurtido","descripcion":"","ingredientes":[{"i":"Vinagre de sidra","c":"","u":""},{"i":"Azúcar","c":"","u":""}],"pasos":[]},{"nombre":"Cebo ajada","descripcion":"","ingredientes":[{"i":"Aceite de oliva 0,4°","c":"","u":""},{"i":"Cebolla blanca","c":"","u":""},{"i":"Ajo morado","c":"","u":""},{"i":"Pimentón dulce","c":"","u":""},{"i":"Pimentón picante","c":"","u":""},{"i":"Vinagre de jerez","c":"","u":""}],"pasos":[]},{"nombre":"Cebo puré de zanahoria","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo néctar de camarón gallego","descripcion":"","ingredientes":[{"i":"Ajo morado","c":"","u":""},{"i":"Aceite de oliva virgen extra","c":"","u":""},{"i":"Brandy Fundador","c":"","u":""},{"i":"Goma xantana","c":"","u":""},{"i":"Camarón rojo","c":"","u":""},{"i":"Gelcrem Fred Sosa","c":"","u":""},{"i":"Kizami wasabi","c":"","u":""}],"pasos":[]},{"nombre":"Cebo pollo umami","descripcion":"","ingredientes":[{"i":"Carcasa de pollo limpia","c":"","u":""},{"i":"Contramuslo de pollo entero","c":"","u":""},{"i":"Champiñón botón","c":"","u":""},{"i":"Cebolla de Figueres","c":"","u":""},{"i":"Tomate pera gordo","c":"","u":""},{"i":"Lechuga de mar fresca en sal","c":"","u":""},{"i":"Vino tinto joven","c":"","u":""},{"i":"Vino fino La Ina","c":"","u":""},{"i":"Almeja blanca","c":"","u":""},{"i":"Shiro miso pasta soja clara","c":"","u":""}],"pasos":[]},{"nombre":"Cebo concha fina seca","descripcion":"","ingredientes":[{"i":"Concha fina","c":"","u":""}],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":11,"nombre":"Esturión ahumado - Caviar Oscietra","seccion":"Entrantes","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Caviar Oscietra","c":"","u":""},{"i":"Flores de aliso blanco","c":"","u":""}],"subrecetas":[{"nombre":"Base brandada de esturión","descripcion":"","ingredientes":[{"i":"Ajos secos","c":"","u":""},{"i":"Apio con hoja","c":"","u":""},{"i":"Cebolla tierna","c":"","u":""},{"i":"Aceite de oliva 0,4°","c":"","u":""},{"i":"Vino blanco joven El Sotillo","c":"","u":""},{"i":"Vino fino La Ina","c":"","u":""},{"i":"Esturión fresco","c":"","u":""},{"i":"Nata pasteurizada oveja","c":"","u":""}],"pasos":[]},{"nombre":"Cebo brandada de esturión","descripcion":"","ingredientes":[{"i":"Cebo base brandada esturión","c":"","u":""},{"i":"Patata agria","c":"","u":""},{"i":"Ajos secos","c":"","u":""},{"i":"Aceite de oliva 0,4°","c":"","u":""},{"i":"Esturión ahumado","c":"","u":""}],"pasos":[]},{"nombre":"Cebo base beurre blanc","descripcion":"","ingredientes":[{"i":"Lingote mantequilla oveja","c":"","u":""},{"i":"Cebolla chalota","c":"","u":""},{"i":"Ajo morado","c":"","u":""},{"i":"Cava Privat Brut Nature","c":"","u":""},{"i":"Nata pasteurizada oveja","c":"","u":""}],"pasos":[]},{"nombre":"Cebo esturión ahumado","descripcion":"","ingredientes":[{"i":"Esturión fresco","c":"","u":""}],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":12,"nombre":"Champiñón botón - Mantequilla tostada","seccion":"Entrantes","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Champiñón botón","c":"","u":""},{"i":"Mantequilla","c":"","u":""},{"i":"Champiñón portobello","c":"","u":""}],"subrecetas":[{"nombre":"Cebo flan de champiñón botón","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo emulsión de escabeche de ortiga y amontillado","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo toffee de champiñones","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo caldo de ave claro","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo douxelle de champiñón lactofermentado","descripcion":"","ingredientes":[{"i":"Aceite de oliva virgen extra","c":"","u":""},{"i":"Ajo morado","c":"","u":""},{"i":"Cebolla de Figueres","c":"","u":""},{"i":"Laurel","c":"","u":""},{"i":"Vino blanco joven","c":"","u":""},{"i":"Champiñón botón","c":"","u":""},{"i":"Champiñón portobello","c":"","u":""},{"i":"Cebo base encurtido de anís estrellado","c":"","u":""},{"i":"Cebo aceite de ajo","c":"","u":""},{"i":"Goma xantana","c":"","u":""}],"pasos":[]},{"nombre":"Cebo toffee de champiñones","descripcion":"","ingredientes":[{"i":"Champiñón botón (recortes)","c":"","u":""},{"i":"Azúcar panela","c":"","u":""},{"i":"Salsa soja","c":"","u":""},{"i":"Vinagre de jerez","c":"","u":""},{"i":"Yondu Vegetable Essence","c":"","u":""},{"i":"Aceite de oliva virgen extra","c":"","u":""},{"i":"Nata líquida 35%","c":"","u":""}],"pasos":[]},{"nombre":"Cebo base encurtido de anís estrellado","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo aceite de ajo","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo helado de champiñón lactofermentado","descripcion":"","ingredientes":[],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":13,"nombre":"Guisante lágrima - Erizo de mar","seccion":"Entrantes","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Guisante maresme lágrima","c":"","u":""},{"i":"Erizos de mar","c":"","u":""},{"i":"Germinado de guisante","c":"","u":""}],"subrecetas":[{"nombre":"Cebo salsa verde","descripcion":"","ingredientes":[{"i":"Cebo caldo de bacalao","c":"","u":""},{"i":"Cebo aceite de ajo","c":"","u":""},{"i":"Vino fino La Ina","c":"","u":""},{"i":"Perejil","c":"","u":""},{"i":"Espinacas","c":"","u":""},{"i":"Ajos secos","c":"","u":""},{"i":"Aceite de girasol","c":"","u":""},{"i":"Aceite de oliva 0,4°","c":"","u":""}],"pasos":[]},{"nombre":"Cebo salsa yodada","descripcion":"","ingredientes":[{"i":"Cebo infusión de algas","c":"","u":""},{"i":"Cebo sofrito en blanco de butifarra de pato","c":"","u":""},{"i":"Nata","c":"","u":""},{"i":"Sucro emul Sosa","c":"","u":""},{"i":"Toufood cítrico","c":"","u":""}],"pasos":[]},{"nombre":"Cebo caldo de bacalao","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo aceite de ajo","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo sofrito en blanco de butifarra de pato","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo tartaleta de espinaca","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo miel de erizo","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo kéfir","descripcion":"","ingredientes":[{"i":"Kéfir","c":"","u":""},{"i":"Leche","c":"","u":""}],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":14,"nombre":"Angulas del Miño","seccion":"Principales","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Angula fresca","c":"","u":""}],"subrecetas":[{"nombre":"Salsa polloalao","descripcion":"","ingredientes":[{"i":"Cebo caldo de ave oscuro","c":"","u":""},{"i":"Cebo caldo de bacalao","c":"","u":""},{"i":"Aceite de oliva 0,4°","c":"","u":""},{"i":"Cebo grasa de pollo","c":"","u":""},{"i":"Tomillo","c":"","u":""},{"i":"Romero","c":"","u":""},{"i":"Goma xantana","c":"","u":""},{"i":"Sal","c":"","u":""}],"pasos":[]},{"nombre":"Cebo caldo de ave oscuro","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo caldo de bacalao","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo grasa de pollo","descripcion":"","ingredientes":[],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":15,"nombre":"Calamar de anzuelo - Rancio Ibérico","seccion":"Principales","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Bote esencia Joselito curado","c":"","u":""},{"i":"Garum colatura de anchoa","c":"","u":""}],"subrecetas":[{"nombre":"Cebo calamar producido","descripcion":"","ingredientes":[{"i":"Nata líquida 35%","c":"","u":""},{"i":"Cebo caldo de jamón","c":"","u":""},{"i":"Patata agria","c":"","u":""},{"i":"Goma xantana","c":"","u":""}],"pasos":[]},{"nombre":"Cebo crema yema premium","descripcion":"","ingredientes":[{"i":"Huevos de pollita","c":"","u":""},{"i":"Sal","c":"","u":""},{"i":"Pimienta negra molida","c":"","u":""}],"pasos":[]},{"nombre":"Cebo salsa rancio ibérico","descripcion":"","ingredientes":[{"i":"Cebolla morada","c":"","u":""},{"i":"Aceite de oliva 0,4°","c":"","u":""},{"i":"Calamar nacional fresco","c":"","u":""},{"i":"Licor sake","c":"","u":""}],"pasos":[]},{"nombre":"Cebo caldo de jamón","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo velo de calamar","descripcion":"","ingredientes":[{"i":"Cebo calamar procesado","c":"","u":""},{"i":"Cebo fumet de cabeza de rape","c":"","u":""},{"i":"Aceite de oliva 0,4°","c":"","u":""},{"i":"Sal","c":"","u":""},{"i":"Goma xantana","c":"","u":""}],"pasos":[]},{"nombre":"Cebo crujiente de calamar","descripcion":"","ingredientes":[{"i":"Cebo calamar procesado","c":"","u":""},{"i":"Cebo fumet de cabeza de rape","c":"","u":""},{"i":"Aceite de oliva 0,4°","c":"","u":""},{"i":"Sal","c":"","u":""},{"i":"Goma xantana","c":"","u":""}],"pasos":[]},{"nombre":"Cebo calamar procesado","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo fumet de cabeza de rape","descripcion":"","ingredientes":[],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":16,"nombre":"Esparraguín de villena","seccion":"Principales","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Esparraguín","c":"","u":""},{"i":"Anguila ahumada","c":"","u":""},{"i":"Flor de sauco","c":"","u":""}],"subrecetas":[{"nombre":"Cebo salsa polloalao","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo caldo de ave oscuro","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo caldo de bacalao","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo grasa de pollo","descripcion":"","ingredientes":[],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":17,"nombre":"Gamba roja de Palamós - Manteca de orza","seccion":"Principales","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Gamba roja extra","c":"","u":""}],"subrecetas":[{"nombre":"Cebo orza","descripcion":"","ingredientes":[{"i":"Chorizo de León dulce","c":"","u":""},{"i":"Manteca de cerdo","c":"","u":""},{"i":"Aceite de girasol","c":"","u":""}],"pasos":[]},{"nombre":"Cebo consomé de gamba roja","descripcion":"","ingredientes":[{"i":"Cabeza de gamba alistada \"Pescaviva\"","c":"","u":""},{"i":"Lorito congelado \"Pescaviva\"","c":"","u":""},{"i":"Ajo morado","c":"","u":""},{"i":"Cebolla","c":"","u":""},{"i":"Laurel","c":"","u":""},{"i":"Vino blanco joven El Sotillo","c":"","u":""},{"i":"Vino fino La Ina","c":"","u":""},{"i":"Aceite de oliva 0,4°","c":"","u":""}],"pasos":[]},{"nombre":"Cebo tapioca cocida","descripcion":"","ingredientes":[],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":18,"nombre":"Virrey reposado - Bulbo de espinaca","seccion":"Principales","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Palometa roja virrey","c":"","u":""},{"i":"Aceite de oliva virgen extra","c":"","u":""},{"i":"Espinaca bulbos","c":"","u":""}],"subrecetas":[{"nombre":"Cebo mantequilla cítrica ahumada","descripcion":"","ingredientes":[{"i":"Puerros","c":"","u":""},{"i":"Apio con hoja","c":"","u":""},{"i":"Cebolla blanca","c":"","u":""},{"i":"Ajo morado","c":"","u":""},{"i":"Palometa roja virrey","c":"","u":""},{"i":"Mantequilla ahumada","c":"","u":""},{"i":"Mantequilla","c":"","u":""},{"i":"Aceite de oliva 0,4°","c":"","u":""},{"i":"Limones","c":"","u":""},{"i":"Vinagre de manzana","c":"","u":""},{"i":"Cebo caldo de bacalao","c":"","u":""},{"i":"Cebo fumet","c":"","u":""},{"i":"Goma xantana","c":"","u":""}],"pasos":[]},{"nombre":"Cebo caldo de bacalao","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo fumet","descripcion":"","ingredientes":[],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":19,"nombre":"Cabrito malagueño - Arroz envejecido","seccion":"Principales","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Mollejas de cordero lechal","c":"","u":""},{"i":"Coliflor","c":"","u":""},{"i":"Col repollo","c":"","u":""},{"i":"Lingote mantequilla oveja","c":"","u":""}],"subrecetas":[{"nombre":"Cebo arroz carnaroli para cabrito","descripcion":"","ingredientes":[{"i":"Arroz carnaroli old","c":"","u":""},{"i":"Lingote mantequilla oveja","c":"","u":""},{"i":"Cebolla chalota","c":"","u":""},{"i":"Ajo morado","c":"","u":""},{"i":"Sal","c":"","u":""},{"i":"Cebo caldo de ave claro","c":"","u":""}],"pasos":[]},{"nombre":"Cebo falda de cordero","descripcion":"","ingredientes":[{"i":"Falda de cordero recental","c":"","u":""},{"i":"Cebo caldo de ave claro","c":"","u":""}],"pasos":[]},{"nombre":"Cebo caldo de ave claro","descripcion":"","ingredientes":[{"i":"Ajo morado","c":"","u":""},{"i":"Cebolla","c":"","u":""},{"i":"Carcasas de ave","c":"","u":""},{"i":"Gallina","c":"","u":""},{"i":"Laurel","c":"","u":""}],"pasos":[]},{"nombre":"Vinagreta de cordero","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo kofta de cabrito","descripcion":"","ingredientes":[{"i":"Cebo falda de cordero","c":"","u":""},{"i":"Pierna de cordero","c":"","u":""},{"i":"Cebo sofrito en blanco de butifarra de pato","c":"","u":""},{"i":"Cebo caldo de ave oscuro","c":"","u":""},{"i":"Piñones","c":"","u":""},{"i":"Col repollo rizado","c":"","u":""}],"pasos":[]},{"nombre":"Cebo queso pata de mulo","descripcion":"","ingredientes":[{"i":"Queso pata de mulo","c":"","u":""},{"i":"XP Gracila Gel","c":"","u":""},{"i":"Cebo licuado de espinaca","c":"","u":""}],"pasos":[]},{"nombre":"Cebo sofrito en blanco de butifarra de pato","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo caldo de ave oscuro","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo licuado de espinaca","descripcion":"","ingredientes":[],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":20,"nombre":"Canetón semisalvaje - Colmenilla del Pirineo","seccion":"Principales","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Canetón de sangre","c":"","u":""},{"i":"Colmenilla","c":"","u":""}],"subrecetas":[{"nombre":"Cebo parfait de colmenilla","descripcion":"","ingredientes":[{"i":"Cebo base paté hígado de pollo","c":"","u":""},{"i":"Alcaparras","c":"","u":""},{"i":"Jamón ibérico en tacos","c":"","u":""},{"i":"Cebo caldo de ave oscuro","c":"","u":""},{"i":"Papada de cerdo ibérico","c":"","u":""}],"pasos":[]},{"nombre":"Cebo jugo de pata barbarie","descripcion":"","ingredientes":[{"i":"Pata barbarie (carcasas)","c":"","u":""},{"i":"Tendones de ternera","c":"","u":""},{"i":"Cebolla","c":"","u":""},{"i":"Puerro","c":"","u":""},{"i":"Ajo morado","c":"","u":""},{"i":"Laurel","c":"","u":""},{"i":"Pimienta negra en grano","c":"","u":""},{"i":"Enebro","c":"","u":""},{"i":"Pimienta de Jamaica","c":"","u":""},{"i":"Vino tinto \"El Sotillo\"","c":"","u":""},{"i":"Vino tinto \"Tintilla de Rota\"","c":"","u":""},{"i":"Huevo","c":"","u":""}],"pasos":[]},{"nombre":"Cebo butifarra de pato","descripcion":"","ingredientes":[{"i":"Cebo guiso de patas de pata barbarie","c":"","u":""},{"i":"Cebo sofrito en blanco de butifarra de pato","c":"","u":""},{"i":"Huevo","c":"","u":""},{"i":"Trufa T. melanosporum","c":"","u":""},{"i":"Papada de cerdo ibérico","c":"","u":""}],"pasos":[]},{"nombre":"Cebo base paté hígado de pollo","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo caldo de ave oscuro","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo guiso de patas de pata barbarie","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo sofrito en blanco de butifarra de pato","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo caldo de gallina","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo caldo de ave claro","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo pan de arroz glutinoso y trufa","descripcion":"","ingredientes":[{"i":"Arroz glutinoso","c":"","u":""},{"i":"Leche entera","c":"","u":""},{"i":"Huevos de pollita","c":"","u":""},{"i":"Levadura","c":"","u":""},{"i":"Trufa otoño tuber uncinatum","c":"","u":""},{"i":"Mantequilla","c":"","u":""},{"i":"Azúcar","c":"","u":""}],"pasos":[]},{"nombre":"Cebo mantequilla de pieles de pato","descripcion":"","ingredientes":[{"i":"Mantequilla","c":"","u":""},{"i":"Boletus en polvo","c":"","u":""},{"i":"Trufa T. melanosporum","c":"","u":""},{"i":"Champiñón botón","c":"","u":""},{"i":"Sal","c":"","u":""},{"i":"Pieles de pollo","c":"","u":""}],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":21,"nombre":"Fresón blanco - Flor de Sauco","seccion":"Postres","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Fresa mara de bois","c":"","u":""},{"i":"Fresón blanco","c":"","u":""},{"i":"Hierba luisa","c":"","u":""},{"i":"Hoja santa","c":"","u":""}],"subrecetas":[{"nombre":"Cebo yogur licor de sauco","descripcion":"","ingredientes":[{"i":"Yogur griego","c":"","u":""},{"i":"Nata líquida 35%","c":"","u":""},{"i":"Licor Elderflower St. Germain","c":"","u":""}],"pasos":[]},{"nombre":"Cebo sorbete de fresa mara de bois","descripcion":"","ingredientes":[{"i":"Fresa mara de bois","c":"","u":""},{"i":"Sosa Instantgel","c":"","u":""},{"i":"Profiber","c":"","u":""},{"i":"Procrema base Sosa","c":"","u":""},{"i":"Dextrosa","c":"","u":""},{"i":"Zumo de lima","c":"","u":""},{"i":"Licor Elderflower St. Germain","c":"","u":""}],"pasos":[]},{"nombre":"Mermelada de fresa mara de bois","descripcion":"","ingredientes":[{"i":"Fresa mara de bois","c":"","u":""},{"i":"Pectina neutra","c":"","u":""}],"pasos":[]},{"nombre":"Cebo helado de fresa mara de bois","descripcion":"","ingredientes":[{"i":"Cebo base licuado de fresa","c":"","u":""},{"i":"Goma xantana","c":"","u":""},{"i":"Sosa Instantgel","c":"","u":""},{"i":"Glicerina","c":"","u":""},{"i":"Azúcar","c":"","u":""},{"i":"Licor Elderflower St. Germain","c":"","u":""}],"pasos":[]},{"nombre":"Cebo base licuado de fresa","descripcion":"","ingredientes":[],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":22,"nombre":"Cacao de origen - Chufa levantina","seccion":"Postres","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[],"subrecetas":[{"nombre":"Cebo helado de chufa","descripcion":"","ingredientes":[{"i":"Cebo horchata chufa cacao","c":"","u":""},{"i":"Dextrosa","c":"","u":""},{"i":"Glicerina","c":"","u":""},{"i":"Procrema base Sosa","c":"","u":""},{"i":"XP Profiber Stab 5","c":"","u":""},{"i":"Goma xantana","c":"","u":""},{"i":"Cebo nata-chufa","c":"","u":""}],"pasos":[]},{"nombre":"Cebo crepe choco nitro","descripcion":"","ingredientes":[{"i":"Chocolate Bolivia","c":"","u":""},{"i":"Leche semi s/lactosa","c":"","u":""},{"i":"Azúcar muscovado dark","c":"","u":""}],"pasos":[]},{"nombre":"Cebo miel de miso","descripcion":"","ingredientes":[{"i":"Miel","c":"","u":""},{"i":"Shiro miso pasta soja clara","c":"","u":""}],"pasos":[]},{"nombre":"Cebo barquillo","descripcion":"","ingredientes":[{"i":"Harina azul suave floja","c":"","u":""},{"i":"Azúcar glas","c":"","u":""},{"i":"Clara líquida","c":"","u":""},{"i":"Mantequilla Echire","c":"","u":""},{"i":"Sal","c":"","u":""},{"i":"Canela molida","c":"","u":""}],"pasos":[]},{"nombre":"Cebo horchata chufa cacao","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo base horchata","descripcion":"","ingredientes":[],"pasos":[]},{"nombre":"Cebo nata-chufa","descripcion":"","ingredientes":[],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":23,"nombre":"Petit Almendra","seccion":"Petit Fours","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Leche en polvo","c":"","u":""},{"i":"Moscatel Pino Viejo","c":"","u":""}],"subrecetas":[{"nombre":"Cebo bizcocho de naranja","descripcion":"","ingredientes":[{"i":"Huevo","c":"","u":""},{"i":"Azúcar","c":"","u":""},{"i":"Naranja de zumo","c":"","u":""},{"i":"Aceite de girasol","c":"","u":""},{"i":"Harina azul suave floja","c":"","u":""},{"i":"Levadura","c":"","u":""}],"pasos":[]},{"nombre":"Cebo ganache de almendra","descripcion":"","ingredientes":[{"i":"Almendras peladas","c":"","u":""},{"i":"Ivoire blanca 35% Valrhona","c":"","u":""},{"i":"Nata líquida 35%","c":"","u":""}],"pasos":[]},{"nombre":"Cebo almendra garrapiñada","descripcion":"","ingredientes":[{"i":"Almendras peladas","c":"","u":""},{"i":"Azúcar","c":"","u":""}],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":24,"nombre":"Petit Piñón","seccion":"Petit Fours","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Miel de espliego","c":"","u":""}],"subrecetas":[{"nombre":"Cebo praliné de piñón","descripcion":"","ingredientes":[{"i":"Piñones","c":"","u":""},{"i":"Azúcar","c":"","u":""}],"pasos":[]},{"nombre":"Cebo muselina de piñón","descripcion":"","ingredientes":[{"i":"Leche entera","c":"","u":""},{"i":"Yema líquida","c":"","u":""},{"i":"Azúcar","c":"","u":""},{"i":"Maizena","c":"","u":""},{"i":"Mantequilla Echire","c":"","u":""},{"i":"Ivoire blanca 35% Valrhona","c":"","u":""},{"i":"Cebo praliné de piñón","c":"","u":""},{"i":"Queso crema Ameland","c":"","u":""}],"pasos":[]},{"nombre":"Cebo sucre","descripcion":"","ingredientes":[{"i":"Huevo","c":"","u":""},{"i":"Sal","c":"","u":""},{"i":"Azúcar glas","c":"","u":""},{"i":"Almendras peladas","c":"","u":""},{"i":"Harina de trigo","c":"","u":""}],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"},{"_i":25,"nombre":"Petit Pistacho","seccion":"Petit Fours","temporada":"Todo el año","descripcion":"","raciones":"","tiempoElaboracion":"","temperatura":"","alergenos":[],"ingredientes":[{"i":"Pistacho pelado ecológico","c":"","u":""}],"subrecetas":[{"nombre":"Cebo praliné de pistacho","descripcion":"","ingredientes":[{"i":"Pistacho pelado ecológico","c":"","u":""},{"i":"Azúcar","c":"","u":""},{"i":"Sal escamas Maldon","c":"","u":""}],"pasos":[]},{"nombre":"Cebo muselina de pistacho","descripcion":"","ingredientes":[{"i":"Leche entera","c":"","u":""},{"i":"Yema líquida","c":"","u":""},{"i":"Azúcar","c":"","u":""},{"i":"Maizena Express","c":"","u":""},{"i":"Mantequilla Echire","c":"","u":""},{"i":"Ivoire blanca 35% Valrhona","c":"","u":""},{"i":"Cebo praliné de piñón","c":"","u":""},{"i":"Queso crema Ameland","c":"","u":""}],"pasos":[]},{"nombre":"Cebo pasta choux","descripcion":"","ingredientes":[{"i":"Leche entera","c":"","u":""},{"i":"Sal","c":"","u":""},{"i":"Azúcar","c":"","u":""},{"i":"Mantequilla","c":"","u":""},{"i":"Harina de trigo","c":"","u":""},{"i":"Huevo","c":"","u":""}],"pasos":[]},{"nombre":"Cebo craquelín","descripcion":"","ingredientes":[{"i":"Mantequilla","c":"","u":""},{"i":"Azúcar moreno","c":"","u":""},{"i":"Harina de trigo","c":"","u":""}],"pasos":[]}],"pasos":[],"notas":"","fecha":"2026-06-21","autor":"Cebo"}], cebo_menus: [], cebo_ideas: [], cebo_kpis: []
 };
 
@@ -746,10 +747,11 @@ function startApp() {
   // Escape key closes the topmost open overlay
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
-    if (document.getElementById("modal")?.classList.contains("open"))   { cModal();          return; }
-    if (document.getElementById("restdet")?.classList.contains("open")) { closeRestRecipe(); return; }
-    if (document.getElementById("rdet")?.classList.contains("open"))    { cRD();             return; }
-    if (document.getElementById("pfdet")?.classList.contains("open"))   { cPF();             return; }
+    if (document.getElementById("modal")?.classList.contains("open"))           { cModal();           return; }
+    if (document.getElementById("restdet")?.classList.contains("open"))        { closeRestRecipe();  return; }
+    if (document.getElementById("rdet")?.classList.contains("open"))           { cRD();              return; }
+    if (document.getElementById("pfdet")?.classList.contains("open"))          { cPF();              return; }
+    if (document.getElementById("huerta-detail-overlay")?.classList.contains("open")) { closeHuertaDetail(); return; }
   });
 
   renderAll();
@@ -780,6 +782,7 @@ function renderAll() {
 function sp(id) {
   if (id === "grupo") { showGrupoPanel(); return; }
   if (id === "id") { showIDPanel(); return; }
+  if (id === "huerta") { showHuertaPanel(); return; }
   document.querySelectorAll(".panel").forEach((panel) => panel.classList.remove("active"));
   document.querySelectorAll(".nav-btn").forEach((btn) => btn.classList.remove("active"));
   document.querySelectorAll(".hnav-btn").forEach((btn) => btn.classList.remove("active"));
@@ -6315,6 +6318,337 @@ function fctExportCSV() {
 
 function escHtml(s) {
   return String(s || "").replace(/[<>&"']/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+// ══════════════════════════════════════════════════════
+// HUERTA — Rueda del Año
+// ══════════════════════════════════════════════════════
+
+let huertaSelectedMonth = null;
+
+function showHuertaPanel() {
+  document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".hnav-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("panel-huerta")?.classList.add("active");
+  document.querySelector('.nav-btn[data-panel="huerta"]')?.classList.add("active");
+  document.querySelector('.hnav-btn[data-panel="huerta"]')?.classList.add("active");
+  scrollTop();
+  closeHamburger();
+  document.getElementById("ped-float-bar")?.classList.remove("visible");
+  rHuerta();
+}
+
+function rHuerta() {
+  const body = document.getElementById("huerta-body");
+  if (!body) return;
+  const plantas = (D.huerta_plantas || []).slice().sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
+  const filtered = huertaSelectedMonth
+    ? plantas.filter(p => (p.meses || []).includes(huertaSelectedMonth))
+    : plantas;
+  const monthLabel = huertaSelectedMonth ? MESES[huertaSelectedMonth - 1] : "Todo el año";
+  const cnt = filtered.length;
+
+  body.innerHTML = `
+    <div class="huerta-layout">
+      <div class="huerta-wheel-wrap">${buildHuertaWheel(plantas, huertaSelectedMonth)}</div>
+      <div class="huerta-filter-row">
+        <div class="huerta-section-label">
+          ${escHtml(monthLabel)}
+          <span style="font-size:14px;font-weight:500;color:var(--muted);margin-left:8px">${cnt} planta${cnt !== 1 ? "s" : ""}</span>
+        </div>
+        ${huertaSelectedMonth ? `<button class="ghost-btn ghost-btn-sm" onclick="selectHuertaMonth(null)">Ver todas</button>` : ""}
+      </div>
+      <div class="huerta-plant-grid">
+        ${filtered.length === 0 ? `
+          <div class="huerta-empty">
+            <div style="font-size:48px;margin-bottom:12px">🌱</div>
+            <div style="font-weight:600;margin-bottom:4px">Sin plantas para ${escHtml(monthLabel.toLowerCase())}</div>
+            <div style="font-size:13px;color:var(--muted)">Pulsa "+" para añadir tu primera planta de temporada</div>
+          </div>` : filtered.map(p => huertaPlantCard(p)).join("")}
+      </div>
+    </div>`;
+}
+
+const _HUERTA_SEA = [
+  "#B0C8E8","#BCCFEE", // Ene, Feb — invierno
+  "#A8E6A3","#7ED68A", // Mar, Abr — primavera temprana
+  "#4DC96D","#34C759", // May, Jun — primavera plena
+  "#FFD60A","#FF9F0A", // Jul, Ago — verano
+  "#FF6B35","#D4845A", // Sep, Oct — otoño
+  "#A0887A","#8EB4D8", // Nov, Dic — otoño tardío / invierno
+];
+
+function buildHuertaWheel(plantas, selectedMonth) {
+  const S = 300, cx = 150, cy = 150;
+  const R = 118, r = 52, labelR = 133;
+  const N = 12, TAU = 2 * Math.PI, gap = 0.018;
+
+  const counts = Array(13).fill(0);
+  plantas.forEach(p => (p.meses || []).forEach(m => { if (m >= 1 && m <= 12) counts[m]++; }));
+  const maxC = Math.max(...counts.slice(1), 1);
+
+  let svg = "";
+  for (let i = 0; i < N; i++) {
+    const month = i + 1;
+    const a0 = -Math.PI / 2 + i * (TAU / N);
+    const a1 = a0 + TAU / N;
+    const am = (a0 + a1) / 2;
+    const isSel = selectedMonth === month;
+    const cnt = counts[month];
+
+    let fill;
+    if (isSel) {
+      fill = _HUERTA_SEA[i];
+    } else if (cnt === 0) {
+      fill = "#E5E5EA";
+    } else {
+      const hex = _HUERTA_SEA[i];
+      const r0 = 242, g0 = 242, b0 = 247;
+      const r1 = parseInt(hex.slice(1,3),16), g1 = parseInt(hex.slice(3,5),16), b1 = parseInt(hex.slice(5,7),16);
+      const t = 0.3 + (cnt / maxC) * 0.7;
+      fill = `rgb(${Math.round(r0+(r1-r0)*t)},${Math.round(g0+(g1-g0)*t)},${Math.round(b0+(b1-b0)*t)})`;
+    }
+
+    const cos0 = Math.cos(a0+gap), sin0 = Math.sin(a0+gap);
+    const cos1 = Math.cos(a1-gap), sin1 = Math.sin(a1-gap);
+    const x1=cx+R*cos0, y1=cy+R*sin0, x2=cx+R*cos1, y2=cy+R*sin1;
+    const x3=cx+r*cos1, y3=cy+r*sin1, x4=cx+r*cos0, y4=cy+r*sin0;
+    const stroke = isSel ? "rgba(0,0,0,.22)" : "rgba(0,0,0,.07)";
+    const sw = isSel ? 2.5 : 1;
+
+    svg += `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} A${R} ${R} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)} L${x3.toFixed(1)} ${y3.toFixed(1)} A${r} ${r} 0 0 0 ${x4.toFixed(1)} ${y4.toFixed(1)}Z" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" onclick="selectHuertaMonth(${month})" style="cursor:pointer"/>`;
+
+    const lx = cx + labelR * Math.cos(am), ly = cy + labelR * Math.sin(am);
+    const shortM = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"][i];
+    svg += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="8.5" font-weight="${isSel?700:500}" fill="${isSel?"#000":"#555"}" onclick="selectHuertaMonth(${month})" style="cursor:pointer">${shortM}</text>`;
+
+    if (cnt > 0) {
+      const mr = (R + r) / 2;
+      const mx = cx + mr * Math.cos(am), my = cy + mr * Math.sin(am);
+      svg += `<text x="${mx.toFixed(1)}" y="${my.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="700" fill="#fff" style="pointer-events:none">${cnt}</text>`;
+    }
+  }
+
+  const centerLabel = selectedMonth ? MESES[selectedMonth - 1] : "Año";
+  svg += `<circle cx="${cx}" cy="${cy}" r="${r-4}" fill="white" stroke="rgba(0,0,0,.07)" stroke-width="1"/>`;
+  if (selectedMonth) {
+    svg += `<text x="${cx}" y="${cy-9}" text-anchor="middle" dominant-baseline="middle" font-size="9.5" font-weight="600" fill="#8E8E93">${["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"][selectedMonth-1]}</text>`;
+    svg += `<text x="${cx}" y="${cy+9}" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="800" fill="#000">${counts[selectedMonth]}</text>`;
+  } else {
+    svg += `<text x="${cx}" y="${cy-7}" text-anchor="middle" dominant-baseline="middle" font-size="8.5" font-weight="500" fill="#8E8E93">PLANTAS</text>`;
+    svg += `<text x="${cx}" y="${cy+8}" text-anchor="middle" dominant-baseline="middle" font-size="13" font-weight="700" fill="#000">${plantas.length}</text>`;
+  }
+
+  return `<svg viewBox="-8 -18 316 336" xmlns="http://www.w3.org/2000/svg" class="huerta-wheel-svg">${svg}</svg>`;
+}
+
+function selectHuertaMonth(month) {
+  huertaSelectedMonth = huertaSelectedMonth === month ? null : month;
+  rHuerta();
+}
+
+function huertaPlantCard(p) {
+  const emoji = _huertaEmoji(p.tipo);
+  return `<button class="huerta-plant-card" onclick="openHuertaPlant('${escHtml(p._id)}')">
+    ${p.foto
+      ? `<img src="${escHtml(p.foto)}" class="huerta-plant-img" alt="${escHtml(p.nombre)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="huerta-plant-img-placeholder" style="display:none">${emoji}</div>`
+      : `<div class="huerta-plant-img-placeholder">${emoji}</div>`}
+    <div class="huerta-plant-info">
+      <div class="huerta-plant-name">${escHtml(p.nombre)}</div>
+      ${p.nombreCientifico ? `<div class="huerta-plant-sci">${escHtml(p.nombreCientifico)}</div>` : ""}
+      ${p.tipo ? `<span class="huerta-plant-tipo">${escHtml(p.tipo)}</span>` : ""}
+    </div>
+  </button>`;
+}
+
+function _huertaEmoji(tipo) {
+  return { Hierba:"🌿", Flor:"🌸", Vegetal:"🥬", Hoja:"🍃", Fruto:"🍅", Tubérculo:"🥔", Hongo:"🍄", Árbol:"🌳", Arbusto:"🫐", Otra:"🌱" }[tipo] || "🌱";
+}
+
+// ── Plant detail overlay ─────────────────────────────
+function openHuertaPlant(id) {
+  const p = (D.huerta_plantas || []).find(x => x._id === id);
+  if (!p) return;
+  const emoji = _huertaEmoji(p.tipo);
+  const mesesStrip = Array.from({length:12}, (_, i) => {
+    const active = (p.meses || []).includes(i + 1);
+    const s = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"][i];
+    return `<div class="huerta-mes-dot${active?" active":""}">${s}</div>`;
+  }).join("");
+
+  let overlay = document.getElementById("huerta-detail-overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "huerta-detail-overlay";
+    overlay.className = "huerta-detail";
+    document.body.appendChild(overlay);
+  }
+
+  overlay.innerHTML = `
+    <div class="huerta-detail-bg" onclick="closeHuertaDetail()"></div>
+    <div class="huerta-detail-sheet">
+      ${p.foto
+        ? `<img src="${escHtml(p.foto)}" class="huerta-detail-img" alt="${escHtml(p.nombre)}" onerror="this.outerHTML='<div class=\\"huerta-detail-img-placeholder\\">${emoji}</div>'">`
+        : `<div class="huerta-detail-img-placeholder">${emoji}</div>`}
+      <div class="huerta-detail-body">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px">
+          <div>
+            <div class="huerta-detail-name">${escHtml(p.nombre)}</div>
+            ${p.nombreCientifico ? `<div class="huerta-detail-sci">${escHtml(p.nombreCientifico)}</div>` : ""}
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0;margin-top:4px">
+            <button class="ghost-btn ghost-btn-sm" onclick="oHuertaM('${escHtml(id)}')">Editar</button>
+            <button class="ghost-btn ghost-btn-sm" style="color:var(--red)" onclick="deleteHuertaPlanta('${escHtml(id)}')">Eliminar</button>
+          </div>
+        </div>
+        ${p.tipo || p.procedencia ? `<div class="huerta-detail-row">${p.tipo?`<span class="huerta-detail-tag">${escHtml(p.tipo)}</span>`:""}${p.procedencia?`<span class="huerta-detail-tag" style="background:var(--bg);color:var(--muted)">${escHtml(p.procedencia)}</span>`:""}</div>` : ""}
+        <div class="huerta-detail-section">
+          <div class="huerta-detail-section-title">Temporada</div>
+          <div class="huerta-meses-strip">${mesesStrip}</div>
+        </div>
+        ${p.descripcion ? `<div class="huerta-detail-section"><div class="huerta-detail-section-title">Descripción</div><div class="huerta-detail-text">${escHtml(p.descripcion)}</div></div>` : ""}
+        ${p.usos ? `<div class="huerta-detail-section"><div class="huerta-detail-section-title">Usos en cocina</div><div class="huerta-detail-text">${escHtml(p.usos)}</div></div>` : ""}
+        ${p.notas ? `<div class="huerta-detail-section"><div class="huerta-detail-section-title">Notas</div><div class="huerta-detail-text">${escHtml(p.notas)}</div></div>` : ""}
+      </div>
+    </div>`;
+
+  requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add("open")));
+}
+
+function closeHuertaDetail() {
+  document.getElementById("huerta-detail-overlay")?.classList.remove("open");
+}
+
+// ── Add / Edit modal ─────────────────────────────────
+const _HUERTA_TIPOS = ["Hierba","Flor","Vegetal","Hoja","Fruto","Tubérculo","Hongo","Árbol","Arbusto","Otra"];
+
+function oHuertaM(id) {
+  closeHuertaDetail();
+  const p = id ? (D.huerta_plantas || []).find(x => x._id === id) : null;
+
+  const tipoOpts = _HUERTA_TIPOS.map(t => `<option value="${t}"${p?.tipo===t?" selected":""}>${t}</option>`).join("");
+  const mesBtns = Array.from({length:12}, (_, i) => {
+    const m = i + 1, active = (p?.meses||[]).includes(m);
+    const s = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"][i];
+    return `<button type="button" class="huerta-mes-toggle${active?" active":""}" data-month="${m}" onclick="this.classList.toggle('active')">${s}</button>`;
+  }).join("");
+
+  oModal(`
+    <div class="modal-head">
+      <div class="modal-title">${p ? "Editar planta" : "Nueva planta"}</div>
+      <button class="modal-close" onclick="cModal()">&times;</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:14px">
+      <input type="hidden" id="hm-id" value="${escHtml(p?._id||"")}">
+      <div>
+        <label class="form-label">Nombre *</label>
+        <input class="form-input" id="hm-nombre" placeholder="Ej. Albahaca" value="${escHtml(p?.nombre||"")}">
+      </div>
+      <div>
+        <label class="form-label">Nombre científico</label>
+        <input class="form-input" id="hm-sci" placeholder="Ej. Ocimum basilicum" value="${escHtml(p?.nombreCientifico||"")}">
+      </div>
+      <div>
+        <label class="form-label">Tipo</label>
+        <select class="form-input" id="hm-tipo"><option value="">Seleccionar…</option>${tipoOpts}</select>
+      </div>
+      <div>
+        <label class="form-label">Meses de temporada</label>
+        <div class="huerta-mes-toggle-row">${mesBtns}</div>
+      </div>
+      <div>
+        <label class="form-label">Descripción</label>
+        <textarea class="form-input" id="hm-desc" rows="3" placeholder="Características, origen…">${escHtml(p?.descripcion||"")}</textarea>
+      </div>
+      <div>
+        <label class="form-label">Usos en cocina</label>
+        <textarea class="form-input" id="hm-usos" rows="2" placeholder="Aplicaciones culinarias…">${escHtml(p?.usos||"")}</textarea>
+      </div>
+      <div>
+        <label class="form-label">Procedencia</label>
+        <input class="form-input" id="hm-proc" placeholder="Ej. Huerta propia" value="${escHtml(p?.procedencia||"")}">
+      </div>
+      <div>
+        <label class="form-label">Foto (URL)</label>
+        <input class="form-input" id="hm-foto" type="url" placeholder="https://…" value="${escHtml(p?.foto||"")}">
+      </div>
+      <div>
+        <label class="form-label">Notas</label>
+        <textarea class="form-input" id="hm-notas" rows="2" placeholder="Observaciones…">${escHtml(p?.notas||"")}</textarea>
+      </div>
+      <button class="primary-btn" onclick="saveHuertaPlanta()">Guardar</button>
+    </div>`);
+}
+
+async function saveHuertaPlanta() {
+  const nombre = document.getElementById("hm-nombre")?.value.trim();
+  if (!nombre) { toast("El nombre es obligatorio", "err"); return; }
+
+  const meses = [...document.querySelectorAll(".huerta-mes-toggle.active")].map(b => parseInt(b.dataset.month));
+  const data = {
+    nombre,
+    nombreCientifico: document.getElementById("hm-sci")?.value.trim() || "",
+    tipo:             document.getElementById("hm-tipo")?.value || "",
+    descripcion:      document.getElementById("hm-desc")?.value.trim() || "",
+    usos:             document.getElementById("hm-usos")?.value.trim() || "",
+    procedencia:      document.getElementById("hm-proc")?.value.trim() || "",
+    foto:             document.getElementById("hm-foto")?.value.trim() || "",
+    notas:            document.getElementById("hm-notas")?.value.trim() || "",
+    meses,
+    fecha:            new Date().toISOString(),
+  };
+
+  const existingId = document.getElementById("hm-id")?.value;
+
+  if (storageMode === "firebase" && db) {
+    try {
+      if (existingId) {
+        await db.collection("huerta_plantas").doc(existingId).update(data);
+        const idx = (D.huerta_plantas || []).findIndex(x => x._id === existingId);
+        if (idx !== -1) D.huerta_plantas[idx] = { ...D.huerta_plantas[idx], ...data };
+      } else {
+        const ref = await db.collection("huerta_plantas").add(data);
+        // Store _id inside the document so loadFromFirebase can retrieve it
+        await ref.update({ _id: ref.id });
+        if (!D.huerta_plantas) D.huerta_plantas = [];
+        D.huerta_plantas.push({ _id: ref.id, ...data });
+      }
+      cModal();
+      toast("✓ " + (existingId ? "Planta actualizada" : "Planta añadida"));
+      rHuerta();
+    } catch(e) {
+      toast("Error: " + e.message, "err");
+    }
+  } else {
+    // Local mode: generate a simple _id
+    if (!D.huerta_plantas) D.huerta_plantas = [];
+    if (existingId) {
+      const idx = D.huerta_plantas.findIndex(x => x._id === existingId);
+      if (idx !== -1) D.huerta_plantas[idx] = { ...D.huerta_plantas[idx], ...data };
+    } else {
+      const newId = "local_" + Date.now();
+      D.huerta_plantas.push({ _id: newId, ...data });
+    }
+    persistLocal();
+    cModal();
+    toast("✓ " + (existingId ? "Planta actualizada" : "Planta añadida"));
+    rHuerta();
+  }
+}
+
+async function deleteHuertaPlanta(id) {
+  if (!confirm("¿Eliminar esta planta?")) return;
+  closeHuertaDetail();
+  if (storageMode === "firebase" && db) {
+    try {
+      await db.collection("huerta_plantas").doc(id).delete();
+    } catch(e) { toast("Error: " + e.message, "err"); return; }
+  }
+  D.huerta_plantas = (D.huerta_plantas || []).filter(x => x._id !== id);
+  if (storageMode !== "firebase") persistLocal();
+  toast("✓ Planta eliminada");
+  rHuerta();
 }
 
 function showToast(msg, kind) {

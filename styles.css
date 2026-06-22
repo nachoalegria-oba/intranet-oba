@@ -3123,6 +3123,62 @@ p, span, div, label, td, th, input, select, textarea, button{
 .prov-product-date{color:var(--muted);font-size:12px;text-align:center}
 
 
+/* ── Huerta — Rueda del Año ────────────────────────── */
+.nav-btn-huerta { color: var(--green-deep); }
+.hnav-btn-huerta { color: var(--green); }
+
+.huerta-layout { display:flex; flex-direction:column; align-items:center; gap:28px; }
+
+.huerta-wheel-wrap { display:flex; flex-direction:column; align-items:center; gap:8px; width:100%; }
+.huerta-wheel-svg { max-width:320px; width:100%; height:auto; }
+.huerta-wheel-svg path { transition:opacity .12s; }
+.huerta-wheel-svg path:hover { opacity:.82; }
+
+.huerta-filter-row { display:flex; align-items:center; justify-content:space-between; width:100%; gap:12px; flex-wrap:wrap; }
+.huerta-section-label { font-size:18px; font-weight:700; color:var(--label); }
+
+.huerta-plant-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(152px,1fr)); gap:14px; width:100%; }
+
+.huerta-plant-card { background:var(--surface); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); cursor:pointer; transition:transform .15s,box-shadow .15s; text-align:left; border:none; padding:0; width:100%; }
+.huerta-plant-card:hover { transform:translateY(-2px); box-shadow:0 4px 16px rgba(0,0,0,.10); }
+
+.huerta-plant-img { width:100%; aspect-ratio:1; object-fit:cover; display:block; }
+.huerta-plant-img-placeholder { width:100%; aspect-ratio:1; background:var(--green-soft); display:flex; align-items:center; justify-content:center; font-size:44px; }
+
+.huerta-plant-info { padding:10px 12px 12px; }
+.huerta-plant-name { font-size:14px; font-weight:700; color:var(--label); margin-bottom:2px; }
+.huerta-plant-sci { font-size:11px; color:var(--muted); font-style:italic; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.huerta-plant-tipo { font-size:11px; font-weight:600; color:var(--green-deep); background:var(--green-soft); padding:2px 8px; border-radius:20px; display:inline-block; }
+
+.huerta-empty { text-align:center; padding:40px 20px; color:var(--muted); font-size:15px; grid-column:1/-1; }
+
+/* Plant detail bottom-sheet */
+.huerta-detail { position:fixed; inset:0; z-index:500; display:flex; align-items:flex-end; pointer-events:none; opacity:0; transition:opacity .2s; }
+.huerta-detail.open { pointer-events:all; opacity:1; }
+.huerta-detail-bg { position:absolute; inset:0; background:rgba(0,0,0,.4); }
+.huerta-detail-sheet { position:relative; width:100%; max-width:640px; margin:0 auto; background:var(--surface); border-radius:var(--radius) var(--radius) 0 0; max-height:85vh; overflow-y:auto; transform:translateY(40px); transition:transform .25s cubic-bezier(.32,.72,0,1); }
+.huerta-detail.open .huerta-detail-sheet { transform:translateY(0); }
+
+.huerta-detail-img { width:100%; max-height:220px; object-fit:cover; border-radius:var(--radius) var(--radius) 0 0; display:block; }
+.huerta-detail-img-placeholder { width:100%; height:160px; background:var(--green-soft); display:flex; align-items:center; justify-content:center; font-size:64px; border-radius:var(--radius) var(--radius) 0 0; }
+.huerta-detail-body { padding:20px; }
+.huerta-detail-name { font-size:22px; font-weight:800; color:var(--label); margin-bottom:2px; }
+.huerta-detail-sci { font-size:14px; color:var(--muted); font-style:italic; margin-bottom:12px; }
+.huerta-detail-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+.huerta-detail-tag { padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; background:var(--green-soft); color:var(--green-deep); }
+.huerta-detail-section { margin-bottom:14px; }
+.huerta-detail-section-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:6px; }
+.huerta-detail-text { font-size:14px; color:var(--label); line-height:1.55; white-space:pre-line; }
+
+.huerta-meses-strip { display:flex; gap:5px; flex-wrap:wrap; }
+.huerta-mes-dot { width:32px; height:32px; border-radius:50%; background:var(--bg); border:1.5px solid var(--separator); font-size:9px; font-weight:700; color:var(--muted); display:flex; align-items:center; justify-content:center; text-transform:uppercase; }
+.huerta-mes-dot.active { background:var(--green); border-color:var(--green); color:#fff; }
+
+/* Month toggle buttons in form */
+.huerta-mes-toggle-row { display:flex; gap:6px; flex-wrap:wrap; }
+.huerta-mes-toggle { padding:5px 10px; border-radius:20px; font-size:12px; font-weight:600; background:var(--bg); color:var(--muted); border:1.5px solid var(--separator); cursor:pointer; transition:all .15s; }
+.huerta-mes-toggle.active { background:var(--green); color:#fff; border-color:var(--green); }
+
 /* ── Impresión PDF (I+D) ───────────────────────────── */
 @media print{
   body.printing-id *{ visibility:hidden !important; }

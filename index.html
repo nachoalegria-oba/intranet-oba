@@ -73,6 +73,7 @@
       <button class="nav-btn nav-btn-grupo" data-panel="grupo" onclick="sp('grupo')">Cañitas Gastro</button>
       <button class="nav-btn nav-btn-id" data-panel="id" onclick="sp('id')">I+D</button>
       <button class="nav-btn nav-btn-ai" data-panel="ia" onclick="sp('ia')">IA</button>
+      <button class="nav-btn nav-btn-huerta" data-panel="huerta" onclick="sp('huerta')">Huerta</button>
     </nav>
     <button id="mobile-nav-toggle" class="mobile-nav-toggle" type="button" aria-label="Mostrar u ocultar navegación" aria-expanded="true" onclick="toggleMobileNav()">
       <span class="mobile-nav-toggle-pill"></span>
@@ -306,6 +307,18 @@
           <button class="primary-btn" onclick="oAM()">Nuevo aviso</button>
         </div>
         <div id="avbody"></div>
+      </section>
+
+      <section class="panel" id="panel-huerta">
+        <div class="section-head section-head-lg">
+          <div>
+            <div class="eyebrow">Huerta</div>
+            <h1>Rueda del Año</h1>
+            <p>Plantas, flores y productos de temporada</p>
+          </div>
+          <button class="primary-btn" onclick="oHuertaM()">+ Planta</button>
+        </div>
+        <div id="huerta-body"></div>
       </section>
 
       <section class="panel" id="panel-grupo">
@@ -596,6 +609,7 @@
       <button class="hnav-btn hnav-btn-grupo" data-panel="grupo" onclick="sp('grupo')">Cañitas Gastro</button>
       <button class="hnav-btn hnav-btn-id" data-panel="id" onclick="sp('id')">I+D</button>
       <button class="hnav-btn hnav-btn-ai" data-panel="ia" onclick="sp('ia')">IA</button>
+      <button class="hnav-btn hnav-btn-huerta" data-panel="huerta" onclick="sp('huerta')">Huerta</button>
     </nav>
     <div class="hamburger-footer">
 <button class="ghost-btn ghost-btn-sm" style="color:rgba(255,255,255,.6)" onclick="logout()">Cerrar sesión</button>
