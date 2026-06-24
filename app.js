@@ -6570,8 +6570,20 @@ function oHuertaM(id) {
         <input class="form-input" id="hm-proc" placeholder="Ej. Huerta propia" value="${escHtml(p?.procedencia||"")}">
       </div>
       <div>
-        <label class="form-label">Foto (URL)</label>
-        <input class="form-input" id="hm-foto" type="url" placeholder="https://…" value="${escHtml(p?.foto||"")}">
+        <label class="form-label">Foto</label>
+        <div class="huerta-foto-picker">
+          <div class="huerta-foto-preview" id="hm-foto-preview">
+            ${p?.foto ? `<img src="${escHtml(p.foto)}" style="width:100%;height:100%;object-fit:cover;border-radius:10px">` : `<span style="font-size:36px">📷</span>`}
+          </div>
+          <input type="hidden" id="hm-foto-url" value="${escHtml(p?.foto||"")}">
+          <input type="file" id="hm-foto-file" accept="image/*" style="display:none" onchange="previewHuertaFoto(this)">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button type="button" class="ghost-btn ghost-btn-sm" onclick="document.getElementById('hm-foto-file').click()">
+              📷 Elegir foto
+            </button>
+            ${p?.foto ? `<button type="button" class="ghost-btn ghost-btn-sm" style="color:var(--red)" id="hm-foto-clear" onclick="clearHuertaFoto()">Quitar foto</button>` : `<span id="hm-foto-clear" style="display:none"></span>`}
+          </div>
+        </div>
       </div>
       <div>
         <label class="form-label">Notas</label>
@@ -6581,9 +6593,61 @@ function oHuertaM(id) {
     </div>`);
 }
 
+function previewHuertaFoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const preview = document.getElementById("hm-foto-preview");
+  const clearBtn = document.getElementById("hm-foto-clear");
+  const reader = new FileReader();
+  reader.onload = e => {
+    if (preview) preview.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:10px">`;
+    if (clearBtn) { clearBtn.style.display = ""; clearBtn.textContent = "Quitar foto"; }
+    // Clear the existing URL since we have a new file
+    const urlField = document.getElementById("hm-foto-url");
+    if (urlField) urlField.value = "";
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearHuertaFoto() {
+  const preview = document.getElementById("hm-foto-preview");
+  const fileInput = document.getElementById("hm-foto-file");
+  const urlField = document.getElementById("hm-foto-url");
+  const clearBtn = document.getElementById("hm-foto-clear");
+  if (preview) preview.innerHTML = `<span style="font-size:36px">📷</span>`;
+  if (fileInput) fileInput.value = "";
+  if (urlField) urlField.value = "";
+  if (clearBtn) clearBtn.style.display = "none";
+}
+
 async function saveHuertaPlanta() {
   const nombre = document.getElementById("hm-nombre")?.value.trim();
   if (!nombre) { toast("El nombre es obligatorio", "err"); return; }
+
+  // Upload photo if a file was selected
+  let fotoUrl = document.getElementById("hm-foto-url")?.value || "";
+  const fileInput = document.getElementById("hm-foto-file");
+  const file = fileInput?.files[0];
+  if (file) {
+    if (storageMode === "firebase" && typeof firebase !== "undefined" && firebase.storage) {
+      try {
+        toast("Subiendo foto…");
+        const storageRef = firebase.storage().ref(`huerta_plantas/${Date.now()}_${file.name}`);
+        const snap = await storageRef.put(file);
+        fotoUrl = await snap.ref.getDownloadURL();
+      } catch(e) {
+        toast("Error subiendo foto: " + e.message, "err");
+        return;
+      }
+    } else {
+      // Local fallback: store as base64 (in-memory only, not persisted)
+      fotoUrl = await new Promise(res => {
+        const r = new FileReader();
+        r.onload = e => res(e.target.result);
+        r.readAsDataURL(file);
+      });
+    }
+  }
 
   const meses = [...document.querySelectorAll(".huerta-mes-toggle.active")].map(b => parseInt(b.dataset.month));
   const data = {
@@ -6593,7 +6657,7 @@ async function saveHuertaPlanta() {
     descripcion:      document.getElementById("hm-desc")?.value.trim() || "",
     usos:             document.getElementById("hm-usos")?.value.trim() || "",
     procedencia:      document.getElementById("hm-proc")?.value.trim() || "",
-    foto:             document.getElementById("hm-foto")?.value.trim() || "",
+    foto:             fotoUrl,
     notas:            document.getElementById("hm-notas")?.value.trim() || "",
     meses,
     fecha:            new Date().toISOString(),

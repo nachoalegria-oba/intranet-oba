@@ -3179,6 +3179,12 @@ p, span, div, label, td, th, input, select, textarea, button{
 .huerta-mes-toggle { padding:5px 10px; border-radius:20px; font-size:12px; font-weight:600; background:var(--bg); color:var(--muted); border:1.5px solid var(--separator); cursor:pointer; transition:all .15s; }
 .huerta-mes-toggle.active { background:var(--green); color:#fff; border-color:var(--green); }
 
+/* Photo picker in plant form */
+.huerta-foto-picker { display:flex; flex-direction:column; align-items:center; gap:10px; }
+.huerta-foto-preview { width:120px; height:120px; border-radius:var(--radius-sm); background:var(--green-soft); border:2px dashed var(--green); display:flex; align-items:center; justify-content:center; font-size:44px; overflow:hidden; flex-shrink:0; }
+.huerta-foto-preview img { width:100%; height:100%; object-fit:cover; }
+.huerta-foto-actions { display:flex; gap:8px; align-items:center; }
+
 /* ── Impresión PDF (I+D) ───────────────────────────── */
 @media print{
   body.printing-id *{ visibility:hidden !important; }
