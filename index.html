@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@300;500;700;900&family=Cormorant+Garamond:wght@300;400;600&family=Comfortaa:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.css">
-  <link rel="stylesheet" href="./styles.css?v=146">
+  <link rel="stylesheet" href="./styles.css?v=147">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
@@ -584,21 +584,14 @@
       </div>
     </div>
     <div class="drawer-body" id="restdet-body"></div>
-    <div class="adjuntos-panel" id="restdet-adjuntos">
-      <button class="adjuntos-toggle" onclick="toggleAdjuntos()">
-        <span class="adjuntos-toggle-left">
-          <span class="adjuntos-toggle-label">Archivos adjuntos</span>
-          <span class="adjuntos-counter" id="adjuntos-counter"></span>
-        </span>
-        <span class="adjuntos-toggle-right">
-          <label class="ghost-btn ghost-btn-sm adjuntos-add-btn" for="adjunto-file-input" onclick="event.stopPropagation()">+ Añadir</label>
-          <svg id="adjuntos-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" style="transform:rotate(-90deg);transition:transform .2s;flex-shrink:0"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </span>
-      </button>
-      <input type="file" id="adjunto-file-input" style="display:none" multiple onchange="uploadAdjuntos(this)">
-      <div id="adjuntos-panel-body" style="display:none">
-        <div id="adjuntos-list"></div>
+    <div class="adj-section" id="restdet-adjuntos">
+      <div class="adj-header">
+        <span class="adj-title">Archivos adjuntos</span>
+        <span class="adj-count" id="adjuntos-counter"></span>
+        <label class="adj-add-btn" for="adjunto-file-input">+ Añadir</label>
       </div>
+      <input type="file" id="adjunto-file-input" style="display:none" multiple onchange="uploadAdjuntos(this)">
+      <div id="adjuntos-list"></div>
     </div>
   </div>
 
@@ -644,6 +637,6 @@
     </button>
   </div>
 
-  <script src="./app.js?v=140"></script>
+  <script src="./app.js?v=141"></script>
 </body>
 </html>

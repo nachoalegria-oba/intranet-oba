@@ -6480,14 +6480,7 @@ function _adjFmtBytes(b) {
   return (b/1048576).toFixed(1) + " MB";
 }
 
-function toggleAdjuntos() {
-  const panel = document.getElementById("adjuntos-panel-body");
-  const chevron = document.getElementById("adjuntos-chevron");
-  if (!panel) return;
-  const open = panel.style.display !== "none";
-  panel.style.display = open ? "none" : "block";
-  if (chevron) chevron.style.transform = open ? "rotate(-90deg)" : "rotate(0deg)";
-}
+function toggleAdjuntos() { /* panel siempre visible */ }
 
 function rAdjuntos() {
   const counter = document.getElementById("adjuntos-counter");
@@ -6509,11 +6502,11 @@ function rAdjuntos() {
       <span class="adjunto-badge">${_adjExt(a.nombre)}</span>
       <div class="adjunto-info">
         <div class="adjunto-name">${escHtml(a.nombre)}</div>
-        <div class="adjunto-meta">${a.bytes ? _adjFmtBytes(a.bytes) + " · " : ""}${a.fecha || ""}</div>
+        <div class="adjunto-meta">${a.bytes ? _adjFmtBytes(a.bytes) + (a.fecha ? " · " + a.fecha : "") : (a.fecha || "")}</div>
       </div>
       <div class="adjunto-actions">
-        <button class="ghost-btn ghost-btn-sm" onclick="openAdjunto(${i})">Abrir</button>
-        <button class="ghost-btn ghost-btn-sm" style="color:var(--red)" onclick="deleteAdjunto(${i})">Eliminar</button>
+        <button class="adj-link" onclick="openAdjunto(${i})">Abrir</button>
+        <button class="adj-link adj-del" onclick="deleteAdjunto(${i})">Eliminar</button>
       </div>
     </div>`).join("");
 }
