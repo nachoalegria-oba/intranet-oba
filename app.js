@@ -4780,6 +4780,81 @@ const _PDF_RECIPES = {
       "Terminar con unas gotas de aceite de perejil y cebollino en la parte del gazpachuelo y cortar la salsa con el aceite."
     ],
     notas: ""
+  },
+  "tomate embotado": {
+    descripcion: "Tomate cuerno de los Andes curado, ahumado con sarmiento y presentado napado con lácteo de cabra, brotes y quinoa frita.",
+    alergenos: ["Lácteos"],
+    subrecetas: [
+      {
+        nombre: "Embotado y secado del tomate",
+        descripcion: "",
+        ingredientes: [
+          {i:"Tomate cuerno de los Andes",c:"2",u:"kg"},
+          {i:"Sal",c:"100",u:"g"},
+          {i:"Azúcar",c:"600",u:"g"}
+        ],
+        pasos: [
+          "Escaldar 25 segundos, pelar y retirar el pedúnculo.",
+          "Realizar en un recipiente la mezcla de azúcar y sal.",
+          "Extender los tomates sobre un recipiente y poner capas de la mezcla anterior sobre cada uno de los pisos de tomate que se vayan formando.",
+          "Dejar que realicen el proceso de curación durante 25 min.",
+          "Extender en bandeja con agujeros y meter en la brasa prácticamente sin fuego (rescoldos) con 200 g de sarmiento durante toda una noche.",
+          "En caso de no secar lo suficiente, dar 20 minutos a 80 °C en el horno.",
+          "Trocear y dar forma de tomate pera, con bolas de 60 g.",
+          "Volver a meter en el horno a 80 °C para que vuelva a formar la costra."
+        ]
+      },
+      {
+        nombre: "Lácteo de cabra",
+        descripcion: "",
+        ingredientes: [
+          {i:"Nata Calaveruela",c:"720",u:"g"},
+          {i:"Queso Payoyo",c:"100",u:"g"},
+          {i:"Queso crema",c:"100",u:"g"},
+          {i:"Gelatina en hoja",c:"3",u:"hojas"},
+          {i:"Goma xantana",c:"3,5",u:"g"}
+        ],
+        pasos: [
+          "Añadir todos los ingredientes menos la xantana y la gelatina y turbinar en Thermomix.",
+          "Calentar a 60 °C y añadir la xantana y la gelatina hasta conseguir una textura que pueda napar el tomate. Añadir un poco de la corteza del Payoyo para intensificar el sabor.",
+          "Reservar en frío y poner a punto de sal."
+        ]
+      },
+      {
+        nombre: "Quinoa frita",
+        descripcion: "",
+        ingredientes: [
+          {i:"Quinoa",c:"",u:""}
+        ],
+        pasos: [
+          "Cocer la quinoa, extender en una bandeja de papel sulfurizado hasta que se seque y romper para que los granos estén dispersos.",
+          "Freír a 185 °C para que suflé, extender en papel absorbente y añadir sal."
+        ]
+      },
+      {
+        nombre: "Selección de brotes",
+        descripcion: "",
+        ingredientes: [
+          {i:"Brotes de lentejuela",c:"",u:""},
+          {i:"Brotes de mostaza verde",c:"",u:""},
+          {i:"Brotes de albahaca limón",c:"",u:""},
+          {i:"Remolacha sangre de toro",c:"",u:""},
+          {i:"Mizuna púrpura",c:"",u:""},
+          {i:"Rabanito morado",c:"",u:""},
+          {i:"Apio montaña",c:"",u:""},
+          {i:"Oxalis",c:"",u:""},
+          {i:"Acedera roja",c:"",u:""}
+        ],
+        pasos: []
+      }
+    ],
+    pasos: [
+      "Napar con crema láctea en un plaque y pasarlo al lato.",
+      "Espolvorear la quinoa frita con pozos de matcha sin dejar rastros por el plato.",
+      "Colocar los brotes ordenadamente por toda la superficie napada.",
+      "Poner 1 g de quinoa por plato y terminar con 3 g de aceite macha."
+    ],
+    notas: ""
   }
 };
 
