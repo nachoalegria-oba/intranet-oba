@@ -7890,11 +7890,12 @@ function _repFormHTML() {
   const mesOpts = MESES.map(m => `<option value="${safeText(m)}"${s.mes===m?" selected":""}>${safeText(m)}</option>`).join("");
   const anioOpts = [2024,2025,2026,2027].map(y => `<option value="${y}"${s.anio===y?" selected":""}>${y}</option>`).join("");
 
-  return `
+  return `<div class="rep-form-wrap">
     <div class="rep-form-head">
       <button class="ghost-btn ghost-btn-sm" onclick="repBack()">← Volver</button>
-      <div>
-        <div class="eyebrow" style="margin:0">Nuevo reporte</div>
+      <div class="rep-form-head-info">
+        <div class="eyebrow" style="margin:0">Reporte mensual</div>
+        <div class="rep-form-head-title">Nuevo reporte</div>
       </div>
     </div>
 
@@ -8104,7 +8105,8 @@ function _repFormHTML() {
     <div style="padding:8px 0 32px;display:flex;gap:10px">
       <button class="ghost-btn" onclick="repBack()">Cancelar</button>
       <button class="primary-btn" style="flex:1" onclick="sReporte()">Enviar reporte</button>
-    </div>`;
+    </div>
+  </div>`;
 }
 
 function repUpdate(key, val) {
