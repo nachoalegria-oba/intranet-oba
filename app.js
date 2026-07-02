@@ -2030,14 +2030,16 @@ function calRender() {
   const monthlyTrainees = D.practicantes.filter((item) => item.fechaEntrada?.startsWith(mPrefix));
   let listHtml = "";
   listHtml += monthlyEvents.map((item) => {
+    const delBtn = `<button class="btn btn-s btn-d" style="margin-top:8px;font-size:11px" onclick="dEv(${item.id})">Eliminar</button>`;
     if (item.tipo === "vacaciones") {
       return `<div class="notice" style="border-left-color:#d97706;background:#fff7ed">
         <strong>🏖 Vacaciones · ${safeText(item.persona || "")}</strong>
         ${item.nota ? `<div>${safeText(item.nota)}</div>` : ""}
         <div class="nd">${safeText(item.fechaInicio)} → ${safeText(item.fechaFin)}</div>
+        ${delBtn}
       </div>`;
     }
-    return `<div class="notice${item.urgente ? " urgent" : ""}"><strong>${safeText(item.titulo)}</strong><div>${safeText(item.nota || "Evento")}</div><div class="nd">${safeText(item.fecha)}</div></div>`;
+    return `<div class="notice${item.urgente ? " urgent" : ""}"><strong>${safeText(item.titulo)}</strong><div>${safeText(item.nota || "Evento")}</div><div class="nd">${safeText(item.fecha)}</div>${delBtn}</div>`;
   }).join("");
   listHtml += monthlyTrainees.map((item) => `<div class="notice" style="border-left-color:#335d87;background:#e7eff7;cursor:pointer" onclick="oPF(${item.id})"><strong>Practicante: ${safeText(item.nombre)}</strong><div>${safeText(item.partida || "Sin partida asignada")}</div><div class="nd">${safeText(item.fechaEntrada)}</div></div>`).join("");
   document.getElementById("clist").innerHTML = listHtml || `<div class="notice"><strong>Mes despejado</strong><div>No hay eventos destacados en este mes.</div></div>`;
@@ -2061,6 +2063,12 @@ function oCM(dateValue) {
     <div class="fr" id="ev-titulo-row"><label>Título *</label><input id="et"></div>
     <div class="fr"><label>Notas</label><input id="enota"></div>
     <div class="mf"><button class="secondary-btn" onclick="cModal()">Cancelar</button><button class="primary-btn" onclick="sEv()">Guardar</button></div>`);
+}
+
+function dEv(id) {
+  if (!confirm("¿Eliminar este evento?")) return;
+  D.eventos = D.eventos.filter((item) => item.id !== id);
+  save("eventos");
 }
 
 function toggleVacFields() {
