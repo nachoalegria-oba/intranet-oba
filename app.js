@@ -4940,7 +4940,10 @@ function buildRestFichaHTML(recipe, scale = 1) {
   // Banner PDF si la receta tiene datos pendientes
   const nomKey = _pdfKey(recipe.nombre || "");
   const hasPdfData = !!_PDF_RECIPES[nomKey];
-  const needsImport = hasPdfData && (!recipe.pasos || recipe.pasos.length === 0);
+  const pdfData = _PDF_RECIPES[nomKey];
+  const recipeSteps = (recipe.pasos||[]).length + (recipe.subrecetas||[]).reduce((n,s)=>n+(s.pasos||[]).length,0);
+  const pdfSteps = pdfData ? (pdfData.pasos||[]).length + (pdfData.subrecetas||[]).reduce((n,s)=>n+(s.pasos||[]).length,0) : 0;
+  const needsImport = hasPdfData && recipeSteps < pdfSteps;
   const pdfBanner = needsImport ? `
     <div style="background:#fff8e1;border:1.5px solid #f9a825;border-radius:12px;padding:14px 16px;margin-bottom:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
       <span style="flex:1;font-size:13px;color:#5d4037"><strong>Datos del PDF disponibles</strong><br>Ingredientes con cantidades, subrecetas, pasos de elaboración y alérgenos.</span>
