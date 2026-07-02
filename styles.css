@@ -3266,6 +3266,35 @@ p, span, div, label, td, th, input, select, textarea, button{
   .adj-section { padding: 16px 16px 24px; }
 }
 
+/* ── Pull to refresh ──────────────────────────────── */
+#ptr-wrap {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 99999;
+  pointer-events: none;
+}
+#ptr-indicator {
+  width: 40px;
+  height: 40px;
+  background: var(--surface);
+  border-radius: 50%;
+  box-shadow: 0 2px 12px rgba(0,0,0,.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-56px);
+  opacity: 0;
+  transition: transform .22s ease, opacity .22s;
+  color: var(--green);
+}
+.ptr-icon { width: 18px; height: 18px; transition: transform .08s linear; }
+.ptr-spinning .ptr-icon { animation: ptr-spin .55s linear infinite; }
+@keyframes ptr-spin { to { transform: rotate(360deg); } }
+
 /* ── Impresión PDF (I+D) ───────────────────────────── */
 @media print{
   body.printing-id *{ visibility:hidden !important; }
