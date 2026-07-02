@@ -6469,13 +6469,8 @@ function escHtml(s) {
 // ══════════════════════════════════════════════════════
 
 // ── Archivos adjuntos por receta ────────────────────────────────────────────
-function _adjIcono(nombre) {
-  const ext = nombre.split(".").pop().toLowerCase();
-  if (["jpg","jpeg","png","gif","webp"].includes(ext)) return "🖼️";
-  if (ext === "pdf") return "📄";
-  if (["xls","xlsx","csv","numbers"].includes(ext)) return "📊";
-  if (["doc","docx","txt"].includes(ext)) return "📝";
-  return "📎";
+function _adjExt(nombre) {
+  return (nombre.split(".").pop() || "").toUpperCase().slice(0, 5) || "FILE";
 }
 
 function _adjFmtBytes(b) {
@@ -6485,7 +6480,17 @@ function _adjFmtBytes(b) {
   return (b/1048576).toFixed(1) + " MB";
 }
 
+function toggleAdjuntos() {
+  const panel = document.getElementById("adjuntos-panel-body");
+  const chevron = document.getElementById("adjuntos-chevron");
+  if (!panel) return;
+  const open = panel.style.display !== "none";
+  panel.style.display = open ? "none" : "block";
+  if (chevron) chevron.style.transform = open ? "rotate(-90deg)" : "rotate(0deg)";
+}
+
 function rAdjuntos() {
+  const counter = document.getElementById("adjuntos-counter");
   const list = document.getElementById("adjuntos-list");
   if (!list) return;
   const col = restRecipeCol;
@@ -6493,16 +6498,18 @@ function rAdjuntos() {
   const recipe = recipes.find(r => r._i === activeRestRecipeId);
   const adjuntos = recipe?.adjuntos || [];
 
+  if (counter) counter.textContent = adjuntos.length ? `(${adjuntos.length})` : "";
+
   if (!adjuntos.length) {
     list.innerHTML = `<div class="adjuntos-empty">Sin archivos adjuntos. Puedes añadir PDFs de fichas, escandallos o fotos del plato.</div>`;
     return;
   }
   list.innerHTML = adjuntos.map((a, i) => `
     <div class="adjunto-row">
-      <span class="adjunto-icon">${_adjIcono(a.nombre)}</span>
+      <span class="adjunto-badge">${_adjExt(a.nombre)}</span>
       <div class="adjunto-info">
         <div class="adjunto-name">${escHtml(a.nombre)}</div>
-        <div class="adjunto-meta">${a.tipo || ""} ${a.bytes ? "· " + _adjFmtBytes(a.bytes) : ""} ${a.fecha ? "· " + a.fecha : ""}</div>
+        <div class="adjunto-meta">${a.bytes ? _adjFmtBytes(a.bytes) + " · " : ""}${a.fecha || ""}</div>
       </div>
       <div class="adjunto-actions">
         <a href="${escHtml(a.url)}" target="_blank" rel="noopener" class="ghost-btn ghost-btn-sm">Abrir</a>
@@ -6527,7 +6534,7 @@ async function uploadAdjuntos(input) {
     const row = document.createElement("div");
     row.className = "adjunto-uploading";
     row.id = progId;
-    row.innerHTML = `⏳ Subiendo ${escHtml(file.name)}…`;
+    row.innerHTML = `Subiendo ${escHtml(file.name)}…`;
     list.prepend(row);
 
     try {

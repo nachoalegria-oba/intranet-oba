@@ -3188,25 +3188,27 @@ p, span, div, label, td, th, input, select, textarea, button{
 /* ── Archivos adjuntos en ficha de receta ──────────── */
 .adjuntos-panel {
   border-top: 1px solid var(--separator);
-  padding: 16px 28px 24px;
   background: var(--bg);
 }
-.adjuntos-header {
+.adjuntos-toggle {
+  width: 100%;
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-.adjuntos-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--ink-2);
-  flex: 1;
-}
-.adjuntos-add-btn {
+  justify-content: space-between;
+  padding: 14px 28px;
+  background: none;
+  border: none;
   cursor: pointer;
-  white-space: nowrap;
+  color: var(--ink);
+  gap: 12px;
 }
+.adjuntos-toggle:hover { background: var(--surface-2); }
+.adjuntos-toggle-left { display: flex; align-items: center; gap: 8px; }
+.adjuntos-toggle-right { display: flex; align-items: center; gap: 10px; }
+.adjuntos-toggle-label { font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.adjuntos-counter { font-size: 12px; color: var(--muted); font-weight: 500; }
+.adjuntos-add-btn { cursor: pointer; white-space: nowrap; }
+#adjuntos-panel-body { padding: 0 28px 20px; }
 .adjunto-row {
   display: flex;
   align-items: center;
@@ -3217,16 +3219,29 @@ p, span, div, label, td, th, input, select, textarea, button{
   margin-bottom: 8px;
   box-shadow: var(--shadow);
 }
-.adjunto-icon { font-size: 22px; flex-shrink: 0; }
+.adjunto-badge {
+  flex-shrink: 0;
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  padding: 3px 7px;
+  border-radius: 6px;
+  border: 1px solid var(--separator);
+  min-width: 36px;
+  text-align: center;
+}
 .adjunto-info { flex: 1; min-width: 0; }
 .adjunto-name { font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .adjunto-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
 .adjunto-actions { display: flex; gap: 6px; flex-shrink: 0; }
-.adjuntos-empty { font-size: 13px; color: var(--muted); padding: 8px 0; }
-.adjunto-uploading { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--blue-soft); border-radius: var(--radius-sm); margin-bottom: 8px; font-size: 13px; color: var(--blue); }
+.adjuntos-empty { font-size: 13px; color: var(--muted); padding: 4px 0 8px; }
+.adjunto-uploading { display: flex; align-items: center; padding: 10px 12px; background: var(--blue-soft); border-radius: var(--radius-sm); margin-bottom: 8px; font-size: 13px; color: var(--blue); }
 
 @media (max-width: 600px) {
-  .adjuntos-panel { padding: 14px 16px 20px; }
+  .adjuntos-toggle { padding: 14px 16px; }
+  #adjuntos-panel-body { padding: 0 16px 16px; }
 }
 
 /* ── Impresión PDF (I+D) ───────────────────────────── */
