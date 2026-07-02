@@ -4556,7 +4556,7 @@ const _PDF_RECIPES = {
     ],
     notas:"De 12 kg de calamar potera se obtienen 4,3 kg de calamar producido."
   },
-  "concha fina - gamba blanca": {
+  "concha fina": {
     descripcion: "Concha fina con gamba blanca curada en sal, sobre puré de zanahoria asada, zanahorias baby encurtidas y escabeche de zanahoria emulsionado con ajada.",
     alergenos: ["Pescado","Crustáceos","Moluscos","Lácteos"],
     subrecetas: [
