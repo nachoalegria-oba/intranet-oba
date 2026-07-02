@@ -6512,10 +6512,37 @@ function rAdjuntos() {
         <div class="adjunto-meta">${a.bytes ? _adjFmtBytes(a.bytes) + " · " : ""}${a.fecha || ""}</div>
       </div>
       <div class="adjunto-actions">
-        <a href="${escHtml(a.url)}" target="_blank" rel="noopener" class="ghost-btn ghost-btn-sm">Abrir</a>
+        <button class="ghost-btn ghost-btn-sm" onclick="openAdjunto(${i})">Abrir</button>
         <button class="ghost-btn ghost-btn-sm" style="color:var(--red)" onclick="deleteAdjunto(${i})">Eliminar</button>
       </div>
     </div>`).join("");
+}
+
+async function openAdjunto(idx) {
+  const col = restRecipeCol;
+  const recipes = D[`${col}_recetas`] || [];
+  const recipe = recipes.find(r => r._i === activeRestRecipeId);
+  const adj = recipe?.adjuntos?.[idx];
+  if (!adj) return;
+
+  if (adj.firestoreId && db) {
+    try {
+      const docSnap = await db.collection("recetas_adjuntos").doc(adj.firestoreId).get();
+      if (docSnap.exists) {
+        const data = docSnap.data().data;
+        const res = await fetch(data);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        window.open(url, "_blank");
+        return;
+      }
+    } catch(e) {
+      toast("Error abriendo archivo: " + e.message, "err");
+      return;
+    }
+  }
+  // Fallback: si hay url directa (datos en memoria)
+  if (adj.url) window.open(adj.url, "_blank");
 }
 
 async function uploadAdjuntos(input) {
@@ -6529,52 +6556,55 @@ async function uploadAdjuntos(input) {
 
   const list = document.getElementById("adjuntos-list");
   for (const file of files) {
-    // Mostrar progreso
     const progId = "adj-prog-" + Date.now();
     const row = document.createElement("div");
     row.className = "adjunto-uploading";
     row.id = progId;
-    row.innerHTML = `Subiendo ${escHtml(file.name)}…`;
+    row.textContent = `Subiendo ${file.name}…`;
     list.prepend(row);
 
     try {
-      let url = "";
-      if (storageMode === "firebase" && typeof firebase !== "undefined" && firebase.storage) {
-        const path = `recetas_adjuntos/${col}/${activeRestRecipeId}/${Date.now()}_${file.name}`;
-        const ref = firebase.storage().ref(path);
-        const snap = await ref.put(file);
-        url = await snap.ref.getDownloadURL();
-      } else {
-        // Fallback base64 (solo en memoria)
-        url = await new Promise(res => {
-          const r = new FileReader();
-          r.onload = e => res(e.target.result);
-          r.readAsDataURL(file);
-        });
-      }
+      // Leer archivo como base64 data URL
+      const dataUrl = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = e => res(e.target.result);
+        r.onerror = rej;
+        r.readAsDataURL(file);
+      });
 
       const ext = file.name.split(".").pop().toLowerCase();
-      const adjunto = {
+      const meta = {
         nombre: file.name,
         tipo: ext.toUpperCase(),
-        url,
         bytes: file.size,
         fecha: today()
       };
-      recipe.adjuntos.push(adjunto);
 
-      // Guardar en Firestore
       if (storageMode === "firebase" && db) {
+        // Guardar el contenido binario en colección separada para no hinchar el doc de receta
+        const adjDoc = await db.collection("recetas_adjuntos").add({
+          col,
+          recipeNombre: recipe.nombre || "",
+          ...meta,
+          data: dataUrl
+        });
+        meta.firestoreId = adjDoc.id;
+
+        // Actualizar array adjuntos en el doc de receta
+        recipe.adjuntos.push(meta);
         const snap = await db.collection(`${col}_recetas`).get();
         for (const doc of snap.docs) {
-          if (doc.data()._i === activeRestRecipeId || doc.data().nombre === recipe.nombre) {
+          if (doc.data().nombre === recipe.nombre) {
             await doc.ref.update({ adjuntos: recipe.adjuntos });
             break;
           }
         }
       } else {
+        meta.url = dataUrl;
+        recipe.adjuntos.push(meta);
         persistLocal();
       }
+
       document.getElementById(progId)?.remove();
       toast("✓ " + file.name + " añadido");
     } catch(e) {
@@ -6593,10 +6623,11 @@ async function deleteAdjunto(idx) {
   const recipe = recipes.find(r => r._i === activeRestRecipeId);
   if (!recipe || !recipe.adjuntos) return;
 
-  // Intentar borrar de Firebase Storage
   const adj = recipe.adjuntos[idx];
-  if (adj?.url && storageMode === "firebase" && typeof firebase !== "undefined" && firebase.storage) {
-    try { await firebase.storage().refFromURL(adj.url).delete(); } catch(e) { /* ignorar si falla */ }
+
+  // Borrar el documento de contenido en Firestore
+  if (adj?.firestoreId && db) {
+    try { await db.collection("recetas_adjuntos").doc(adj.firestoreId).delete(); } catch(e) { /* ignorar */ }
   }
 
   recipe.adjuntos.splice(idx, 1);
