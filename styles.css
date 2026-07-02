@@ -1301,18 +1301,19 @@ tbody td:last-child{
   padding:16px;
   background:rgba(8,8,8,.55);
   backdrop-filter:blur(10px);
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
 }
-.modal-bg.open{display:flex;align-items:center;justify-content:center}
+.modal-bg.open{display:flex;align-items:flex-start;justify-content:center}
 
 .modal{
   width:min(760px, 100%);
-  max-height:92vh;
-  overflow:auto;
+  margin:auto;
   padding:26px;
   border-radius:28px;
   background:#fbf8f2;
   box-shadow:0 30px 80px rgba(0,0,0,.28);
-  overscroll-behavior:contain;
 }
 .modal h3{
   margin-bottom:18px;
@@ -1993,7 +1994,6 @@ th,
   }
   .modal{
     padding:20px;
-    max-height:calc(100vh - 14px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   }
   .danger-icon-btn{
     justify-self:flex-end;
