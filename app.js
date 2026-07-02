@@ -783,6 +783,7 @@ function sp(id) {
   if (id === "grupo") { showGrupoPanel(); return; }
   if (id === "id") { showIDPanel(); return; }
   if (id === "huerta") { showHuertaPanel(); return; }
+  if (id === "reportes") { showReportesPanel(); return; }
   document.querySelectorAll(".panel").forEach((panel) => panel.classList.remove("active"));
   document.querySelectorAll(".nav-btn").forEach((btn) => btn.classList.remove("active"));
   document.querySelectorAll(".hnav-btn").forEach((btn) => btn.classList.remove("active"));
@@ -7641,3 +7642,635 @@ function showToast(msg, kind) {
     }
   }, { passive: true });
 })();
+
+// ══════════════════════════════════════════════════════
+// REPORTES MENSUALES
+// ══════════════════════════════════════════════════════
+
+let _reportesList = [];
+let _reportesUnsub = null;
+let _repView = "dashboard"; // "dashboard" | "form" | "detail"
+let _repActiveId = null;
+let _repState = {};
+
+const RESTAURANTES = ["OBA", "Cañitas Maite", "Canido y Mora", "Cebo", "Enebro"];
+const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
+function _repInit() {
+  _repState = {
+    restaurante: "", mes: "", anio: new Date().getFullYear(), responsable: "",
+    urgencia: "No urgente",
+    facturacion: "", comensales: "", ticketMedio: "", eventosCifra: "", valoracion: "",
+    cartaPlatosActivos: "", cartaRecetasModificadas: "", cartaCambios: "", cartaPlatoDestacado: "",
+    eventosRealizados: [], eventosProximos: [],
+    proveedoresCambios: [], proveedoresIncidencias: [],
+    equipoPlantilla: "", equipoAltasBajas: "", equipoObservaciones: "",
+    calidadValoracion: "", calidadResenas: "", calidadIncidencias: [],
+    notasObservaciones: "", notasPrioridades: [], notasUrgenciaOba: "No urgente"
+  };
+}
+
+function showReportesPanel() {
+  document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".hnav-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("panel-reportes")?.classList.add("active");
+  document.querySelector('.nav-btn[data-panel="reportes"]')?.classList.add("active");
+  document.querySelector('.hnav-btn[data-panel="reportes"]')?.classList.add("active");
+  scrollTop();
+  closeHamburger();
+  const fb = document.getElementById("ped-float-bar");
+  if (fb) fb.classList.remove("visible");
+  loadReportes();
+}
+
+function loadReportes() {
+  if (!storageMode || storageMode !== "firebase") {
+    _repView = "dashboard";
+    rRepInner();
+    return;
+  }
+  if (_reportesUnsub) return; // already subscribed
+  _reportesUnsub = db.collection("reportes")
+    .orderBy("fechaEnvio", "desc")
+    .onSnapshot(snap => {
+      _reportesList = snap.docs.map(d => ({ _fsId: d.id, ...d.data() }));
+      rRepInner();
+    }, err => {
+      console.warn("reportes snapshot error:", err);
+      rRepInner();
+    });
+}
+
+function rRepInner() {
+  const el = document.getElementById("rep-inner");
+  if (!el) return;
+  if (_repView === "form") { el.innerHTML = _repFormHTML(); return; }
+  if (_repView === "detail") { el.innerHTML = _repDetailHTML(_repActiveId); return; }
+  el.innerHTML = _repDashHTML();
+}
+
+// ── Dashboard ──────────────────────────────────────────
+function _repDashHTML() {
+  const rfil = document.getElementById("rep-filter-rest")?.value || "";
+  const mfil = document.getElementById("rep-filter-mes")?.value || "";
+  let list = _reportesList;
+  if (rfil) list = list.filter(r => r.restaurante === rfil);
+  if (mfil) list = list.filter(r => r.mes === mfil);
+
+  const urgentes = list.filter(r => r.urgencia === "Urgente OBA");
+
+  const alertsHTML = urgentes.map(r => `
+    <div class="rep-urgent-alert">
+      <div class="rep-urgent-alert-icon">🚨</div>
+      <div class="rep-urgent-alert-body">
+        <strong>${safeText(r.restaurante)} — ${safeText(r.mes)} ${safeText(String(r.anio || ""))}</strong>
+        ${safeText(r.notas?.urgenciaOba || "Requiere atención de OBA")}
+      </div>
+    </div>`).join("");
+
+  const filterRest = RESTAURANTES.map(r => `<option value="${safeText(r)}"${rfil===r?" selected":""}>${safeText(r)}</option>`).join("");
+  const filterMes = MESES.map(m => `<option value="${safeText(m)}"${mfil===m?" selected":""}>${safeText(m)}</option>`).join("");
+
+  const cardsHTML = list.length
+    ? list.map(r => _repCardHTML(r)).join("")
+    : `<div class="rep-dash-empty"><p>No hay reportes${rfil||mfil ? " con estos filtros" : " todavía"}.</p></div>`;
+
+  return `
+    <div class="section-head section-head-lg">
+      <div>
+        <div class="eyebrow">Gestión interna</div>
+        <h1>Reportes mensuales</h1>
+        <p>Seguimiento por restaurante y mes.</p>
+      </div>
+      <button class="primary-btn" onclick="oReporteForm()">+ Nuevo reporte</button>
+    </div>
+    ${alertsHTML}
+    <div class="rep-dash-filters">
+      <select class="field-select" id="rep-filter-rest" onchange="rRepFilter()">
+        <option value="">Todos los restaurantes</option>${filterRest}
+      </select>
+      <select class="field-select" id="rep-filter-mes" onchange="rRepFilter()">
+        <option value="">Todos los meses</option>${filterMes}
+      </select>
+    </div>
+    <div id="rep-cards">${cardsHTML}</div>`;
+}
+
+function rRepFilter() {
+  const el = document.getElementById("rep-cards");
+  if (!el) return;
+  const rfil = document.getElementById("rep-filter-rest")?.value || "";
+  const mfil = document.getElementById("rep-filter-mes")?.value || "";
+  let list = _reportesList;
+  if (rfil) list = list.filter(r => r.restaurante === rfil);
+  if (mfil) list = list.filter(r => r.mes === mfil);
+  el.innerHTML = list.length
+    ? list.map(r => _repCardHTML(r)).join("")
+    : `<div class="rep-dash-empty"><p>No hay reportes con estos filtros.</p></div>`;
+}
+
+function _repUrgBadge(u) {
+  const cls = u === "Urgente OBA" ? "urgente" : u === "Consulta" ? "consulta" : "no";
+  return `<span class="rep-badge rep-badge-${cls}">${safeText(u||"No urgente")}</span>`;
+}
+function _repValBadge(v) {
+  const cls = v === "Difícil" ? "dificil" : v === "Regular" ? "regular" : "bueno";
+  return `<span class="rep-badge rep-badge-${cls}">${safeText(v||"—")}</span>`;
+}
+
+function _repCardHTML(r) {
+  const kpis = r.kpis || {};
+  const kpiHTML = [
+    kpis.facturacion ? `<div class="rep-card-kpi"><strong>${safeText(String(kpis.facturacion))}€</strong><span>Facturación</span></div>` : "",
+    kpis.comensales ? `<div class="rep-card-kpi"><strong>${safeText(String(kpis.comensales))}</strong><span>Comensales</span></div>` : "",
+    kpis.ticketMedio ? `<div class="rep-card-kpi"><strong>${safeText(String(kpis.ticketMedio))}€</strong><span>Ticket medio</span></div>` : "",
+  ].filter(Boolean).join("");
+
+  return `
+    <button class="rep-card" onclick="verReporte('${safeText(r._fsId)}')">
+      <div class="rep-card-head">
+        <div>
+          <div class="rep-card-rest">${safeText(r.restaurante||"—")}</div>
+          <div class="rep-card-meta">${safeText(r.mes||"")} ${safeText(String(r.anio||""))} · ${safeText(r.responsable||"")}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          ${_repUrgBadge(r.urgencia)}
+          ${kpis.valoracion ? _repValBadge(kpis.valoracion) : ""}
+        </div>
+      </div>
+      ${kpiHTML ? `<div class="rep-card-kpis">${kpiHTML}</div>` : ""}
+    </button>`;
+}
+
+// ── Form ───────────────────────────────────────────────
+function oReporteForm() {
+  _repInit();
+  _repView = "form";
+  rRepInner();
+  scrollTop();
+}
+
+function repBack() {
+  _repView = "dashboard";
+  _repActiveId = null;
+  rRepInner();
+  scrollTop();
+}
+
+function _repFormHTML() {
+  const s = _repState;
+  const restOpts = RESTAURANTES.map(r => `<option value="${safeText(r)}"${s.restaurante===r?" selected":""}>${safeText(r)}</option>`).join("");
+  const mesOpts = MESES.map(m => `<option value="${safeText(m)}"${s.mes===m?" selected":""}>${safeText(m)}</option>`).join("");
+  const anioOpts = [2024,2025,2026,2027].map(y => `<option value="${y}"${s.anio===y?" selected":""}>${y}</option>`).join("");
+
+  return `
+    <div class="rep-form-head">
+      <button class="ghost-btn ghost-btn-sm" onclick="repBack()">← Volver</button>
+      <div>
+        <div class="eyebrow" style="margin:0">Nuevo reporte</div>
+      </div>
+    </div>
+
+    <div class="rep-progress-wrap">
+      <div class="rep-progress-bar"><div class="rep-progress-fill" id="rep-prog-fill" style="width:0%"></div></div>
+      <div class="rep-progress-label" id="rep-prog-label">0 de 8 secciones completadas</div>
+    </div>
+
+    <!-- A: Identificación -->
+    <div class="rep-section" id="rep-sec-a">
+      <div class="rep-section-title">
+        <div class="rep-section-letter">A</div>
+        <div class="rep-section-name">Identificación</div>
+      </div>
+      <div class="fr"><label>Restaurante</label>
+        <select class="field-select" onchange="repUpdate('restaurante',this.value)">
+          <option value="">Selecciona…</option>${restOpts}
+        </select>
+      </div>
+      <div class="fr"><label>Mes</label>
+        <select class="field-select" onchange="repUpdate('mes',this.value)">
+          <option value="">Selecciona…</option>${mesOpts}
+        </select>
+      </div>
+      <div class="fr"><label>Año</label>
+        <select class="field-select" onchange="repUpdate('anio',parseInt(this.value))">
+          ${anioOpts}
+        </select>
+      </div>
+      <div class="fr"><label>Responsable</label>
+        <input type="text" class="field-input" placeholder="Nombre del responsable" value="${safeText(s.responsable)}" oninput="repUpdate('responsable',this.value)">
+      </div>
+    </div>
+
+    <!-- B: Cifras -->
+    <div class="rep-section" id="rep-sec-b">
+      <div class="rep-section-title">
+        <div class="rep-section-letter">B</div>
+        <div class="rep-section-name">Cifras del mes</div>
+      </div>
+      <div class="rep-kpi-grid">
+        <div class="fr"><label>Facturación (€)</label>
+          <input type="number" class="field-input" placeholder="0" value="${safeText(String(s.facturacion))}" oninput="repUpdate('facturacion',this.value)">
+        </div>
+        <div class="fr"><label>Comensales</label>
+          <input type="number" class="field-input" placeholder="0" value="${safeText(String(s.comensales))}" oninput="repUpdate('comensales',this.value)">
+        </div>
+        <div class="fr"><label>Ticket medio (€)</label>
+          <input type="number" class="field-input" placeholder="0.00" step="0.01" value="${safeText(String(s.ticketMedio))}" oninput="repUpdate('ticketMedio',this.value)">
+        </div>
+        <div class="fr"><label>Eventos realizados</label>
+          <input type="number" class="field-input" placeholder="0" value="${safeText(String(s.eventosCifra))}" oninput="repUpdate('eventosCifra',this.value)">
+        </div>
+      </div>
+      <div class="fr" style="margin-top:12px"><label>Valoración general del mes</label>
+        <div class="rep-semaforo">
+          <button type="button" class="rep-sem-btn rep-sem-bueno${s.valoracion==='Bueno'?' active':''}" onclick="repSetVal('Bueno')">Bueno</button>
+          <button type="button" class="rep-sem-btn rep-sem-regular${s.valoracion==='Regular'?' active':''}" onclick="repSetVal('Regular')">Regular</button>
+          <button type="button" class="rep-sem-btn rep-sem-dificil${s.valoracion==='Difícil'?' active':''}" onclick="repSetVal('Difícil')">Difícil</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- C: Eventos -->
+    <div class="rep-section" id="rep-sec-c">
+      <div class="rep-section-title">
+        <div class="rep-section-letter">C</div>
+        <div class="rep-section-name">Eventos</div>
+      </div>
+      <div class="fr"><label>Eventos realizados este mes</label>
+        <div class="rep-list-editor">
+          <div class="rep-list-items" id="rep-list-eventosRealizados">${_repListItemsHTML("eventosRealizados")}</div>
+          <div class="rep-list-add">
+            <input type="text" class="field-input" id="rep-add-eventosRealizados" placeholder="Añadir evento…" onkeydown="if(event.key==='Enter'){repAddItem('eventosRealizados');event.preventDefault()}">
+            <button type="button" class="secondary-btn" onclick="repAddItem('eventosRealizados')">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="fr" style="margin-top:12px"><label>Eventos próximos</label>
+        <div class="rep-list-editor">
+          <div class="rep-list-items" id="rep-list-eventosProximos">${_repListItemsHTML("eventosProximos")}</div>
+          <div class="rep-list-add">
+            <input type="text" class="field-input" id="rep-add-eventosProximos" placeholder="Añadir evento próximo…" onkeydown="if(event.key==='Enter'){repAddItem('eventosProximos');event.preventDefault()}">
+            <button type="button" class="secondary-btn" onclick="repAddItem('eventosProximos')">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D: Carta y recetas -->
+    <div class="rep-section" id="rep-sec-d">
+      <div class="rep-section-title">
+        <div class="rep-section-letter">D</div>
+        <div class="rep-section-name">Carta y recetas</div>
+      </div>
+      <div class="rep-kpi-grid">
+        <div class="fr"><label>Platos activos en carta</label>
+          <input type="number" class="field-input" placeholder="0" value="${safeText(String(s.cartaPlatosActivos))}" oninput="repUpdate('cartaPlatosActivos',this.value)">
+        </div>
+        <div class="fr"><label>Recetas modificadas</label>
+          <input type="number" class="field-input" placeholder="0" value="${safeText(String(s.cartaRecetasModificadas))}" oninput="repUpdate('cartaRecetasModificadas',this.value)">
+        </div>
+      </div>
+      <div class="fr" style="margin-top:4px"><label>Cambios de carta</label>
+        <textarea class="field-input" rows="3" placeholder="Describe los cambios realizados en carta…" oninput="repUpdate('cartaCambios',this.value)">${safeText(s.cartaCambios)}</textarea>
+      </div>
+      <div class="fr"><label>Plato destacado del mes</label>
+        <input type="text" class="field-input" placeholder="Nombre del plato estrella" value="${safeText(s.cartaPlatoDestacado)}" oninput="repUpdate('cartaPlatoDestacado',this.value)">
+      </div>
+    </div>
+
+    <!-- E: Proveedores -->
+    <div class="rep-section" id="rep-sec-e">
+      <div class="rep-section-title">
+        <div class="rep-section-letter">E</div>
+        <div class="rep-section-name">Proveedores</div>
+      </div>
+      <div class="fr"><label>Cambios de proveedor</label>
+        <div class="rep-list-editor">
+          <div class="rep-list-items" id="rep-list-proveedoresCambios">${_repListItemsHTML("proveedoresCambios")}</div>
+          <div class="rep-list-add">
+            <input type="text" class="field-input" id="rep-add-proveedoresCambios" placeholder="Añadir cambio…" onkeydown="if(event.key==='Enter'){repAddItem('proveedoresCambios');event.preventDefault()}">
+            <button type="button" class="secondary-btn" onclick="repAddItem('proveedoresCambios')">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="fr" style="margin-top:12px"><label>Incidencias con proveedores</label>
+        <div class="rep-list-editor">
+          <div class="rep-list-items" id="rep-list-proveedoresIncidencias">${_repListItemsHTML("proveedoresIncidencias")}</div>
+          <div class="rep-list-add">
+            <input type="text" class="field-input" id="rep-add-proveedoresIncidencias" placeholder="Añadir incidencia…" onkeydown="if(event.key==='Enter'){repAddItem('proveedoresIncidencias');event.preventDefault()}">
+            <button type="button" class="secondary-btn" onclick="repAddItem('proveedoresIncidencias')">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- F: Equipo -->
+    <div class="rep-section" id="rep-sec-f">
+      <div class="rep-section-title">
+        <div class="rep-section-letter">F</div>
+        <div class="rep-section-name">Equipo</div>
+      </div>
+      <div class="fr"><label>Plantilla actual (personas)</label>
+        <input type="number" class="field-input" placeholder="0" value="${safeText(String(s.equipoPlantilla))}" oninput="repUpdate('equipoPlantilla',this.value)">
+      </div>
+      <div class="fr"><label>Altas y bajas</label>
+        <input type="text" class="field-input" placeholder="Ej: 1 alta, 0 bajas" value="${safeText(s.equipoAltasBajas)}" oninput="repUpdate('equipoAltasBajas',this.value)">
+      </div>
+      <div class="fr"><label>Observaciones de equipo</label>
+        <textarea class="field-input" rows="3" placeholder="Ambiente, formación, incidencias de personal…" oninput="repUpdate('equipoObservaciones',this.value)">${safeText(s.equipoObservaciones)}</textarea>
+      </div>
+    </div>
+
+    <!-- G: Calidad y reseñas -->
+    <div class="rep-section" id="rep-sec-g">
+      <div class="rep-section-title">
+        <div class="rep-section-letter">G</div>
+        <div class="rep-section-name">Calidad y reseñas</div>
+      </div>
+      <div class="rep-kpi-grid">
+        <div class="fr"><label>Valoración online (0–5)</label>
+          <input type="number" class="field-input" placeholder="4.5" min="0" max="5" step="0.1" value="${safeText(String(s.calidadValoracion))}" oninput="repUpdate('calidadValoracion',this.value)">
+        </div>
+        <div class="fr"><label>N.º reseñas del mes</label>
+          <input type="number" class="field-input" placeholder="0" value="${safeText(String(s.calidadResenas))}" oninput="repUpdate('calidadResenas',this.value)">
+        </div>
+      </div>
+      <div class="fr" style="margin-top:4px"><label>Incidencias de calidad</label>
+        <div class="rep-list-editor">
+          <div class="rep-list-items" id="rep-list-calidadIncidencias">${_repListItemsHTML("calidadIncidencias")}</div>
+          <div class="rep-list-add">
+            <input type="text" class="field-input" id="rep-add-calidadIncidencias" placeholder="Añadir incidencia…" onkeydown="if(event.key==='Enter'){repAddItem('calidadIncidencias');event.preventDefault()}">
+            <button type="button" class="secondary-btn" onclick="repAddItem('calidadIncidencias')">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- H: Notas y próximos pasos -->
+    <div class="rep-section" id="rep-sec-h">
+      <div class="rep-section-title">
+        <div class="rep-section-letter">H</div>
+        <div class="rep-section-name">Notas y próximos pasos</div>
+      </div>
+      <div class="fr"><label>Observaciones generales</label>
+        <textarea class="field-input" rows="3" placeholder="Notas libres del mes…" oninput="repUpdate('notasObservaciones',this.value)">${safeText(s.notasObservaciones)}</textarea>
+      </div>
+      <div class="fr"><label>Prioridades para el mes siguiente</label>
+        <div class="rep-list-editor">
+          <div class="rep-list-items" id="rep-list-notasPrioridades">${_repListItemsHTML("notasPrioridades")}</div>
+          <div class="rep-list-add">
+            <input type="text" class="field-input" id="rep-add-notasPrioridades" placeholder="Añadir prioridad…" onkeydown="if(event.key==='Enter'){repAddItem('notasPrioridades');event.preventDefault()}">
+            <button type="button" class="secondary-btn" onclick="repAddItem('notasPrioridades')">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="fr" style="margin-top:12px"><label>¿Requiere atención de OBA?</label>
+        <div class="rep-semaforo">
+          <button type="button" class="rep-sem-btn rep-sem-bueno${s.notasUrgenciaOba==='No urgente'?' active':''}" onclick="repSetUrg('No urgente')">No urgente</button>
+          <button type="button" class="rep-sem-btn rep-sem-regular${s.notasUrgenciaOba==='Consulta'?' active':''}" onclick="repSetUrg('Consulta')">Consulta</button>
+          <button type="button" class="rep-sem-btn rep-sem-dificil${s.notasUrgenciaOba==='Urgente OBA'?' active':''}" onclick="repSetUrg('Urgente OBA')">Urgente OBA</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding:8px 0 32px;display:flex;gap:10px">
+      <button class="ghost-btn" onclick="repBack()">Cancelar</button>
+      <button class="primary-btn" style="flex:1" onclick="sReporte()">Enviar reporte</button>
+    </div>`;
+}
+
+function repUpdate(key, val) {
+  _repState[key] = val;
+  _repUpdateProgress();
+}
+
+function repSetVal(val) {
+  _repState.valoracion = val;
+  document.querySelectorAll("#rep-sec-b .rep-sem-btn").forEach(b => b.classList.remove("active"));
+  const map = { "Bueno": "rep-sem-bueno", "Regular": "rep-sem-regular", "Difícil": "rep-sem-dificil" };
+  document.querySelector(`#rep-sec-b .${map[val]}`)?.classList.add("active");
+  _repUpdateProgress();
+}
+
+function repSetUrg(val) {
+  _repState.notasUrgenciaOba = val;
+  _repState.urgencia = val;
+  document.querySelectorAll("#rep-sec-h .rep-sem-btn").forEach(b => b.classList.remove("active"));
+  const map = { "No urgente": "rep-sem-bueno", "Consulta": "rep-sem-regular", "Urgente OBA": "rep-sem-dificil" };
+  document.querySelector(`#rep-sec-h .${map[val]}`)?.classList.add("active");
+}
+
+function _repListItemsHTML(type) {
+  const arr = _repState[type] || [];
+  return arr.map((item, idx) => `
+    <div class="rep-list-item">
+      <span>${safeText(item)}</span>
+      <button type="button" class="ghost-btn ghost-btn-sm" onclick="repRemoveItem('${type}',${idx})" style="padding:2px 8px;flex-shrink:0">✕</button>
+    </div>`).join("");
+}
+
+function repAddItem(type) {
+  const inp = document.getElementById(`rep-add-${type}`);
+  if (!inp) return;
+  const val = inp.value.trim();
+  if (!val) return;
+  if (!Array.isArray(_repState[type])) _repState[type] = [];
+  _repState[type].push(val);
+  inp.value = "";
+  _repRenderList(type, `rep-list-${type}`);
+  _repUpdateProgress();
+}
+
+function repRemoveItem(type, idx) {
+  if (!Array.isArray(_repState[type])) return;
+  _repState[type].splice(idx, 1);
+  _repRenderList(type, `rep-list-${type}`);
+  _repUpdateProgress();
+}
+
+function _repRenderList(type, elId) {
+  const el = document.getElementById(elId);
+  if (el) el.innerHTML = _repListItemsHTML(type);
+}
+
+function _repUpdateProgress() {
+  const s = _repState;
+  const checks = [
+    !!(s.restaurante && s.mes && s.responsable),
+    !!(s.facturacion || s.comensales || s.ticketMedio || s.valoracion),
+    !!(s.eventosRealizados.length || s.eventosProximos.length),
+    !!(s.cartaCambios || s.cartaPlatosActivos || s.cartaPlatoDestacado),
+    !!(s.proveedoresCambios.length || s.proveedoresIncidencias.length),
+    !!(s.equipoPlantilla || s.equipoObservaciones || s.equipoAltasBajas),
+    !!(s.calidadValoracion || s.calidadResenas || s.calidadIncidencias.length),
+    !!(s.notasObservaciones || s.notasPrioridades.length || s.notasUrgenciaOba)
+  ];
+  const done = checks.filter(Boolean).length;
+  const pct = Math.round((done / 8) * 100);
+  const fill = document.getElementById("rep-prog-fill");
+  const label = document.getElementById("rep-prog-label");
+  if (fill) fill.style.width = pct + "%";
+  if (label) label.textContent = `${done} de 8 secciones completadas`;
+}
+
+// ── Save ───────────────────────────────────────────────
+function sReporte() {
+  const s = _repState;
+  if (!s.restaurante || !s.mes || !s.responsable) {
+    toast("Completa al menos restaurante, mes y responsable.", "error");
+    return;
+  }
+  if (storageMode !== "firebase") {
+    toast("Necesitas Firebase para guardar reportes.", "error");
+    return;
+  }
+  const doc = {
+    restaurante: s.restaurante,
+    mes: s.mes,
+    anio: Number(s.anio) || new Date().getFullYear(),
+    responsable: s.responsable,
+    fechaEnvio: firebase.firestore.FieldValue.serverTimestamp(),
+    estado: "enviado",
+    urgencia: s.notasUrgenciaOba || "No urgente",
+    kpis: {
+      facturacion: s.facturacion ? Number(s.facturacion) : null,
+      comensales: s.comensales ? Number(s.comensales) : null,
+      ticketMedio: s.ticketMedio ? Number(s.ticketMedio) : null,
+      eventos: s.eventosCifra ? Number(s.eventosCifra) : null,
+      valoracion: s.valoracion || null
+    },
+    carta: {
+      platosActivos: s.cartaPlatosActivos ? Number(s.cartaPlatosActivos) : null,
+      recetasModificadas: s.cartaRecetasModificadas ? Number(s.cartaRecetasModificadas) : null,
+      cambios: s.cartaCambios || "",
+      platoDestacado: s.cartaPlatoDestacado || ""
+    },
+    eventos: {
+      realizados: s.eventosRealizados || [],
+      proximos: s.eventosProximos || []
+    },
+    proveedores: {
+      cambios: s.proveedoresCambios || [],
+      incidencias: s.proveedoresIncidencias || []
+    },
+    equipo: {
+      plantilla: s.equipoPlantilla ? Number(s.equipoPlantilla) : null,
+      altasBajas: s.equipoAltasBajas || "",
+      observaciones: s.equipoObservaciones || ""
+    },
+    calidad: {
+      valoracionOnline: s.calidadValoracion ? Number(s.calidadValoracion) : null,
+      resenas: s.calidadResenas ? Number(s.calidadResenas) : null,
+      incidencias: s.calidadIncidencias || []
+    },
+    notas: {
+      observaciones: s.notasObservaciones || "",
+      prioridades: s.notasPrioridades || [],
+      urgenciaOba: s.notasUrgenciaOba || "No urgente"
+    }
+  };
+
+  db.collection("reportes").add(doc)
+    .then(() => {
+      toast("Reporte enviado correctamente.", "ok");
+      _repView = "dashboard";
+      rRepInner();
+      scrollTop();
+    })
+    .catch(err => {
+      console.error("Error guardando reporte:", err);
+      toast("Error al guardar el reporte. Inténtalo de nuevo.", "error");
+    });
+}
+
+// ── Detail view ────────────────────────────────────────
+function verReporte(fsId) {
+  _repActiveId = fsId;
+  _repView = "detail";
+  rRepInner();
+  scrollTop();
+}
+
+function _repDetailHTML(fsId) {
+  const r = _reportesList.find(x => x._fsId === fsId);
+  if (!r) return `<button class="ghost-btn ghost-btn-sm" onclick="repBack()">← Volver</button><p style="color:var(--muted);margin-top:16px">Reporte no encontrado.</p>`;
+
+  const kpis = r.kpis || {};
+  const carta = r.carta || {};
+  const eventos = r.eventos || {};
+  const prov = r.proveedores || {};
+  const equipo = r.equipo || {};
+  const calidad = r.calidad || {};
+  const notas = r.notas || {};
+
+  const tagList = (arr) => arr && arr.length
+    ? `<div class="rep-tag-list">${arr.map(t => `<span class="rep-tag">${safeText(t)}</span>`).join("")}</div>`
+    : `<span style="color:var(--muted);font-size:13px">—</span>`;
+
+  const row = (label, val) => `<div class="rep-detail-row"><span class="rep-detail-label">${label}</span><span>${val || "—"}</span></div>`;
+
+  return `
+    <div class="rep-form-head" style="margin-bottom:16px">
+      <button class="ghost-btn ghost-btn-sm" onclick="repBack()">← Volver</button>
+      <div style="flex:1">
+        <div class="eyebrow" style="margin:0">${safeText(r.restaurante||"")} · ${safeText(r.mes||"")} ${safeText(String(r.anio||""))}</div>
+        <div style="font-size:13px;color:var(--muted)">Responsable: ${safeText(r.responsable||"")}</div>
+      </div>
+      ${_repUrgBadge(r.urgencia)}
+    </div>
+
+    <div class="rep-detail-section">
+      <h4>Cifras del mes</h4>
+      <div class="rep-detail-kpis">
+        ${kpis.facturacion != null ? `<div class="rep-detail-kpi"><strong>${kpis.facturacion.toLocaleString("es-ES")}€</strong><span>Facturación</span></div>` : ""}
+        ${kpis.comensales != null ? `<div class="rep-detail-kpi"><strong>${kpis.comensales}</strong><span>Comensales</span></div>` : ""}
+        ${kpis.ticketMedio != null ? `<div class="rep-detail-kpi"><strong>${kpis.ticketMedio}€</strong><span>Ticket medio</span></div>` : ""}
+        ${kpis.eventos != null ? `<div class="rep-detail-kpi"><strong>${kpis.eventos}</strong><span>Eventos</span></div>` : ""}
+        ${kpis.valoracion ? `<div class="rep-detail-kpi"><strong style="font-size:1rem">${safeText(kpis.valoracion)}</strong><span>Valoración</span></div>` : ""}
+      </div>
+    </div>
+
+    <div class="rep-detail-section">
+      <h4>Eventos</h4>
+      ${row("Realizados", "")}
+      ${tagList(eventos.realizados)}
+      <div style="margin-top:10px">${row("Próximos", "")}</div>
+      ${tagList(eventos.proximos)}
+    </div>
+
+    <div class="rep-detail-section">
+      <h4>Carta y recetas</h4>
+      ${row("Platos activos", carta.platosActivos != null ? String(carta.platosActivos) : null)}
+      ${row("Recetas modificadas", carta.recetasModificadas != null ? String(carta.recetasModificadas) : null)}
+      ${row("Plato destacado", safeText(carta.platoDestacado||""))}
+      ${carta.cambios ? `<div class="rep-detail-row"><span class="rep-detail-label">Cambios</span><span>${safeText(carta.cambios)}</span></div>` : ""}
+    </div>
+
+    <div class="rep-detail-section">
+      <h4>Proveedores</h4>
+      ${row("Cambios", "")}${tagList(prov.cambios)}
+      <div style="margin-top:8px">${row("Incidencias", "")}</div>${tagList(prov.incidencias)}
+    </div>
+
+    <div class="rep-detail-section">
+      <h4>Equipo</h4>
+      ${row("Plantilla", equipo.plantilla != null ? equipo.plantilla + " personas" : null)}
+      ${row("Altas y bajas", safeText(equipo.altasBajas||""))}
+      ${equipo.observaciones ? `<div class="rep-detail-row"><span class="rep-detail-label">Observaciones</span><span>${safeText(equipo.observaciones)}</span></div>` : ""}
+    </div>
+
+    <div class="rep-detail-section">
+      <h4>Calidad y reseñas</h4>
+      ${row("Valoración online", calidad.valoracionOnline != null ? calidad.valoracionOnline + " / 5" : null)}
+      ${row("Reseñas del mes", calidad.resenas != null ? String(calidad.resenas) : null)}
+      ${calidad.incidencias && calidad.incidencias.length ? `<div style="margin-top:8px">${row("Incidencias","")}</div>${tagList(calidad.incidencias)}` : ""}
+    </div>
+
+    <div class="rep-detail-section">
+      <h4>Notas y próximos pasos</h4>
+      ${notas.observaciones ? `<div class="rep-detail-row"><span class="rep-detail-label">Observaciones</span><span>${safeText(notas.observaciones)}</span></div>` : ""}
+      ${notas.prioridades && notas.prioridades.length ? `<div style="margin-top:8px">${row("Prioridades","")}</div>${tagList(notas.prioridades)}` : ""}
+      <div style="margin-top:10px">${row("Atención OBA", safeText(notas.urgenciaOba||"No urgente"))}</div>
+    </div>`;
