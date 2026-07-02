@@ -4631,17 +4631,6 @@ function buildRestFichaHTML(recipe, scale = 1) {
       <h4>Alérgenos</h4>
       <div class="ca">${alerg.map((a) => `<span class="badge" style="border-color:#b84337;color:#b84337">${safeText(a)}</span>`).join("")}</div>
     </div>` : "";
-  const scaleBar = _rscaleBase > 0 ? `
-    <div class="scale-bar">
-      <span class="scale-label">Base: <strong>${_rscaleBase}</strong> rac.</span>
-      <div class="scale-ctrl">
-        <span class="scale-label">Escalar a:</span>
-        <button class="scale-btn" onclick="changeRestScale(-1)">−</button>
-        <strong>${_rscaleCur}</strong>
-        <button class="scale-btn" onclick="changeRestScale(1)">+</button>
-        <span class="scale-label">raciones</span>
-      </div>
-    </div>` : "";
   // Banner PDF si la receta tiene datos pendientes
   const nomKey = recipe.nombre ? recipe.nombre.toLowerCase().split(" - ")[0].trim() : "";
   const hasPdfData = !!_PDF_RECIPES[nomKey];
@@ -4654,7 +4643,6 @@ function buildRestFichaHTML(recipe, scale = 1) {
     </div>` : "";
   return `
     ${pdfBanner}
-    ${scaleBar}
     <div class="rs">
       <h4>Información general</h4>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
