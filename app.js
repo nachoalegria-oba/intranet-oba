@@ -4945,7 +4945,7 @@ function buildRestFichaHTML(recipe, scale = 1) {
   const pdfSteps = pdfData ? (pdfData.pasos||[]).length + (pdfData.subrecetas||[]).reduce((n,s)=>n+(s.pasos||[]).length,0) : 0;
   const needsImport = hasPdfData && recipeSteps < pdfSteps;
   const pdfBanner = needsImport ? `
-    <div style="background:#fff8e1;border:1.5px solid #f9a825;border-radius:12px;padding:14px 16px;margin-bottom:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+    <div id="pdf-import-banner" style="background:#fff8e1;border:1.5px solid #f9a825;border-radius:12px;padding:14px 16px;margin-bottom:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
       <span style="flex:1;font-size:13px;color:#5d4037"><strong>Datos del PDF disponibles</strong><br>Ingredientes con cantidades, subrecetas, pasos de elaboración y alérgenos.</span>
       <button id="pdf-import-btn" class="primary-btn" style="font-size:13px;padding:8px 18px" onclick="applyPdfRecipe('${restRecipeCol}','${escHtml(recipe.nombre)}')">Aplicar datos PDF</button>
     </div>` : "";

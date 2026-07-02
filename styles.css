@@ -3310,4 +3310,6 @@ p, span, div, label, td, th, input, select, textarea, button{
     margin:0 !important;
     padding:0 !important;
   }
+  /* Ocultar banner de importación PDF al imprimir */
+  #pdf-import-banner { display:none !important; }
 }
