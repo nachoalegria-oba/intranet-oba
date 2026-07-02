@@ -2005,7 +2005,7 @@ function calRender() {
     const hasVac = events.some((item) => item.tipo === "vacaciones");
     let content = events.map((item) => {
       if (item.tipo === "vacaciones") {
-        return `<div class="ce-vac">🏖 ${safeText(item.persona || "Vacaciones")}</div>`;
+        return `<div class="ce-vac">${safeText(item.persona || "Vacaciones")}</div>`;
       }
       const cls = item.tipo === "especial" ? "ce-esp" : item.urgente || item.tipo === "urgente" ? "ce-urg" : "ce";
       return `<div class="${cls}">${item.tipo === "especial" ? `${ico('star',12)} ` : item.urgente ? `${ico('warning',12)} ` : ""}${safeText(item.titulo)}</div>`;
@@ -2035,7 +2035,7 @@ function calRender() {
     const delBtn = `<button class="btn btn-s btn-d" style="margin-top:8px;font-size:11px" onclick="dEv(${item.id})">Eliminar</button>`;
     if (item.tipo === "vacaciones") {
       return `<div class="notice" style="border-left-color:#d97706;background:#fff7ed">
-        <strong>🏖 Vacaciones · ${safeText(item.persona || "")}</strong>
+        <strong>Vacaciones · ${safeText(item.persona || "")}</strong>
         ${item.nota ? `<div>${safeText(item.nota)}</div>` : ""}
         <div class="nd">${safeText(item.fechaInicio)} → ${safeText(item.fechaFin)}</div>
         ${delBtn}
@@ -2054,9 +2054,9 @@ function oCM(dateValue) {
     <div class="fr"><label>Tipo</label>
       <select id="etipo" onchange="toggleVacFields()">
         <option value="normal">Normal</option>
-        <option value="especial">Especial ⭐</option>
-        <option value="urgente">Urgente ⚠️</option>
-        <option value="vacaciones">Vacaciones 🏖️</option>
+        <option value="especial">Especial</option>
+        <option value="urgente">Urgente</option>
+        <option value="vacaciones">Vacaciones</option>
       </select>
     </div>
     <div class="fr" id="vac-persona-row" style="display:none"><label>Persona *</label><input id="epersona" placeholder="Nombre del trabajador"></div>
@@ -2090,11 +2090,11 @@ function openDayPanel(dateStr) {
 
   const evHtml = dayEvents.map((item) => {
     const badge = item.tipo === "vacaciones"
-      ? `<span class="ce-vac" style="display:inline-block;margin-bottom:0">🏖 ${safeText(item.persona || "Vacaciones")}</span>`
+      ? `<span class="ce-vac" style="display:inline-block;margin-bottom:0">${safeText(item.persona || "Vacaciones")}</span>`
       : item.tipo === "especial"
-        ? `<span class="ce-esp" style="display:inline-block;margin-bottom:0">⭐ ${safeText(item.titulo)}</span>`
+        ? `<span class="ce-esp" style="display:inline-block;margin-bottom:0">${safeText(item.titulo)}</span>`
         : item.urgente
-          ? `<span class="ce-urg" style="display:inline-block;margin-bottom:0">⚠️ ${safeText(item.titulo)}</span>`
+          ? `<span class="ce-urg" style="display:inline-block;margin-bottom:0">${safeText(item.titulo)}</span>`
           : `<span class="ce" style="display:inline-block;margin-bottom:0">${safeText(item.titulo)}</span>`;
     const rango = item.tipo === "vacaciones" ? `<div class="nd" style="margin-top:4px">${safeText(item.fechaInicio)} → ${safeText(item.fechaFin)}</div>` : "";
     const nota = item.nota ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">${safeText(item.nota)}</div>` : "";
@@ -2135,9 +2135,9 @@ function editEv(id, dateStr) {
     <div class="fr"><label>Tipo</label>
       <select id="etipo" onchange="toggleVacFields()">
         <option value="normal"${item.tipo === "normal" ? " selected" : ""}>Normal</option>
-        <option value="especial"${item.tipo === "especial" ? " selected" : ""}>Especial ⭐</option>
-        <option value="urgente"${item.tipo === "urgente" ? " selected" : ""}>Urgente ⚠️</option>
-        <option value="vacaciones"${isVac ? " selected" : ""}>Vacaciones 🏖️</option>
+        <option value="especial"${item.tipo === "especial" ? " selected" : ""}>Especial</option>
+        <option value="urgente"${item.tipo === "urgente" ? " selected" : ""}>Urgente</option>
+        <option value="vacaciones"${isVac ? " selected" : ""}>Vacaciones</option>
       </select>
     </div>
     <div class="fr" id="vac-persona-row" style="display:${isVac ? "" : "none"}"><label>Persona</label><input id="epersona" value="${safeText(item.persona || "")}"></div>
