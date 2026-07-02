@@ -24,23 +24,41 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-  <!-- Auto-recovery: if app.js fails to load (parse error / stale cache), reload once after 12s -->
+  <!-- Recovery: reload when SW updates (even if app.js failed to parse) -->
   <script>
+    window.__appLoaded = false;
+    if ('serviceWorker' in navigator) {
+      // When a new SW takes control, reload immediately to get fresh files
+      navigator.serviceWorker.addEventListener('controllerchange', function() {
+        if (!window.__appLoaded) location.reload();
+      });
+      navigator.serviceWorker.addEventListener('message', function(e) {
+        if (e.data && e.data.type === 'SW_UPDATED' && !window.__appLoaded) location.reload();
+      });
+    }
+    // Fallback: if app still hasn't loaded after 5s, unregister SW + clear caches + reload once
     (function(){
       var KEY = 'oba_reload_guard';
-      var last = parseInt(sessionStorage.getItem(KEY)||'0',10);
+      var last = parseInt(sessionStorage.getItem(KEY)||'0', 10);
       var now = Date.now();
-      window.__appLoaded = false;
       setTimeout(function(){
-        if(!window.__appLoaded && (now - last) > 20000){
-          sessionStorage.setItem(KEY, String(now));
-          // Clear all SW caches before reload so stale files are evicted
-          if('caches' in window){
-            caches.keys().then(function(ks){ ks.forEach(function(k){ caches.delete(k); }); });
-          }
-          location.reload(true);
+        if (window.__appLoaded) return;
+        if ((now - last) < 12000) return; // avoid infinite loop
+        sessionStorage.setItem(KEY, String(now));
+        var done = function(){ location.reload(true); };
+        var p = [];
+        if ('serviceWorker' in navigator) {
+          p.push(navigator.serviceWorker.getRegistrations().then(function(regs){
+            return Promise.all(regs.map(function(r){ return r.unregister(); }));
+          }));
         }
-      }, 12000);
+        if ('caches' in window) {
+          p.push(caches.keys().then(function(ks){
+            return Promise.all(ks.map(function(k){ return caches.delete(k); }));
+          }));
+        }
+        Promise.all(p).then(done).catch(done);
+      }, 5000);
     })();
   </script>
 </head>
