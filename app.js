@@ -7473,48 +7473,53 @@ function showToast(msg, kind) {
 
   let startY = 0;
   let pulling = false;
-  const THRESHOLD = 75;
+  let triggered = false;
+  const THRESHOLD = 70;
 
   function isDrawerOpen() {
-    return document.querySelector(".drawer.open, .modal-overlay.active, #restdet.open, #rdet.open") !== null;
-  }
-
-  function activeScrollTop() {
-    const panel = document.querySelector(".panel.active");
-    return panel ? panel.scrollTop : (window.scrollY || document.documentElement.scrollTop);
+    return !!(
+      document.querySelector("#restdet.open") ||
+      document.querySelector("#rdet.open") ||
+      document.querySelector(".modal-overlay.active") ||
+      document.querySelector(".huerta-detail-overlay.active")
+    );
   }
 
   document.addEventListener("touchstart", function(e) {
     if (isDrawerOpen()) return;
-    if (activeScrollTop() === 0) {
+    if (window.scrollY === 0) {
       startY = e.touches[0].clientY;
       pulling = true;
+      triggered = false;
     }
   }, { passive: true });
 
   document.addEventListener("touchmove", function(e) {
-    if (!pulling) return;
+    if (!pulling || triggered) return;
     const dy = e.touches[0].clientY - startY;
     if (dy <= 0) { pulling = false; return; }
+    // Block native overscroll so our indicator shows cleanly
+    e.preventDefault();
     const progress = Math.min(dy / THRESHOLD, 1);
-    const ty = Math.min(dy * 0.45, THRESHOLD * 0.75);
+    const ty = Math.min(dy * 0.5, 54);
     indicator.style.transition = "none";
     indicator.style.transform = `translateY(${ty}px)`;
-    indicator.style.opacity = Math.min(progress * 1.4, 1);
-    indicator.querySelector(".ptr-icon").style.transform = `rotate(${progress * 260}deg)`;
-  }, { passive: true });
+    indicator.style.opacity = String(Math.min(progress * 1.5, 1));
+    indicator.querySelector(".ptr-icon").style.transform = `rotate(${progress * 270}deg)`;
+  }, { passive: false });
 
   document.addEventListener("touchend", function(e) {
     if (!pulling) return;
     const dy = e.changedTouches[0].clientY - startY;
     pulling = false;
-    indicator.style.transition = "";
+    indicator.style.transition = "transform .22s ease, opacity .22s";
 
     if (dy >= THRESHOLD) {
-      indicator.style.transform = "translateY(52px)";
+      triggered = true;
+      indicator.style.transform = "translateY(54px)";
       indicator.style.opacity = "1";
       indicator.classList.add("ptr-spinning");
-      setTimeout(() => location.reload(), 350);
+      setTimeout(() => location.reload(), 400);
     } else {
       indicator.style.transform = "translateY(-56px)";
       indicator.style.opacity = "0";

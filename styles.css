@@ -34,6 +34,7 @@ html{
   min-height:100%;
   background:var(--bg);
   -webkit-text-size-adjust:100%;
+  overscroll-behavior-y:none;
 }
 /* Login active: fondo oscuro en html/body como respaldo */
 html.login-mode,
