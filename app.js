@@ -1018,9 +1018,16 @@ function rRec() {
 
   document.getElementById("rcards").innerHTML = list.length ? list.map((recipe) => {
     const subs = recipe.subrecetas || [];
+    const enMenu = recipe.enMenu !== false;
     return `
-      <article class="card">
-        ${bsec(recipe.seccion)}
+      <article class="card${enMenu ? "" : " card-off-menu"}">
+        <div class="card-menu-row">
+          ${bsec(recipe.seccion)}
+          <button class="menu-toggle${enMenu ? " menu-toggle-on" : ""}" onclick="toggleEnMenu(${recipe.id})" title="${enMenu ? "En carta · pulsa para retirar" : "Fuera de carta · pulsa para activar"}">
+            <span class="menu-toggle-knob"></span>
+            <span class="menu-toggle-label">${enMenu ? "En carta" : "Fuera de carta"}</span>
+          </button>
+        </div>
         <h3>${safeText(recipe.nombre)}</h3>
         <p>${safeText(recipe.descripcion || "Sin descripción")}</p>
         <div class="cmeta">
@@ -1395,6 +1402,13 @@ function sRec(id) {
   } else {
     doSave(currentPhoto);
   }
+}
+
+function toggleEnMenu(id) {
+  const recipe = D.recipes.find((item) => item.id === id);
+  if (!recipe) return;
+  recipe.enMenu = recipe.enMenu === false ? true : false;
+  save("recipes");
 }
 
 function dRec(id) {

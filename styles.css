@@ -578,6 +578,53 @@ td select:focus{
 .card p{color:var(--muted)}
 .card .ca{margin-top:auto}
 
+.card-off-menu{
+  opacity:.45;
+  filter:grayscale(.4);
+  transition:opacity .2s, filter .2s;
+}
+.card-off-menu:hover{ opacity:.7; filter:none; }
+
+.card-menu-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  min-height:24px;
+}
+
+.menu-toggle{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 10px 4px 6px;
+  border-radius:999px;
+  border:none;
+  background:var(--line);
+  cursor:pointer;
+  font-size:11px;
+  font-weight:600;
+  color:var(--muted);
+  transition:background .2s, color .2s;
+  flex-shrink:0;
+}
+.menu-toggle-knob{
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.2);
+  transition:transform .2s;
+  flex-shrink:0;
+}
+.menu-toggle-on{
+  background:var(--green);
+  color:#fff;
+}
+.menu-toggle-on .menu-toggle-knob{
+  transform:translateX(2px);
+}
+
 .ctag,
 .badge,
 .ps{
