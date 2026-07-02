@@ -7483,6 +7483,7 @@ function showToast(msg, kind) {
     return !!(
       document.querySelector("#restdet.open") ||
       document.querySelector("#rdet.open") ||
+      document.querySelector("#modal.open") ||
       document.querySelector(".modal-overlay.active") ||
       document.querySelector(".huerta-detail-overlay.active")
     );
