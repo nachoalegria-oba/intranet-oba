@@ -1,4 +1,7 @@
 const PWD = "oba2025";
+const REPORTES_USER = "reportescañitasgastro";
+const REPORTES_PWD  = "reportescañitasgastro";
+const REPORTES_SESSION_KEY = "oba_reportes_unlocked_v1";
 const FB = {
   apiKey: "AIzaSyAUUgLnKnh1xUbCjis4nPoEzoLLrJp9loY",
   authDomain: "intranet-oba.firebaseapp.com",
@@ -544,6 +547,9 @@ function showLoginForm() {
     const greetEl = document.getElementById("greet-sub");
     if (greetEl) greetEl.innerHTML = getGreeting();
     startApp();
+    if (sessionStorage.getItem(REPORTES_SESSION_KEY) === "1") {
+      setTimeout(() => sp("reportes"), 50);
+    }
   } else {
     setLoginMode(true);
   }
@@ -666,10 +672,14 @@ function save(col) {
 }
 
 function login() {
-  const input = document.getElementById("pwd");
-  const errorEl = document.getElementById("le");
-  if (!input) return;
-  if (input.value === PWD) {
+  const usrInput = document.getElementById("usr");
+  const pwdInput = document.getElementById("pwd");
+  const errorEl  = document.getElementById("le");
+  if (!pwdInput) return;
+  const usr = (usrInput?.value || "").trim();
+  const pwd = pwdInput.value;
+
+  const _enterApp = (goReportes) => {
     sessionStorage.setItem("oba-auth", "1");
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("app").classList.add("visible");
@@ -677,21 +687,32 @@ function login() {
     const greetEl = document.getElementById("greet-sub");
     if (greetEl) greetEl.innerHTML = getGreeting();
     startApp();
+    if (goReportes) setTimeout(() => sp("reportes"), 50);
+  };
+
+  if (usr === REPORTES_USER && pwd === REPORTES_PWD) {
+    sessionStorage.setItem(REPORTES_SESSION_KEY, "1");
+    _enterApp(true);
+  } else if (!usr && pwd === PWD) {
+    _enterApp(false);
+  } else if (usr && !(usr === REPORTES_USER && pwd === REPORTES_PWD)) {
+    if (errorEl) { errorEl.textContent = "Usuario o contraseña incorrectos"; setTimeout(() => { errorEl.textContent = ""; }, 2500); }
   } else if (errorEl) {
     errorEl.textContent = "Contraseña incorrecta";
-    setTimeout(() => {
-      errorEl.textContent = "";
-    }, 2000);
+    setTimeout(() => { errorEl.textContent = ""; }, 2000);
   }
 }
 
 function logout() {
   sessionStorage.removeItem("oba-auth");
+  sessionStorage.removeItem(REPORTES_SESSION_KEY);
   document.getElementById("login-screen").style.display = "flex";
   document.getElementById("app").classList.remove("visible");
   setLoginMode(true);
   const pwd = document.getElementById("pwd");
   if (pwd) pwd.value = "";
+  const usr = document.getElementById("usr");
+  if (usr) usr.value = "";
 }
 
 function seedRestRecetas(col) {
@@ -7681,7 +7702,47 @@ function showReportesPanel() {
   closeHamburger();
   const fb = document.getElementById("ped-float-bar");
   if (fb) fb.classList.remove("visible");
-  loadReportes();
+  if (sessionStorage.getItem(REPORTES_SESSION_KEY) === "1") {
+    loadReportes();
+  } else {
+    _repRenderGate();
+  }
+}
+
+function _repRenderGate() {
+  const el = document.getElementById("rep-inner");
+  if (!el) return;
+  el.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:24px">
+      <div style="background:var(--surface);border-radius:24px;box-shadow:var(--shadow);padding:32px 28px;width:100%;max-width:360px">
+        <div style="text-align:center;margin-bottom:24px">
+          <img src="./icons/oba-logo-white.png" alt="OBA" style="width:48px;margin-bottom:12px;opacity:.85">
+          <div class="eyebrow" style="margin-bottom:4px">Acceso restringido</div>
+          <h2 style="font-size:1.4rem;margin:0 0 4px">Reportes mensuales</h2>
+          <p style="color:var(--muted);font-size:13px;margin:0">Introduce tus credenciales para continuar</p>
+        </div>
+        <label class="sr-only" for="rep-gate-usr">Usuario</label>
+        <input class="login-input" type="text" id="rep-gate-usr" placeholder="Usuario" autocomplete="username"
+          style="margin-bottom:10px" onkeydown="if(event.key==='Enter')document.getElementById('rep-gate-pwd').focus()">
+        <label class="sr-only" for="rep-gate-pwd">Contraseña</label>
+        <input class="login-input" type="password" id="rep-gate-pwd" placeholder="Contraseña" autocomplete="current-password"
+          style="margin-bottom:10px" onkeydown="if(event.key==='Enter')repUnlockPanel()">
+        <button class="primary-btn" style="width:100%" onclick="repUnlockPanel()">Entrar</button>
+        <div class="login-error" id="rep-gate-err" style="margin-top:8px;text-align:center"></div>
+      </div>
+    </div>`;
+}
+
+function repUnlockPanel() {
+  const usr = (document.getElementById("rep-gate-usr")?.value || "").trim();
+  const pwd = document.getElementById("rep-gate-pwd")?.value || "";
+  const err = document.getElementById("rep-gate-err");
+  if (usr === REPORTES_USER && pwd === REPORTES_PWD) {
+    sessionStorage.setItem(REPORTES_SESSION_KEY, "1");
+    loadReportes();
+  } else {
+    if (err) { err.textContent = "Usuario o contraseña incorrectos"; setTimeout(() => { err.textContent = ""; }, 2500); }
+  }
 }
 
 function loadReportes() {

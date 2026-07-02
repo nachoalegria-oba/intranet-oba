@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@300;500;700;900&family=Cormorant+Garamond:wght@300;400;600&family=Comfortaa:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.css">
-  <link rel="stylesheet" href="./styles.css?v=158">
+  <link rel="stylesheet" href="./styles.css?v=159">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
@@ -41,8 +41,10 @@
       </div>
       <div class="login-status" id="ls-sub">Conectando...</div>
       <div class="login-form" id="lf" style="display:none">
+        <label class="sr-only" for="usr">Usuario</label>
+        <input class="login-input" type="text" id="usr" placeholder="Usuario (opcional)" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('pwd').focus()">
         <label class="sr-only" for="pwd">Contraseña</label>
-        <input class="login-input" type="password" id="pwd" placeholder="Contraseña" onkeydown="if(event.key==='Enter')login()">
+        <input class="login-input" type="password" id="pwd" placeholder="Contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
         <button class="primary-btn" onclick="login()">Entrar</button>
         <div class="login-error" id="le"></div>
       </div>
@@ -641,6 +643,6 @@
     </button>
   </div>
 
-  <script src="./app.js?v=161"></script>
+  <script src="./app.js?v=162"></script>
 </body>
 </html>
