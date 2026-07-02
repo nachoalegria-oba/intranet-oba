@@ -1332,29 +1332,38 @@ tbody td:last-child{
 }
 .fr textarea{min-height:110px;resize:vertical}
 .allergen-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  display:flex;
+  flex-wrap:wrap;
   gap:8px;
 }
 .allergen-option{
-  display:flex;
-  align-items:flex-start;
-  gap:8px;
-  min-width:0;
-  padding:10px 12px;
-  border-radius:16px;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:7px 14px;
+  border-radius:999px;
   background:var(--surface);
-  box-shadow:inset 0 0 0 1px var(--line);
-  text-transform:none;
-  letter-spacing:0;
-  font-size:12px;
-  line-height:1.4;
+  box-shadow:inset 0 0 0 1.5px var(--line);
+  font-size:13px;
+  font-weight:500;
+  color:var(--muted);
+  cursor:pointer;
+  transition:background .15s, box-shadow .15s, color .15s;
+  user-select:none;
 }
 .allergen-option input{
-  width:16px;
-  min-width:16px;
-  height:16px;
-  margin-top:1px;
+  display:none;
+}
+.allergen-option:has(input:checked){
+  background:rgba(64,87,53,.12);
+  box-shadow:inset 0 0 0 1.5px var(--green);
+  color:var(--green);
+}
+.allergen-option:has(input:checked)::before{
+  content:"✓";
+  font-size:12px;
+  font-weight:700;
+  color:var(--green);
 }
 .ingredient-editor{
   display:flex;
