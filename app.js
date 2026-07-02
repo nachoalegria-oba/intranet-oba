@@ -4697,6 +4697,7 @@ function openRestRecipe(empId, col, id) {
   }
   document.getElementById("restdet").classList.add("open");
   updateOverlayState();
+  rAdjuntos();
 }
 
 function closeRestRecipe() {
@@ -6466,6 +6467,147 @@ function escHtml(s) {
 // ══════════════════════════════════════════════════════
 // HUERTA — Rueda del Año
 // ══════════════════════════════════════════════════════
+
+// ── Archivos adjuntos por receta ────────────────────────────────────────────
+function _adjIcono(nombre) {
+  const ext = nombre.split(".").pop().toLowerCase();
+  if (["jpg","jpeg","png","gif","webp"].includes(ext)) return "🖼️";
+  if (ext === "pdf") return "📄";
+  if (["xls","xlsx","csv","numbers"].includes(ext)) return "📊";
+  if (["doc","docx","txt"].includes(ext)) return "📝";
+  return "📎";
+}
+
+function _adjFmtBytes(b) {
+  if (!b) return "";
+  if (b < 1024) return b + " B";
+  if (b < 1048576) return (b/1024).toFixed(0) + " KB";
+  return (b/1048576).toFixed(1) + " MB";
+}
+
+function rAdjuntos() {
+  const list = document.getElementById("adjuntos-list");
+  if (!list) return;
+  const col = restRecipeCol;
+  const recipes = D[`${col}_recetas`] || [];
+  const recipe = recipes.find(r => r._i === activeRestRecipeId);
+  const adjuntos = recipe?.adjuntos || [];
+
+  if (!adjuntos.length) {
+    list.innerHTML = `<div class="adjuntos-empty">Sin archivos adjuntos. Puedes añadir PDFs de fichas, escandallos o fotos del plato.</div>`;
+    return;
+  }
+  list.innerHTML = adjuntos.map((a, i) => `
+    <div class="adjunto-row">
+      <span class="adjunto-icon">${_adjIcono(a.nombre)}</span>
+      <div class="adjunto-info">
+        <div class="adjunto-name">${escHtml(a.nombre)}</div>
+        <div class="adjunto-meta">${a.tipo || ""} ${a.bytes ? "· " + _adjFmtBytes(a.bytes) : ""} ${a.fecha ? "· " + a.fecha : ""}</div>
+      </div>
+      <div class="adjunto-actions">
+        <a href="${escHtml(a.url)}" target="_blank" rel="noopener" class="ghost-btn ghost-btn-sm">Abrir</a>
+        <button class="ghost-btn ghost-btn-sm" style="color:var(--red)" onclick="deleteAdjunto(${i})">Eliminar</button>
+      </div>
+    </div>`).join("");
+}
+
+async function uploadAdjuntos(input) {
+  const files = [...input.files];
+  if (!files.length) return;
+  const col = restRecipeCol;
+  const recipes = D[`${col}_recetas`] || [];
+  const recipe = recipes.find(r => r._i === activeRestRecipeId);
+  if (!recipe) return;
+  if (!recipe.adjuntos) recipe.adjuntos = [];
+
+  const list = document.getElementById("adjuntos-list");
+  for (const file of files) {
+    // Mostrar progreso
+    const progId = "adj-prog-" + Date.now();
+    const row = document.createElement("div");
+    row.className = "adjunto-uploading";
+    row.id = progId;
+    row.innerHTML = `⏳ Subiendo ${escHtml(file.name)}…`;
+    list.prepend(row);
+
+    try {
+      let url = "";
+      if (storageMode === "firebase" && typeof firebase !== "undefined" && firebase.storage) {
+        const path = `recetas_adjuntos/${col}/${activeRestRecipeId}/${Date.now()}_${file.name}`;
+        const ref = firebase.storage().ref(path);
+        const snap = await ref.put(file);
+        url = await snap.ref.getDownloadURL();
+      } else {
+        // Fallback base64 (solo en memoria)
+        url = await new Promise(res => {
+          const r = new FileReader();
+          r.onload = e => res(e.target.result);
+          r.readAsDataURL(file);
+        });
+      }
+
+      const ext = file.name.split(".").pop().toLowerCase();
+      const adjunto = {
+        nombre: file.name,
+        tipo: ext.toUpperCase(),
+        url,
+        bytes: file.size,
+        fecha: today()
+      };
+      recipe.adjuntos.push(adjunto);
+
+      // Guardar en Firestore
+      if (storageMode === "firebase" && db) {
+        const snap = await db.collection(`${col}_recetas`).get();
+        for (const doc of snap.docs) {
+          if (doc.data()._i === activeRestRecipeId || doc.data().nombre === recipe.nombre) {
+            await doc.ref.update({ adjuntos: recipe.adjuntos });
+            break;
+          }
+        }
+      } else {
+        persistLocal();
+      }
+      document.getElementById(progId)?.remove();
+      toast("✓ " + file.name + " añadido");
+    } catch(e) {
+      document.getElementById(progId)?.remove();
+      toast("Error subiendo " + file.name + ": " + e.message, "err");
+    }
+  }
+  input.value = "";
+  rAdjuntos();
+}
+
+async function deleteAdjunto(idx) {
+  if (!confirm("¿Eliminar este archivo adjunto?")) return;
+  const col = restRecipeCol;
+  const recipes = D[`${col}_recetas`] || [];
+  const recipe = recipes.find(r => r._i === activeRestRecipeId);
+  if (!recipe || !recipe.adjuntos) return;
+
+  // Intentar borrar de Firebase Storage
+  const adj = recipe.adjuntos[idx];
+  if (adj?.url && storageMode === "firebase" && typeof firebase !== "undefined" && firebase.storage) {
+    try { await firebase.storage().refFromURL(adj.url).delete(); } catch(e) { /* ignorar si falla */ }
+  }
+
+  recipe.adjuntos.splice(idx, 1);
+
+  if (storageMode === "firebase" && db) {
+    const snap = await db.collection(`${col}_recetas`).get();
+    for (const doc of snap.docs) {
+      if (doc.data().nombre === recipe.nombre) {
+        await doc.ref.update({ adjuntos: recipe.adjuntos });
+        break;
+      }
+    }
+  } else {
+    persistLocal();
+  }
+  toast("✓ Archivo eliminado");
+  rAdjuntos();
+}
 
 let huertaSelectedMonth = null;
 

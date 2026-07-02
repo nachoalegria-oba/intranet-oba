@@ -3185,6 +3185,50 @@ p, span, div, label, td, th, input, select, textarea, button{
 .huerta-foto-preview img { width:100%; height:100%; object-fit:cover; }
 .huerta-foto-actions { display:flex; gap:8px; align-items:center; }
 
+/* ── Archivos adjuntos en ficha de receta ──────────── */
+.adjuntos-panel {
+  border-top: 1px solid var(--separator);
+  padding: 16px 28px 24px;
+  background: var(--bg);
+}
+.adjuntos-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.adjuntos-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-2);
+  flex: 1;
+}
+.adjuntos-add-btn {
+  cursor: pointer;
+  white-space: nowrap;
+}
+.adjunto-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  box-shadow: var(--shadow);
+}
+.adjunto-icon { font-size: 22px; flex-shrink: 0; }
+.adjunto-info { flex: 1; min-width: 0; }
+.adjunto-name { font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.adjunto-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.adjunto-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.adjuntos-empty { font-size: 13px; color: var(--muted); padding: 8px 0; }
+.adjunto-uploading { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--blue-soft); border-radius: var(--radius-sm); margin-bottom: 8px; font-size: 13px; color: var(--blue); }
+
+@media (max-width: 600px) {
+  .adjuntos-panel { padding: 14px 16px 20px; }
+}
+
 /* ── Impresión PDF (I+D) ───────────────────────────── */
 @media print{
   body.printing-id *{ visibility:hidden !important; }
