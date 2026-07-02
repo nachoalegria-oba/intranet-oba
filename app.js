@@ -562,7 +562,8 @@ async function initData() {
     if (canUseFirebase) {
       firebase.initializeApp(FB);
       db = firebase.firestore();
-      await loadFromFirebase();
+      const _timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 8000));
+      await Promise.race([loadFromFirebase(), _timeout]);
       storageMode = "firebase";
     } else {
       loadFromLocal();
