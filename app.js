@@ -921,6 +921,17 @@ function cModal() {
   updateOverlayState();
 }
 
+function _safeCloseModal() {
+  const mi = document.getElementById("mi");
+  if (!mi) { cModal(); return; }
+  const hasContent = Array.from(mi.querySelectorAll("input,textarea,select")).some((el) => {
+    if (el.type === "checkbox" || el.type === "file" || el.type === "hidden") return false;
+    return (el.value || "").trim().length > 0;
+  });
+  if (hasContent && !confirm("¿Cerrar sin guardar? Los cambios se perderán.")) return;
+  cModal();
+}
+
 function getGreeting() {
   const h = new Date().getHours();
   if (h >= 6 && h < 12) return `${ico('sun', 20)} Buenos días`;
@@ -2315,7 +2326,7 @@ function closeTopOverlay() {
     return true;
   }
   if (document.getElementById("modal")?.classList.contains("open")) {
-    cModal();
+    _safeCloseModal();
     return true;
   }
   if (document.getElementById("rdet")?.classList.contains("open")) {
@@ -5461,11 +5472,20 @@ function setupHamburgerMenu() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("modal").addEventListener("click", (event) => {
-    if (event.target.id === "modal") cModal();
+  // Track pointer movement so a scroll gesture doesn't count as a backdrop click
+  let _modalPtrMoved = false;
+  const _modalEl = document.getElementById("modal");
+  _modalEl.addEventListener("pointerdown", () => { _modalPtrMoved = false; });
+  _modalEl.addEventListener("pointermove", (e) => { if (e.buttons) _modalPtrMoved = true; });
+  _modalEl.addEventListener("click", (event) => {
+    if (event.target.id !== "modal" || _modalPtrMoved) return;
+    _safeCloseModal();
   });
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeTopOverlay();
+    if (event.key === "Escape") {
+      if (document.getElementById("modal")?.classList.contains("open")) { _safeCloseModal(); return; }
+      closeTopOverlay();
+    }
   });
   const installCardClose = document.getElementById("install-card-close");
   if (installCardClose) {
