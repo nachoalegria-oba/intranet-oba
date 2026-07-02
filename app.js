@@ -4467,6 +4467,138 @@ function dRestRec(empId, col, id) {
   rEmpresaDetalle(empId, "recetario");
 }
 
+const _PDF_RECIPES = {
+  "calamar de anzuelo": {
+    descripcion: "Tallarín de calamar de potera sobre crema de yema, salsa rancio ibérico con caldo de jamón y polvo de tinta de calamar.",
+    alergenos: ["Huevos","Moluscos","Lácteos"],
+    ingredientes: [
+      {i:"Bote esencia Joselito curado",c:"",u:""},
+      {i:"Garum colatura de anchoa",c:"",u:""}
+    ],
+    subrecetas: [
+      {
+        nombre:"Cebo calamar producido",
+        descripcion:"Rendimiento: de 12 kg de calamar potera se obtienen 4,3 kg de calamar producido.",
+        ingredientes:[{i:"Calamar potera",c:"12",u:"kg"}],
+        pasos:[
+          "Trabajar siempre con baños maría invertidos con hielo para mantener el calamar lo más frío posible.",
+          "Retirar las patas, cabeza, cococha, tripas y pluma.",
+          "Cortar a la mitad para abrir su cuerpo.",
+          "Quitar la punta de arriba y cortar la base.",
+          "Retirar perfectamente las dos telillas (exterior e interior).",
+          "Desangrar en agua con hielo y un punto de sal para limpiar el resto de tinta.",
+          "Superponer los cuerpos uno encima de otro y congelar en el abatidor en forma de bloque.",
+          "Cortar en la corta fiambres para obtener el tallarín del tamaño deseado."
+        ]
+      },
+      {
+        nombre:"Cebo crema yema premium",
+        descripcion:"",
+        ingredientes:[
+          {i:"Yemas de huevo",c:"15",u:"uds"},
+          {i:"Pimienta",c:"2",u:"g"},
+          {i:"Sal",c:"2",u:"g"}
+        ],
+        pasos:[
+          "Separar las yemas de las claras y colarlas para eliminar cualquier resto mucoso.",
+          "Salpimentar las yemas e introducirlas en una bolsa de vacío.",
+          "Sellar la bolsa lo más al filo posible para poder estirar el contenido.",
+          "Cocinar en horno con 100% de humedad a 68 °C durante 10 minutos.",
+          "Verificar textura: al inclinar la bolsa el contenido debe descender lentamente con consistencia densa. Si no, cocinar 5 minutos más.",
+          "Transferir a mangas pasteleras y conservar refrigerado."
+        ]
+      },
+      {
+        nombre:"Cebo caldo de jamón",
+        descripcion:"",
+        ingredientes:[
+          {i:"Huesos de jamón",c:"20",u:"kg"},
+          {i:"Agua",c:"40",u:"l"},
+          {i:"Cebolla",c:"3",u:"uds"},
+          {i:"Garbanzos",c:"1",u:"kg"}
+        ],
+        pasos:[
+          "Hidratar los garbanzos 12 horas antes.",
+          "Cortar la cebolla en mirepoix y quemar las caras en planchón o a la brasa.",
+          "Escaldar 3 veces el codillo del jamón.",
+          "Cocer todo junto durante 2 horas y 20 min.",
+          "Reposar otras 2 horas todo junto a fuego lento.",
+          "Colar, desgrasar y reducir."
+        ]
+      },
+      {
+        nombre:"Cebo polvo de tinta de calamar",
+        descripcion:"",
+        ingredientes:[{i:"Polvo de tinta de calamar",c:"",u:""}],
+        pasos:["Poner el polvo de tinta de calamar dentro de unas gasas."]
+      },
+      {
+        nombre:"Cebo salsa rancio ibérico",
+        descripcion:"",
+        ingredientes:[
+          {i:"Nata líquida 35%",c:"150",u:"g"},
+          {i:"Cebo caldo de jamón",c:"500",u:"g"},
+          {i:"Patata agria",c:"120",u:"g"},
+          {i:"Goma xantana",c:"0,6",u:"g"}
+        ],
+        pasos:[
+          "Cocer la patata en cachelos en el caldo de jamón.",
+          "Triturar.",
+          "Añadir la nata y colar por chino fino."
+        ]
+      }
+    ],
+    pasos:[
+      "Poner en el centro del plato un punto pequeño de crema yema.",
+      "Poner la cantidad de tallarín de calamar encima del punto.",
+      "Espolvorear polvo de tinta de calamar encima del tallarín.",
+      "Salsear alrededor del tallarín."
+    ],
+    notas:"De 12 kg de calamar potera se obtienen 4,3 kg de calamar producido."
+  }
+};
+
+async function applyPdfRecipe(col, recipeNombre) {
+  const key = recipeNombre.toLowerCase().split(" - ")[0].trim();
+  const data = _PDF_RECIPES[key];
+  if (!data) { toast("No hay datos PDF para esta receta","err"); return; }
+  const btn = document.getElementById("pdf-import-btn");
+  if (btn) { btn.textContent = "Guardando…"; btn.disabled = true; }
+  try {
+    if (storageMode === "firebase" && db) {
+      const snap = await db.collection(`${col}_recetas`).get();
+      let found = false;
+      for (const doc of snap.docs) {
+        const d = doc.data();
+        if (d.nombre && d.nombre.toLowerCase().includes(key)) {
+          await doc.ref.update(data);
+          // Actualizar en memoria también
+          const list = D[`${col}_recetas`] || [];
+          const idx = list.findIndex(r => r.nombre && r.nombre.toLowerCase().includes(key));
+          if (idx !== -1) Object.assign(list[idx], data);
+          found = true;
+          break;
+        }
+      }
+      if (!found) { toast("Receta no encontrada en Firestore","err"); return; }
+    } else {
+      const list = D[`${col}_recetas`] || [];
+      const idx = list.findIndex(r => r.nombre && r.nombre.toLowerCase().includes(key));
+      if (idx !== -1) Object.assign(list[idx], data);
+      persistLocal();
+    }
+    toast("✓ Datos del PDF aplicados");
+    // Reabrir la ficha actualizada
+    const recipe = (D[`${col}_recetas`] || []).find(r => r.nombre && r.nombre.toLowerCase().includes(key));
+    if (recipe) {
+      document.getElementById("restdet-body").innerHTML = buildRestFichaHTML(recipe);
+    }
+  } catch(e) {
+    toast("Error: " + e.message, "err");
+    if (btn) { btn.textContent = "Aplicar datos PDF"; btn.disabled = false; }
+  }
+}
+
 function buildRestFichaHTML(recipe, scale = 1) {
   const subs = recipe.subrecetas || [];
   const alerg = recipe.alergenos || [];
@@ -4510,7 +4642,18 @@ function buildRestFichaHTML(recipe, scale = 1) {
         <span class="scale-label">raciones</span>
       </div>
     </div>` : "";
+  // Banner PDF si la receta tiene datos pendientes
+  const nomKey = recipe.nombre ? recipe.nombre.toLowerCase().split(" - ")[0].trim() : "";
+  const hasPdfData = !!_PDF_RECIPES[nomKey];
+  const needsImport = hasPdfData && (!recipe.pasos || recipe.pasos.length === 0);
+  const pdfBanner = needsImport ? `
+    <div style="background:#fff8e1;border:1.5px solid #f9a825;border-radius:12px;padding:14px 16px;margin-bottom:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <span style="font-size:20px">📄</span>
+      <span style="flex:1;font-size:13px;color:#5d4037"><strong>Esta ficha tiene datos del PDF pendientes de importar</strong><br>Ingredientes con cantidades, pasos de elaboración y alérgenos.</span>
+      <button id="pdf-import-btn" class="primary-btn" style="font-size:13px;padding:8px 18px" onclick="applyPdfRecipe('${restRecipeCol}','${escHtml(recipe.nombre)}')">Aplicar datos PDF</button>
+    </div>` : "";
   return `
+    ${pdfBanner}
     ${scaleBar}
     <div class="rs">
       <h4>Información general</h4>
