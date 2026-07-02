@@ -4752,11 +4752,10 @@ function buildRestFichaHTML(recipe, scale = 1) {
   // Banner PDF si la receta tiene datos pendientes
   const nomKey = _pdfKey(recipe.nombre || "");
   const hasPdfData = !!_PDF_RECIPES[nomKey];
-  const needsImport = hasPdfData && (!recipe.pasos || recipe.pasos.length === 0);
-  const pdfBanner = needsImport ? `
+  console.log("[PDF]", recipe.nombre, "→ key:", nomKey, "| hasPdfData:", hasPdfData, "| keys:", Object.keys(_PDF_RECIPES));
+  const pdfBanner = hasPdfData ? `
     <div style="background:#fff8e1;border:1.5px solid #f9a825;border-radius:12px;padding:14px 16px;margin-bottom:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-      <span style="font-size:20px">📄</span>
-      <span style="flex:1;font-size:13px;color:#5d4037"><strong>Esta ficha tiene datos del PDF pendientes de importar</strong><br>Ingredientes con cantidades, pasos de elaboración y alérgenos.</span>
+      <span style="flex:1;font-size:13px;color:#5d4037"><strong>Datos del PDF disponibles</strong><br>Ingredientes con cantidades, subrecetas, pasos de elaboración y alérgenos.</span>
       <button id="pdf-import-btn" class="primary-btn" style="font-size:13px;padding:8px 18px" onclick="applyPdfRecipe('${restRecipeCol}','${escHtml(recipe.nombre)}')">Aplicar datos PDF</button>
     </div>` : "";
   return `
