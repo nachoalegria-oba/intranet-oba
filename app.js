@@ -4555,11 +4555,129 @@ const _PDF_RECIPES = {
       "Salsear alrededor del tallarín."
     ],
     notas:"De 12 kg de calamar potera se obtienen 4,3 kg de calamar producido."
+  },
+  "concha fina - gamba blanca": {
+    descripcion: "Concha fina con gamba blanca curada en sal, sobre puré de zanahoria asada, zanahorias baby encurtidas y escabeche de zanahoria emulsionado con ajada.",
+    alergenos: ["Pescado","Crustáceos","Moluscos","Lácteos"],
+    subrecetas: [
+      {
+        nombre: "Cebo base encurtido",
+        descripcion: "",
+        ingredientes: [
+          {i:"Vinagre de manzana",c:"300",u:"ml"},
+          {i:"Azúcar",c:"100",u:"g"},
+          {i:"Agua",c:"200",u:"ml"}
+        ],
+        pasos: [
+          "Mezclar el vinagre de manzana junto con el azúcar y el agua.",
+          "Dispensar unas gotas de ajada."
+        ]
+      },
+      {
+        nombre: "Cebo zanahorias baby encurtidas",
+        descripcion: "",
+        ingredientes: [
+          {i:"Cebo base encurtido",c:"600",u:"g"},
+          {i:"Mini zanahoria baby",c:"6",u:"bandejas"}
+        ],
+        pasos: [
+          "Dejar macerar un mínimo de 48h en el encurtido. Retirar previamente el tallo y lijar para quitar la impureza exterior."
+        ]
+      },
+      {
+        nombre: "Cebo fumet",
+        descripcion: "",
+        ingredientes: [
+          {i:"Ajo morado",c:"15",u:"g"},
+          {i:"Cebolla",c:"180",u:"g"},
+          {i:"Apio",c:"100",u:"g"},
+          {i:"Verde de puerro",c:"150",u:"g"},
+          {i:"Laurel",c:"2",u:"hojas"},
+          {i:"Espinas de pescado",c:"1",u:"kg"},
+          {i:"Agua",c:"1",u:"l"}
+        ],
+        pasos: [
+          "Llevar las espinas a ebullición lo más rápido posible, tirar el agua y lavar las espinas 2 veces para quitar las impurezas que coagulan.",
+          "Poner las espinas lavadas con la verdura en corte fino, añadir el agua y levantar a hervir suavemente 25 minutos. Dejar reposar 5 min.",
+          "Colar sin apretar."
+        ]
+      },
+      {
+        nombre: "Escabeche de zanahorias",
+        descripcion: "",
+        ingredientes: [
+          {i:"Cebo fumet",c:"350",u:"ml"},
+          {i:"AOVE",c:"1,5",u:"l"},
+          {i:"Ajo morado",c:"60",u:"g"},
+          {i:"Laurel",c:"3",u:"g"},
+          {i:"Cebolla",c:"300",u:"g"},
+          {i:"Pimienta negra",c:"10",u:"g"},
+          {i:"Vinagre de manzana",c:"180",u:"ml"},
+          {i:"Vinagre de jerez",c:"170",u:"ml"},
+          {i:"Zanahoria",c:"1",u:"kg"}
+        ],
+        pasos: [
+          "Infusionar las pieles y tallos de zanahorias en el AOVE durante 30 minutos, junto con el laurel, cebolla, pimienta negra y ajo morado. Dejar reposar 30 minutos.",
+          "Añadir todos los ácidos y cocer durante 8 minutos a fuego medio hasta conseguir el punto de acidez deseado.",
+          "Colar con chino fino apretando.",
+          "Mezclar la emulsión resultante con las zanahorias crudas peladas. Envasar al 100% en bolsas de vacío grandes con la zanahoria en plano.",
+          "Cocinar en el horno a vapor a 85 °C durante 40 minutos.",
+          "Abrir la bolsa, cortar la zanahoria en mirepoix y triturar con el líquido de la bolsa durante 1 minuto a velocidad 10. Colar."
+        ]
+      },
+      {
+        nombre: "Cebo ajado",
+        descripcion: "",
+        ingredientes: [
+          {i:"AOVE",c:"1",u:"l"},
+          {i:"Cebolla blanca",c:"600",u:"g"},
+          {i:"Ajo",c:"160",u:"g"},
+          {i:"Pimentón dulce",c:"30",u:"g"},
+          {i:"Pimentón picante",c:"10",u:"g"},
+          {i:"Vinagre de jerez",c:"100",u:"ml"}
+        ],
+        pasos: [
+          "Introducir el pimentón con el aceite a 80 °C.",
+          "Remover con una cuchara durante 30 segundos hasta que se cocine el pimentón.",
+          "Añadir el vinagre de jerez y cocinar la mezcla durante 3 minutos.",
+          "Colar por chino fino apretando la verdura correctamente.",
+          "Decantar y quedarse con la parte grasa."
+        ]
+      },
+      {
+        nombre: "Cebo puré de zanahoria",
+        descripcion: "",
+        ingredientes: [
+          {i:"Zanahoria",c:"3",u:"kg"},
+          {i:"Mantequilla de oveja",c:"140",u:"g"}
+        ],
+        pasos: [
+          "Marcar en brasa las zanahorias.",
+          "Envolver en papel de aluminio y terminar de asar en el horno a 160 °C.",
+          "Pasar por Thermomix sin que quede perfectamente triturado.",
+          "Poner a punto de sal."
+        ]
+      }
+    ],
+    pasos: [
+      "Poner en la base del plato 10 g de puré de zanahoria.",
+      "Colocar encima del puré 1,5 unidades de zanahorias baby encurtidas.",
+      "Montar los labios y el coral de la concha fina.",
+      "Terminar con la gamba blanca, previamente curada en sal durante 3 min, en la forma en la que aparece en la foto.",
+      "Añadir el escabeche de zanahoria emulsionado justo antes de emplatar y terminar con unas gotas de ajada cortadas con el escabeche justo antes de sacar el plato."
+    ],
+    notas: ""
   }
 };
 
+function _pdfKey(nombre) {
+  const full = (nombre || "").toLowerCase().trim();
+  const part = full.split(" - ")[0];
+  return _PDF_RECIPES[full] ? full : (part in _PDF_RECIPES ? part : full);
+}
+
 async function applyPdfRecipe(col, recipeNombre) {
-  const key = recipeNombre.toLowerCase().split(" - ")[0].trim();
+  const key = _pdfKey(recipeNombre);
   const data = _PDF_RECIPES[key];
   if (!data) { toast("No hay datos PDF para esta receta","err"); return; }
   const btn = document.getElementById("pdf-import-btn");
@@ -4632,7 +4750,7 @@ function buildRestFichaHTML(recipe, scale = 1) {
       <div class="ca">${alerg.map((a) => `<span class="badge" style="border-color:#b84337;color:#b84337">${safeText(a)}</span>`).join("")}</div>
     </div>` : "";
   // Banner PDF si la receta tiene datos pendientes
-  const nomKey = recipe.nombre ? recipe.nombre.toLowerCase().split(" - ")[0].trim() : "";
+  const nomKey = _pdfKey(recipe.nombre || "");
   const hasPdfData = !!_PDF_RECIPES[nomKey];
   const needsImport = hasPdfData && (!recipe.pasos || recipe.pasos.length === 0);
   const pdfBanner = needsImport ? `
