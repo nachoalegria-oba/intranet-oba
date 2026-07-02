@@ -2,6 +2,7 @@ const PWD = "oba2025";
 const REPORTES_USER = "reportescañitasgastro";
 const REPORTES_PWD  = "reportescañitasgastro";
 const REPORTES_SESSION_KEY = "oba_reportes_unlocked_v1";
+const REPORTES_ONLY_KEY    = "oba_reportes_only_v1";
 const FB = {
   apiKey: "AIzaSyAUUgLnKnh1xUbCjis4nPoEzoLLrJp9loY",
   authDomain: "intranet-oba.firebaseapp.com",
@@ -37,6 +38,10 @@ function setLoginMode(on) {
   document.documentElement.classList.toggle("login-mode", on);
   const meta = document.getElementById("theme-color-meta");
   if (meta) meta.content = on ? "#050505" : "#f2f2f7";
+}
+
+function _applyRepOnlyMode() {
+  document.getElementById("app")?.classList.add("rep-only");
 }
 
 // --- Recipe scaling helpers ---
@@ -548,7 +553,10 @@ function showLoginForm() {
     const greetEl = document.getElementById("greet-sub");
     if (greetEl) greetEl.innerHTML = getGreeting();
     startApp();
-    if (sessionStorage.getItem(REPORTES_SESSION_KEY) === "1") {
+    if (sessionStorage.getItem(REPORTES_ONLY_KEY) === "1") {
+      _applyRepOnlyMode();
+      setTimeout(() => sp("reportes"), 50);
+    } else if (sessionStorage.getItem(REPORTES_SESSION_KEY) === "1") {
       setTimeout(() => sp("reportes"), 50);
     }
   } else {
@@ -694,7 +702,9 @@ function login() {
 
   if (usr === REPORTES_USER && pwd === REPORTES_PWD) {
     sessionStorage.setItem(REPORTES_SESSION_KEY, "1");
+    sessionStorage.setItem(REPORTES_ONLY_KEY, "1");
     _enterApp(true);
+    _applyRepOnlyMode();
   } else if (!usr && pwd === PWD) {
     _enterApp(false);
   } else if (usr && !(usr === REPORTES_USER && pwd === REPORTES_PWD)) {
@@ -708,6 +718,8 @@ function login() {
 function logout() {
   sessionStorage.removeItem("oba-auth");
   sessionStorage.removeItem(REPORTES_SESSION_KEY);
+  sessionStorage.removeItem(REPORTES_ONLY_KEY);
+  document.getElementById("app")?.classList.remove("rep-only");
   document.getElementById("login-screen").style.display = "flex";
   document.getElementById("app").classList.remove("visible");
   setLoginMode(true);
@@ -803,6 +815,7 @@ function renderAll() {
 }
 
 function sp(id) {
+  if (sessionStorage.getItem(REPORTES_ONLY_KEY) === "1" && id !== "reportes") return;
   if (id === "grupo") { showGrupoPanel(); return; }
   if (id === "id") { showIDPanel(); return; }
   if (id === "huerta") { showHuertaPanel(); return; }

@@ -3457,9 +3457,15 @@ p, span, div, label, td, th, input, select, textarea, button{
   #pdf-import-banner { display:none !important; }
 }
 
+/* ── Reportes-only mode (login con credenciales de reportes) ── */
+#app.rep-only .main-nav{display:none}
+#app.rep-only .mobile-nav-toggle{display:none}
+#app.rep-only #hamburger-btn{display:none}
+#app.rep-only .topbar-brand>div{display:none}
+
 /* ── Reportes Mensuales ──────────────────────────────── */
 /* Form wrapper: constrain width so it doesn't stretch on wide screens */
-.rep-form-wrap{max-width:580px;margin:0 auto}
+.rep-form-wrap{max-width:520px;margin:0 auto}
 
 /* Progress bar */
 .rep-progress-wrap{position:sticky;top:0;z-index:5;padding:8px 0 10px;background:var(--bg);margin-bottom:12px}
