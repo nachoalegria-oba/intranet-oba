@@ -7675,7 +7675,6 @@ let _repActiveId = null;
 let _repState = {};
 
 const RESTAURANTES = ["OBA", "Cañitas Maite", "Canido y Mora", "Cebo", "Enebro"];
-const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
 function _repInit() {
   _repState = {
@@ -8335,3 +8334,4 @@ function _repDetailHTML(fsId) {
       ${notas.prioridades && notas.prioridades.length ? `<div style="margin-top:8px">${row("Prioridades","")}</div>${tagList(notas.prioridades)}` : ""}
       <div style="margin-top:10px">${row("Atención OBA", safeText(notas.urgenciaOba||"No urgente"))}</div>
     </div>`;
+}
