@@ -5572,31 +5572,35 @@ function setupHamburgerMenu() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Track pointer movement so a scroll gesture doesn't count as a backdrop click
-  let _modalPtrMoved = false;
-  const _modalEl = document.getElementById("modal");
-  _modalEl.addEventListener("pointerdown", () => { _modalPtrMoved = false; });
-  _modalEl.addEventListener("pointermove", (e) => { if (e.buttons) _modalPtrMoved = true; });
-  _modalEl.addEventListener("click", (event) => {
-    if (event.target.id !== "modal" || _modalPtrMoved) return;
-    _safeCloseModal();
-  });
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
-      if (document.getElementById("modal")?.classList.contains("open")) { _safeCloseModal(); return; }
-      closeTopOverlay();
+  // Setup steps wrapped individually so a single failure never blocks initData()
+  try {
+    let _modalPtrMoved = false;
+    const _modalEl = document.getElementById("modal");
+    if (_modalEl) {
+      _modalEl.addEventListener("pointerdown", () => { _modalPtrMoved = false; });
+      _modalEl.addEventListener("pointermove", (e) => { if (e.buttons) _modalPtrMoved = true; });
+      _modalEl.addEventListener("click", (event) => {
+        if (event.target.id !== "modal" || _modalPtrMoved) return;
+        _safeCloseModal();
+      });
     }
-  });
-  const installCardClose = document.getElementById("install-card-close");
-  if (installCardClose) {
-    installCardClose.onclick = dismissInstallHint;
-  }
-  setupMobileNavToggle();
-  setupHamburgerMenu();
-  setupPedFloatBar();
-  registerPWA();
-  initIA();
-  initFacturas();
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        if (document.getElementById("modal")?.classList.contains("open")) { _safeCloseModal(); return; }
+        closeTopOverlay();
+      }
+    });
+    const installCardClose = document.getElementById("install-card-close");
+    if (installCardClose) installCardClose.onclick = dismissInstallHint;
+  } catch (e) { console.warn("setup error:", e); }
+
+  try { setupMobileNavToggle(); } catch (e) { console.warn("setupMobileNavToggle:", e); }
+  try { setupHamburgerMenu(); } catch (e) { console.warn("setupHamburgerMenu:", e); }
+  try { setupPedFloatBar(); } catch (e) { console.warn("setupPedFloatBar:", e); }
+  try { registerPWA(); } catch (e) { console.warn("registerPWA:", e); }
+  try { initIA(); } catch (e) { console.warn("initIA:", e); }
+  try { initFacturas(); } catch (e) { console.warn("initFacturas:", e); }
+
   initData().catch((error) => showError(error.message));
 });
 

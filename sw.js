@@ -1,20 +1,9 @@
-const CACHE_NAME = "oba-intranet-v190";
-const APP_SHELL = [
-  "./",
-  "./index.html",
-  "./styles.css",
-  "./manifest.webmanifest",
-  "./icons/oba-logo-white.png",
-  "./icons/icon-180.png",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/icon-maskable-512.png"
-];
+const CACHE_NAME = "oba-intranet-v191";
 
+// Empty APP_SHELL so install completes instantly and skipWaiting() always fires.
+// All caching happens at runtime via the fetch handler (network-first).
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting())
-  );
+  event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener("activate", (event) => {
