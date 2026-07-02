@@ -4667,6 +4667,119 @@ const _PDF_RECIPES = {
       "Añadir el escabeche de zanahoria emulsionado justo antes de emplatar y terminar con unas gotas de ajada cortadas con el escabeche justo antes de sacar el plato."
     ],
     notas: ""
+  },
+  "navaja de buceo": {
+    descripcion: "Navaja de buceo abierta al vapor sobre geleé de caldo de navaja, con gazpachuelo de codium, escarcha de codium con nitrógeno y aceite de perejil y cebollino.",
+    alergenos: ["Moluscos","Huevos","Frutos secos"],
+    subrecetas: [
+      {
+        nombre: "Navaja de buceo fresca",
+        descripcion: "",
+        ingredientes: [
+          {i:"Navaja de buceo",c:"50",u:"g"}
+        ],
+        pasos: [
+          "Abrir la navaja al vapor, manteniendo el interior crudo."
+        ]
+      },
+      {
+        nombre: "Cebo base caldo navaja",
+        descripcion: "",
+        ingredientes: [
+          {i:"Navaja Delta Ebro",c:"8",u:"kg"}
+        ],
+        pasos: [
+          "Abrir en un sauté con aceite de ajo y a fuego medio las navajas, reservando todo el líquido de la propia navaja.",
+          "Quitar la concha a todas las navajas, dejando el cuerpo limpio en una olla.",
+          "Pasar el agua obtenida de la propia navaja por una malla fina para quitar toda la tierra.",
+          "Por cada 3 kg de navaja añadir 4,6 l de agua junto con el propio caldo que va soltando la navaja."
+        ]
+      },
+      {
+        nombre: "Cebo geleé caldo navaja",
+        descripcion: "",
+        ingredientes: [
+          {i:"Cebo base caldo navaja",c:"500",u:"ml"},
+          {i:"Salsa kimchi Popo Umami",c:"35",u:"ml"},
+          {i:"Limas (zumo)",c:"10",u:"ml"},
+          {i:"Agar agar",c:"1",u:"g"},
+          {i:"Instantgel",c:"26",u:"g"},
+          {i:"Laurel",c:"1",u:"hoja"}
+        ],
+        pasos: [
+          "Poner a infusionar el caldo de navaja junto con la hoja de laurel.",
+          "Fuera del fuego añadir el instantgel y el agar agar, poner en ebullición durante 1 minuto.",
+          "Turbinar.",
+          "Añadir las limas junto al kimchi y rectificar de sal si es necesario."
+        ]
+      },
+      {
+        nombre: "Cebo gazpachuelo codium",
+        descripcion: "",
+        ingredientes: [
+          {i:"Huevos",c:"166",u:"g"},
+          {i:"AOVE",c:"250",u:"ml"},
+          {i:"Aceite de girasol",c:"250",u:"ml"},
+          {i:"Limas (zumo)",c:"60",u:"ml"},
+          {i:"Cebo base caldo navaja",c:"230",u:"ml"},
+          {i:"Sal",c:"1",u:"g"},
+          {i:"Ají amarillo",c:"2",u:"g"}
+        ],
+        pasos: [
+          "Añadir el huevo junto con la lima, el ají y la sal.",
+          "Añadir el aceite de girasol junto con el caldo de navaja y emulsionar."
+        ]
+      },
+      {
+        nombre: "Cebo codium escarcha (nitrógeno)",
+        descripcion: "",
+        ingredientes: [
+          {i:"Alga codium",c:"1",u:"kg"},
+          {i:"Nitrógeno líquido",c:"3,5",u:"l"},
+          {i:"Gelatina en hoja",c:"16",u:"g"}
+        ],
+        pasos: [
+          "Calentar el licuado de codium.",
+          "Introducir las gelatinas previamente hidratadas.",
+          "Introducir la mezcla en sifón con 2 cargas.",
+          "Llenar ¾ partes del recipiente con nitrógeno.",
+          "Dispensar en forma de churro hasta terminar el sifón.",
+          "Añadir más nitrógeno si fuera necesario."
+        ]
+      },
+      {
+        nombre: "Aceite de cebollino y perejil",
+        descripcion: "",
+        ingredientes: [
+          {i:"Cebollino",c:"200",u:"g"},
+          {i:"Perejil",c:"200",u:"g"},
+          {i:"Aceite de girasol",c:"1",u:"l"}
+        ],
+        pasos: [
+          "Meter todos los elementos en frío en la Thermomix, turbinar a velocidad 10 durante 1 min.",
+          "Dejar reposar 5 min la verdura en el aceite para que suelte la clorofila.",
+          "Colar por malla fina o tamiz.",
+          "Decantar y quedarse con la parte líquida."
+        ]
+      },
+      {
+        nombre: "Cebo licuado de codium",
+        descripcion: "",
+        ingredientes: [],
+        pasos: [
+          "Thermomix durante 1 minuto a velocidad 1.",
+          "Colar por chino fino."
+        ]
+      }
+    ],
+    pasos: [
+      "Poner la geleé en la mitad del plato de forma aplanada.",
+      "Con la navaja abierta al vapor y troceada sin la tripa, colocarla encima de la geleé.",
+      "Añadir unos trocitos de almendra encima de la navaja.",
+      "Poner el gazpachuelo recién emulsionado en la otra parte del plato, rellenando la base.",
+      "Terminar con unas gotas de aceite de perejil y cebollino en la parte del gazpachuelo y cortar la salsa con el aceite."
+    ],
+    notas: ""
   }
 };
 
