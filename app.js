@@ -6732,3 +6732,124 @@ function showToast(msg, kind) {
   clearTimeout(el._t);
   el._t = setTimeout(() => { el.style.opacity = "0"; }, 2800);
 }
+
+// ── Migración única: actualizar receta 15 (calamar) con datos del PDF ──────
+(async function _migrateCeboR15() {
+  const FLAG = "cebo_r15_v2";
+  if (localStorage.getItem(FLAG)) return;
+
+  const R15 = {
+    nombre: "Calamar de anzuelo - Rancio Ibérico",
+    seccion: "Principales",
+    temporada: "Todo el año",
+    descripcion: "Tallarín de calamar de potera sobre crema de yema, salsa rancio ibérico con caldo de jamón y polvo de tinta de calamar.",
+    alergenos: ["Huevos", "Moluscos", "Lácteos"],
+    ingredientes: [
+      { i: "Bote esencia Joselito curado", c: "", u: "" },
+      { i: "Garum colatura de anchoa", c: "", u: "" }
+    ],
+    subrecetas: [
+      {
+        nombre: "Cebo calamar producido",
+        descripcion: "Rendimiento: de 12 kg de calamar potera se obtienen 4,3 kg de calamar producido.",
+        ingredientes: [{ i: "Calamar potera", c: "12", u: "kg" }],
+        pasos: [
+          "Siempre con baños maría invertidos con hielo para que el calamar se mantenga lo más frío posible.",
+          "Retirar las patas, cabeza, cococha, tripas y pluma.",
+          "Cortar a la mitad para abrir su cuerpo.",
+          "Quitar la punta de arriba y cortar la base.",
+          "Retirar perfectamente las dos telillas (exterior e interior).",
+          "Desangrar en agua con hielo junto con un punto de sal para limpiar el resto de tinta que pueda tener.",
+          "Superponer los cuerpos uno encima de otro para congelarlo en el abatidor en forma de bloque.",
+          "Cortar en la corta fiambres para obtener el tallarín del tamaño deseado."
+        ]
+      },
+      {
+        nombre: "Cebo crema yema premium",
+        descripcion: "",
+        ingredientes: [
+          { i: "Yemas de huevo", c: "15", u: "uds" },
+          { i: "Pimienta", c: "2", u: "g" },
+          { i: "Sal", c: "2", u: "g" }
+        ],
+        pasos: [
+          "Separar las yemas de las claras y colarlas para eliminar cualquier resto mucoso.",
+          "Salpimentar las yemas e introducirlas en una bolsa de vacío.",
+          "Sellar la bolsa lo más al filo posible para poder estirar el contenido.",
+          "Cocinar en horno con 100% de humedad a 68 °C durante 10 minutos.",
+          "Verificar textura: al inclinar la bolsa el contenido debe descender lentamente y con consistencia densa. Si no, cocinar 5 minutos más.",
+          "Transferir a mangas pasteleras y conservar refrigerado."
+        ]
+      },
+      {
+        nombre: "Cebo caldo de jamón",
+        descripcion: "",
+        ingredientes: [
+          { i: "Huesos de jamón", c: "20", u: "kg" },
+          { i: "Agua", c: "40", u: "l" },
+          { i: "Cebolla", c: "3", u: "uds" },
+          { i: "Garbanzos", c: "1", u: "kg" }
+        ],
+        pasos: [
+          "Hidratar los garbanzos 12 horas antes.",
+          "Cortar la cebolla en mirepoix y quemar las caras en planchón o a la brasa.",
+          "Escaldar 3 veces el codillo del jamón.",
+          "Cocer todo junto durante 2 horas y 20 min.",
+          "Reposar otras 2 horas todo junto a fuego lento.",
+          "Colar, desgrasar y reducir."
+        ]
+      },
+      {
+        nombre: "Cebo polvo de tinta de calamar",
+        descripcion: "",
+        ingredientes: [{ i: "Polvo de tinta de calamar", c: "", u: "" }],
+        pasos: ["Poner el polvo de tinta de calamar dentro de unas gasas."]
+      },
+      {
+        nombre: "Cebo salsa rancio ibérico",
+        descripcion: "",
+        ingredientes: [
+          { i: "Nata líquida 35%", c: "150", u: "g" },
+          { i: "Cebo caldo de jamón", c: "500", u: "g" },
+          { i: "Patata agria", c: "120", u: "g" },
+          { i: "Goma xantana", c: "0,6", u: "g" }
+        ],
+        pasos: [
+          "Cocer la patata en cachelos en el caldo de jamón.",
+          "Triturar.",
+          "Añadir la nata y colar por chino fino."
+        ]
+      }
+    ],
+    pasos: [
+      "Poner en el centro del plato un punto pequeño de crema yema.",
+      "Poner la cantidad de tallarín de calamar encima del punto.",
+      "Espolvorear polvo de tinta de calamar encima del tallarín.",
+      "Salsear alrededor del tallarín."
+    ],
+    notas: "De 12 kg de calamar potera se obtienen 4,3 kg de calamar producido.",
+    autor: "Cebo"
+  };
+
+  // Esperar hasta que Firebase cargue los datos (máx 20 s)
+  for (let i = 0; i < 20; i++) {
+    await new Promise(r => setTimeout(r, 1000));
+    const list = D.cebo_recetas || [];
+    const idx = list.findIndex(x => x._i === 15);
+    if (idx === -1) continue;
+    // Aplicar migración
+    list[idx] = { ...list[idx], ...R15 };
+    D.cebo_recetas = list;
+    if (storageMode === "firebase" && db) {
+      try {
+        await saveCol("cebo_recetas");
+        toast("✓ Receta calamar actualizada");
+      } catch(e) {
+        console.warn("Migration error:", e);
+        return;
+      }
+    }
+    localStorage.setItem(FLAG, "1");
+    return;
+  }
+})();
