@@ -1531,6 +1531,40 @@ tbody td:last-child{
   background:linear-gradient(180deg, rgba(251,248,242,0), #fbf8f2 28%);
 }
 
+/* ── Calendar two-column layout ── */
+.cal-layout{
+  display:grid;
+  grid-template-columns:280px 1fr;
+  gap:24px;
+  align-items:start;
+}
+
+.cal-sidebar{
+  position:sticky;
+  top:80px;
+  background:var(--surface);
+  border-radius:20px;
+  padding:20px;
+  box-shadow:var(--shadow);
+  border:1px solid var(--line);
+}
+
+.cal-sidebar-head{
+  margin-bottom:16px;
+  padding-bottom:14px;
+  border-bottom:1px solid var(--line);
+}
+
+.cal-sidebar-month{
+  font-family:Arial,Helvetica,sans-serif;
+  font-weight:700;
+  font-size:1.25rem;
+  margin-top:4px;
+  color:var(--text);
+}
+
+.cal-main{ min-width:0; }
+
 .calendar-toolbar{
   display:flex;
   align-items:center;
@@ -3358,6 +3392,18 @@ p, span, div, label, td, th, input, select, textarea, button{
 .ptr-icon { width: 18px; height: 18px; transition: transform .08s linear; }
 .ptr-spinning .ptr-icon { animation: ptr-spin .55s linear infinite; }
 @keyframes ptr-spin { to { transform: rotate(360deg); } }
+
+/* ── Calendar responsive ──────────────────────────── */
+@media (max-width:900px){
+  .cal-layout{
+    grid-template-columns:1fr;
+  }
+  .cal-sidebar{
+    position:static;
+    order:2;
+  }
+  .cal-main{ order:1; }
+}
 
 /* ── Impresión PDF (I+D) ───────────────────────────── */
 @media print{

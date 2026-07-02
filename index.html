@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@300;500;700;900&family=Cormorant+Garamond:wght@300;400;600&family=Comfortaa:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.css">
-  <link rel="stylesheet" href="./styles.css?v=154">
+  <link rel="stylesheet" href="./styles.css?v=155">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
@@ -237,31 +237,35 @@
       </section>
 
       <section class="panel" id="panel-calendario">
-        <div class="section-head section-head-lg">
-          <div>
-            <div class="eyebrow">Calendario</div>
-            <h1>Eventos y fechas importantes</h1>
-            <p>Con llegadas de practicantes integradas.</p>
+        <div class="cal-layout">
+          <!-- Sidebar resumen -->
+          <aside class="cal-sidebar">
+            <div class="cal-sidebar-head">
+              <div class="eyebrow">Calendario</div>
+              <div id="cal-title-side" class="cal-sidebar-month"></div>
+            </div>
+            <div id="clist" class="calendar-list"></div>
+            <button class="primary-btn" style="width:100%;margin-top:12px" onclick="oCM()">+ Nuevo evento</button>
+          </aside>
+
+          <!-- Calendario -->
+          <div class="cal-main">
+            <div class="calendar-toolbar">
+              <button class="secondary-btn" onclick="calNav(-1)">‹</button>
+              <div id="cal-title" class="calendar-title"></div>
+              <button class="secondary-btn" onclick="calNav(1)">›</button>
+            </div>
+            <div class="legend-row">
+              <span><i class="legend-dot dot-event"></i> Evento</span>
+              <span><i class="legend-dot dot-special"></i> Especial</span>
+              <span><i class="legend-dot dot-urgent"></i> Urgente</span>
+              <span><i class="legend-dot dot-prac"></i> Practicante</span>
+              <span><i class="legend-dot" style="background:#d97706"></i> Vacaciones</span>
+            </div>
+            <div class="calendar-grid heads" id="cheads"></div>
+            <div class="calendar-grid" id="cbody"></div>
           </div>
-          <button class="primary-btn" onclick="oCM()">Nuevo evento</button>
         </div>
-
-        <div class="calendar-toolbar">
-          <button class="secondary-btn" onclick="calNav(-1)">Anterior</button>
-          <div id="cal-title" class="calendar-title"></div>
-          <button class="secondary-btn" onclick="calNav(1)">Siguiente</button>
-        </div>
-
-        <div class="legend-row">
-          <span><i class="legend-dot dot-event"></i> Evento</span>
-          <span><i class="legend-dot dot-special"></i> Especial</span>
-          <span><i class="legend-dot dot-urgent"></i> Urgente</span>
-          <span><i class="legend-dot dot-prac"></i> Practicante</span>
-        </div>
-
-        <div class="calendar-grid heads" id="cheads"></div>
-        <div class="calendar-grid" id="cbody"></div>
-        <div id="clist" class="calendar-list"></div>
       </section>
 
       <section class="panel" id="panel-practicantes">
@@ -645,6 +649,6 @@
     </button>
   </div>
 
-  <script src="./app.js?v=157"></script>
+  <script src="./app.js?v=158"></script>
 </body>
 </html>

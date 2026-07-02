@@ -1979,6 +1979,8 @@ function calRender() {
   const title = document.getElementById("cal-title");
   if (!title) return;
   title.textContent = `${MESES[cM]} ${cY}`;
+  const titleSide = document.getElementById("cal-title-side");
+  if (titleSide) titleSide.textContent = `${MESES[cM]} ${cY}`;
   document.getElementById("cheads").innerHTML = DS.map((day) => `<div class="ch">${day}</div>`).join("");
 
   const first = new Date(cY, cM, 1);
@@ -2009,7 +2011,7 @@ function calRender() {
       return `<div class="${cls}">${item.tipo === "especial" ? `${ico('star',12)} ` : item.urgente ? `${ico('warning',12)} ` : ""}${safeText(item.titulo)}</div>`;
     }).join("");
     content += trainees.map((item) => `<div class="ce-prac" onclick="event.stopPropagation();oPF(${item.id})">${ico('user', 14)} ${safeText(item.nombre)}</div>`).join("");
-    html += `<div class="cd${dateStr === today() ? " today" : ""}${hasVac ? " has-vac" : ""}" onclick="oCM('${dateStr}')"><div class="cdn">${day}</div>${content}</div>`;
+    html += `<div class="cd${dateStr === today() ? " today" : ""}${hasVac ? " has-vac" : ""}" onclick="openDayPanel('${dateStr}')"><div class="cdn">${day}</div>${content}</div>`;
   }
 
   const remaining = (7 - ((startDay + last.getDate()) % 7)) % 7;
@@ -2069,6 +2071,107 @@ function dEv(id) {
   if (!confirm("¿Eliminar este evento?")) return;
   D.eventos = D.eventos.filter((item) => item.id !== id);
   save("eventos");
+  cModal();
+}
+
+function openDayPanel(dateStr) {
+  const DIAS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dow = new Date(y, m - 1, d).getDay();
+  const label = `${DIAS[dow]}, ${d} de ${MESES[m - 1]} ${y}`;
+
+  const dayEvents = D.eventos.filter((item) => {
+    if (item.tipo === "vacaciones" && item.fechaInicio && item.fechaFin) {
+      return dateStr >= item.fechaInicio && dateStr <= item.fechaFin;
+    }
+    return item.fecha === dateStr;
+  });
+  const trainees = D.practicantes.filter((item) => item.fechaEntrada === dateStr);
+
+  const evHtml = dayEvents.map((item) => {
+    const badge = item.tipo === "vacaciones"
+      ? `<span class="ce-vac" style="display:inline-block;margin-bottom:0">🏖 ${safeText(item.persona || "Vacaciones")}</span>`
+      : item.tipo === "especial"
+        ? `<span class="ce-esp" style="display:inline-block;margin-bottom:0">⭐ ${safeText(item.titulo)}</span>`
+        : item.urgente
+          ? `<span class="ce-urg" style="display:inline-block;margin-bottom:0">⚠️ ${safeText(item.titulo)}</span>`
+          : `<span class="ce" style="display:inline-block;margin-bottom:0">${safeText(item.titulo)}</span>`;
+    const rango = item.tipo === "vacaciones" ? `<div class="nd" style="margin-top:4px">${safeText(item.fechaInicio)} → ${safeText(item.fechaFin)}</div>` : "";
+    const nota = item.nota ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">${safeText(item.nota)}</div>` : "";
+    return `<div style="padding:10px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <div>${badge}${rango}${nota}</div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn btn-s btn-o" onclick="editEv(${item.id},'${dateStr}')">Editar</button>
+        <button class="btn btn-s btn-d" onclick="dEv(${item.id})">Eliminar</button>
+      </div>
+    </div>`;
+  }).join("");
+
+  const pracHtml = trainees.map((item) => `
+    <div style="padding:10px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <span class="ce-prac" style="display:inline-block;margin-bottom:0">${ico('user',12)} ${safeText(item.nombre)}</span>
+      <button class="btn btn-s btn-o" onclick="cModal();oPF(${item.id})">Ver perfil</button>
+    </div>`).join("");
+
+  const empty = !dayEvents.length && !trainees.length
+    ? `<div style="color:var(--muted);font-size:13px;padding:16px 0">Sin eventos este día.</div>` : "";
+
+  oModal(`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 style="margin:0;font-size:1rem">${label}</h3>
+      <button class="primary-btn" style="font-size:12px;padding:6px 14px" onclick="oCM('${dateStr}')">+ Añadir</button>
+    </div>
+    ${evHtml}${pracHtml}${empty}
+    <div class="mf" style="margin-top:16px"><button class="secondary-btn" onclick="cModal()">Cerrar</button></div>
+  `);
+}
+
+function editEv(id, dateStr) {
+  const item = D.eventos.find((e) => e.id === id);
+  if (!item) return;
+  const isVac = item.tipo === "vacaciones";
+  oModal(`
+    <h3>Editar evento</h3>
+    <div class="fr"><label>Tipo</label>
+      <select id="etipo" onchange="toggleVacFields()">
+        <option value="normal"${item.tipo === "normal" ? " selected" : ""}>Normal</option>
+        <option value="especial"${item.tipo === "especial" ? " selected" : ""}>Especial ⭐</option>
+        <option value="urgente"${item.tipo === "urgente" ? " selected" : ""}>Urgente ⚠️</option>
+        <option value="vacaciones"${isVac ? " selected" : ""}>Vacaciones 🏖️</option>
+      </select>
+    </div>
+    <div class="fr" id="vac-persona-row" style="display:${isVac ? "" : "none"}"><label>Persona</label><input id="epersona" value="${safeText(item.persona || "")}"></div>
+    <div class="fr"><label id="ef-label">${isVac ? "Fecha inicio" : "Fecha"}</label><input type="date" id="ef" value="${safeText(item.fechaInicio || item.fecha)}"></div>
+    <div class="fr" id="vac-fin-row" style="display:${isVac ? "" : "none"}"><label>Fecha fin</label><input type="date" id="effin" value="${safeText(item.fechaFin || item.fecha)}"></div>
+    <div class="fr" id="ev-titulo-row" style="display:${isVac ? "none" : ""}"><label>Título</label><input id="et" value="${safeText(item.titulo)}"></div>
+    <div class="fr"><label>Notas</label><input id="enota" value="${safeText(item.nota || "")}"></div>
+    <div class="mf">
+      <button class="secondary-btn" onclick="openDayPanel('${dateStr}')">Volver</button>
+      <button class="primary-btn" onclick="saveEditEv(${id},'${dateStr}')">Guardar</button>
+    </div>`);
+}
+
+function saveEditEv(id, dateStr) {
+  const item = D.eventos.find((e) => e.id === id);
+  if (!item) return;
+  const type = document.getElementById("etipo").value;
+  const isVac = type === "vacaciones";
+  const persona = isVac ? (document.getElementById("epersona")?.value.trim() || "") : "";
+  const title = isVac ? (persona ? `Vacaciones · ${persona}` : "Vacaciones") : (document.getElementById("et")?.value.trim() || item.titulo);
+  const fechaInicio = document.getElementById("ef").value;
+  const fechaFin = isVac ? (document.getElementById("effin")?.value || fechaInicio) : fechaInicio;
+  Object.assign(item, {
+    titulo: title,
+    fecha: fechaInicio,
+    fechaInicio: isVac ? fechaInicio : undefined,
+    fechaFin: isVac ? fechaFin : undefined,
+    persona: isVac ? persona : undefined,
+    tipo: type,
+    urgente: type === "urgente",
+    nota: document.getElementById("enota").value || ""
+  });
+  save("eventos");
+  openDayPanel(dateStr);
 }
 
 function toggleVacFields() {
