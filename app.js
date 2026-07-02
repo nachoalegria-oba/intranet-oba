@@ -6537,7 +6537,7 @@ function oHuertaM(id) {
   oModal(`
     <div class="modal-head">
       <div class="modal-title">${p ? "Editar planta" : "Nueva planta"}</div>
-      <button class="modal-close" onclick="cModal()">&times;</button>
+      <button class="primary-btn" style="font-size:13px;padding:7px 16px" onclick="saveHuertaPlanta()">Guardar</button>
     </div>
     <div class="modal-body" style="display:flex;flex-direction:column;gap:14px">
       <input type="hidden" id="hm-id" value="${escHtml(p?._id||"")}">
@@ -6589,7 +6589,10 @@ function oHuertaM(id) {
         <label class="form-label">Notas</label>
         <textarea class="form-input" id="hm-notas" rows="2" placeholder="Observaciones…">${escHtml(p?.notas||"")}</textarea>
       </div>
-      <button class="primary-btn" onclick="saveHuertaPlanta()">Guardar</button>
+      <div class="mf">
+        <button class="secondary-btn" onclick="cModal()">Cancelar</button>
+        <button class="primary-btn" onclick="saveHuertaPlanta()">Guardar planta</button>
+      </div>
     </div>`);
 }
 
