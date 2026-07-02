@@ -537,6 +537,7 @@ function updateOverlayState() {
 }
 
 function showLoginForm() {
+  window.__appLoaded = true;
   updateStorageStatus();
   const form = document.getElementById("lf");
   if (form) form.style.display = "flex";

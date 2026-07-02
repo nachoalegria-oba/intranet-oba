@@ -1,9 +1,8 @@
-const CACHE_NAME = "oba-intranet-v186";
+const CACHE_NAME = "oba-intranet-v187";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css",
-  "./app.js",
   "./manifest.webmanifest",
   "./icons/oba-logo-white.png",
   "./icons/icon-180.png",

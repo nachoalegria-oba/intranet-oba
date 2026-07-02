@@ -24,6 +24,25 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <!-- Auto-recovery: if app.js fails to load (parse error / stale cache), reload once after 12s -->
+  <script>
+    (function(){
+      var KEY = 'oba_reload_guard';
+      var last = parseInt(sessionStorage.getItem(KEY)||'0',10);
+      var now = Date.now();
+      window.__appLoaded = false;
+      setTimeout(function(){
+        if(!window.__appLoaded && (now - last) > 20000){
+          sessionStorage.setItem(KEY, String(now));
+          // Clear all SW caches before reload so stale files are evicted
+          if('caches' in window){
+            caches.keys().then(function(ks){ ks.forEach(function(k){ caches.delete(k); }); });
+          }
+          location.reload(true);
+        }
+      }, 12000);
+    })();
+  </script>
 </head>
 <body>
   <div id="ptr-wrap">
@@ -643,6 +662,6 @@
     </button>
   </div>
 
-  <script src="./app.js?v=163"></script>
+  <script src="./app.js?v=164"></script>
 </body>
 </html>
