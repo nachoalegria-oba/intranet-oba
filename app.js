@@ -1993,14 +1993,23 @@ function calRender() {
 
   for (let day = 1; day <= last.getDate(); day += 1) {
     const dateStr = `${cY}-${String(cM + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    const events = D.eventos.filter((item) => item.fecha === dateStr);
+    const events = D.eventos.filter((item) => {
+      if (item.tipo === "vacaciones" && item.fechaInicio && item.fechaFin) {
+        return dateStr >= item.fechaInicio && dateStr <= item.fechaFin;
+      }
+      return item.fecha === dateStr;
+    });
     const trainees = D.practicantes.filter((item) => item.fechaEntrada === dateStr);
+    const hasVac = events.some((item) => item.tipo === "vacaciones");
     let content = events.map((item) => {
+      if (item.tipo === "vacaciones") {
+        return `<div class="ce-vac">🏖 ${safeText(item.persona || "Vacaciones")}</div>`;
+      }
       const cls = item.tipo === "especial" ? "ce-esp" : item.urgente || item.tipo === "urgente" ? "ce-urg" : "ce";
       return `<div class="${cls}">${item.tipo === "especial" ? `${ico('star',12)} ` : item.urgente ? `${ico('warning',12)} ` : ""}${safeText(item.titulo)}</div>`;
     }).join("");
     content += trainees.map((item) => `<div class="ce-prac" onclick="event.stopPropagation();oPF(${item.id})">${ico('user', 14)} ${safeText(item.nombre)}</div>`).join("");
-    html += `<div class="cd${dateStr === today() ? " today" : ""}" onclick="oCM('${dateStr}')"><div class="cdn">${day}</div>${content}</div>`;
+    html += `<div class="cd${dateStr === today() ? " today" : ""}${hasVac ? " has-vac" : ""}" onclick="oCM('${dateStr}')"><div class="cdn">${day}</div>${content}</div>`;
   }
 
   const remaining = (7 - ((startDay + last.getDate()) % 7)) % 7;
@@ -2010,32 +2019,75 @@ function calRender() {
 
   document.getElementById("cbody").innerHTML = html;
 
-  const monthlyEvents = D.eventos.filter((item) => item.fecha.startsWith(`${cY}-${String(cM + 1).padStart(2, "0")}`));
-  const monthlyTrainees = D.practicantes.filter((item) => item.fechaEntrada?.startsWith(`${cY}-${String(cM + 1).padStart(2, "0")}`));
+  const mPrefix = `${cY}-${String(cM + 1).padStart(2, "0")}`;
+  const monthlyEvents = D.eventos.filter((item) => {
+    if (item.tipo === "vacaciones" && item.fechaInicio && item.fechaFin) {
+      return item.fechaInicio.startsWith(mPrefix) || item.fechaFin.startsWith(mPrefix) ||
+        (item.fechaInicio <= mPrefix + "-01" && item.fechaFin >= mPrefix + "-31");
+    }
+    return item.fecha.startsWith(mPrefix);
+  });
+  const monthlyTrainees = D.practicantes.filter((item) => item.fechaEntrada?.startsWith(mPrefix));
   let listHtml = "";
-  listHtml += monthlyEvents.map((item) => `<div class="notice${item.urgente ? " urgent" : ""}"><strong>${safeText(item.titulo)}</strong><div>${safeText(item.nota || "Evento")}</div><div class="nd">${safeText(item.fecha)}</div></div>`).join("");
+  listHtml += monthlyEvents.map((item) => {
+    if (item.tipo === "vacaciones") {
+      return `<div class="notice" style="border-left-color:#d97706;background:#fff7ed">
+        <strong>🏖 Vacaciones · ${safeText(item.persona || "")}</strong>
+        ${item.nota ? `<div>${safeText(item.nota)}</div>` : ""}
+        <div class="nd">${safeText(item.fechaInicio)} → ${safeText(item.fechaFin)}</div>
+      </div>`;
+    }
+    return `<div class="notice${item.urgente ? " urgent" : ""}"><strong>${safeText(item.titulo)}</strong><div>${safeText(item.nota || "Evento")}</div><div class="nd">${safeText(item.fecha)}</div></div>`;
+  }).join("");
   listHtml += monthlyTrainees.map((item) => `<div class="notice" style="border-left-color:#335d87;background:#e7eff7;cursor:pointer" onclick="oPF(${item.id})"><strong>Practicante: ${safeText(item.nombre)}</strong><div>${safeText(item.partida || "Sin partida asignada")}</div><div class="nd">${safeText(item.fechaEntrada)}</div></div>`).join("");
   document.getElementById("clist").innerHTML = listHtml || `<div class="notice"><strong>Mes despejado</strong><div>No hay eventos destacados en este mes.</div></div>`;
 }
 
 function oCM(dateValue) {
+  const d = typeof dateValue === "string" ? dateValue : today();
   oModal(`
     <h3>Nuevo evento</h3>
-    <div class="fr"><label>Título *</label><input id="et"></div>
-    <div class="fr"><label>Tipo</label><select id="etipo"><option value="normal">Normal</option><option value="especial">Especial</option><option value="urgente">Urgente</option></select></div>
-    <div class="fr"><label>Fecha</label><input type="date" id="ef" value="${safeText(typeof dateValue === "string" ? dateValue : today())}"></div>
+    <div class="fr"><label>Tipo</label>
+      <select id="etipo" onchange="toggleVacFields()">
+        <option value="normal">Normal</option>
+        <option value="especial">Especial ⭐</option>
+        <option value="urgente">Urgente ⚠️</option>
+        <option value="vacaciones">Vacaciones 🏖️</option>
+      </select>
+    </div>
+    <div class="fr" id="vac-persona-row" style="display:none"><label>Persona *</label><input id="epersona" placeholder="Nombre del trabajador"></div>
+    <div class="fr"><label id="ef-label">Fecha</label><input type="date" id="ef" value="${safeText(d)}"></div>
+    <div class="fr" id="vac-fin-row" style="display:none"><label>Fecha fin *</label><input type="date" id="effin" value="${safeText(d)}"></div>
+    <div class="fr" id="ev-titulo-row"><label>Título *</label><input id="et"></div>
     <div class="fr"><label>Notas</label><input id="enota"></div>
     <div class="mf"><button class="secondary-btn" onclick="cModal()">Cancelar</button><button class="primary-btn" onclick="sEv()">Guardar</button></div>`);
 }
 
+function toggleVacFields() {
+  const isVac = document.getElementById("etipo").value === "vacaciones";
+  document.getElementById("vac-persona-row").style.display = isVac ? "" : "none";
+  document.getElementById("vac-fin-row").style.display = isVac ? "" : "none";
+  document.getElementById("ef-label").textContent = isVac ? "Fecha inicio *" : "Fecha";
+  document.getElementById("ev-titulo-row").style.display = isVac ? "none" : "";
+}
+
 function sEv() {
-  const title = document.getElementById("et").value.trim();
-  if (!title) return alert("El título es obligatorio");
   const type = document.getElementById("etipo").value;
+  const isVac = type === "vacaciones";
+  const persona = isVac ? (document.getElementById("epersona")?.value.trim() || "") : "";
+  const title = isVac ? (persona ? `Vacaciones · ${persona}` : "Vacaciones") : (document.getElementById("et")?.value.trim() || "");
+  if (!title) return alert("El título es obligatorio");
+  if (isVac && !persona) return alert("Indica el nombre de la persona");
+  const fechaInicio = document.getElementById("ef").value;
+  const fechaFin = isVac ? (document.getElementById("effin")?.value || fechaInicio) : fechaInicio;
+  if (isVac && fechaFin < fechaInicio) return alert("La fecha fin debe ser igual o posterior a la fecha inicio");
   D.eventos.push({
     id: nid++,
     titulo: title,
-    fecha: document.getElementById("ef").value,
+    fecha: fechaInicio,
+    fechaInicio: isVac ? fechaInicio : undefined,
+    fechaFin: isVac ? fechaFin : undefined,
+    persona: isVac ? persona : undefined,
     tipo: type,
     urgente: type === "urgente",
     nota: document.getElementById("enota").value || ""

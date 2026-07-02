@@ -1594,7 +1594,7 @@ tbody td:last-child{
 .cd.om{opacity:.32}
 .cdn{font-weight:700;margin-bottom:6px}
 
-.ce,.ce-prac,.ce-esp,.ce-urg{
+.ce,.ce-prac,.ce-esp,.ce-urg,.ce-vac{
   margin-bottom:4px;
   padding:2px 6px;
   border-radius:999px;
@@ -1606,6 +1606,13 @@ tbody td:last-child{
 .ce-prac{background:var(--blue)}
 .ce-esp{background:var(--brown)}
 .ce-urg{background:var(--red)}
+.ce-vac{background:#d97706;color:#fff}
+
+.cd.has-vac{
+  background:linear-gradient(135deg,#fff7ed 0%,#fef3c7 100%);
+  border-color:#f59e0b44;
+}
+.cd.has-vac .cdn{color:#92400e}
 
 .pb{
   overflow:hidden;
@@ -2005,7 +2012,7 @@ th,
   }
   .calendar-grid{gap:6px}
   .cd{min-height:72px;padding:8px}
-  .ce,.ce-prac,.ce-esp,.ce-urg{display:none}
+  .ce,.ce-prac,.ce-esp,.ce-urg,.ce-vac{display:none}
   .chat-compose{flex-direction:column}
   .drawer-head{
     position:fixed;
