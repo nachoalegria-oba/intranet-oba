@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@300;500;700;900&family=Cormorant+Garamond:wght@300;400;600&family=Comfortaa:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.css">
-  <link rel="stylesheet" href="./styles.css?v=156">
+  <link rel="stylesheet" href="./styles.css?v=157">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
@@ -74,7 +74,6 @@
       <button class="nav-btn" data-panel="recetario" onclick="sp('recetario')">Recetario</button>
       <button class="nav-btn" data-panel="pedidos" onclick="sp('pedidos')">Pedidos</button>
       <button class="nav-btn" data-panel="facturas" onclick="sp('facturas')">Facturas</button>
-      <button class="nav-btn" data-panel="menu" onclick="sp('menu')">Menú</button>
       <button class="nav-btn" data-panel="calendario" onclick="sp('calendario')">Calendario</button>
       <button class="nav-btn" data-panel="practicantes" onclick="sp('practicantes')">Practicantes</button>
       <button class="nav-btn" data-panel="proyectos" onclick="sp('proyectos')">Proyectos</button>
@@ -224,19 +223,7 @@
         <!-- Floating action bar (aparece al hacer scroll) -->
       </section>
 
-      <section class="panel" id="panel-menu">
-        <div class="section-head section-head-lg">
-          <div>
-            <div class="eyebrow">Menú semanal</div>
-            <h1>Cambios y pase de huerta</h1>
-            <p>Deja visibles los movimientos de carta y pruebas.</p>
-          </div>
-          <button class="primary-btn" onclick="oMM()">Nuevo cambio</button>
-        </div>
-        <div id="mbody"></div>
-      </section>
-
-      <section class="panel" id="panel-calendario">
+<section class="panel" id="panel-calendario">
         <div class="cal-layout">
           <!-- Sidebar resumen -->
           <aside class="cal-sidebar">
@@ -623,7 +610,6 @@
       <button class="hnav-btn" data-panel="recetario" onclick="sp('recetario')">Recetario</button>
       <button class="hnav-btn" data-panel="pedidos" onclick="sp('pedidos')">Pedidos</button>
       <button class="hnav-btn" data-panel="facturas" onclick="sp('facturas')">Facturas</button>
-      <button class="hnav-btn" data-panel="menu" onclick="sp('menu')">Menú</button>
       <button class="hnav-btn" data-panel="calendario" onclick="sp('calendario')">Calendario</button>
       <button class="hnav-btn" data-panel="practicantes" onclick="sp('practicantes')">Practicantes</button>
       <button class="hnav-btn" data-panel="proyectos" onclick="sp('proyectos')">Proyectos</button>
@@ -649,6 +635,6 @@
     </button>
   </div>
 
-  <script src="./app.js?v=159"></script>
+  <script src="./app.js?v=160"></script>
 </body>
 </html>

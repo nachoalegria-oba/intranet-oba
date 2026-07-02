@@ -15,7 +15,7 @@ const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "
 const DS = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"];
 const SKILLS = ["Mise en place", "Fondos y salsas", "Carnes", "Pescados", "Pastelería", "Fermentos", "Limpieza y orden", "Trabajo en equipo"];
 const ALERGEN_LIST = ["Gluten", "Crustáceos", "Huevos", "Pescado", "Cacahuetes", "Soja", "Lácteos", "Frutos de cáscara", "Apio", "Mostaza", "Sésamo", "Dióxido de azufre", "Altramuces", "Moluscos"];
-const COLLECTIONS = ["recipes", "ingredientes", "menu", "avisos", "proyectos", "eventos", "proveedores", "practicantes", "centros", "habitaciones", "pedidosHistorial", "descargables", "empresas", "grupo_descargables", "oba_recetas", "oba_menus", "oba_ideas", "oba_kpis", "ene_recetas", "ene_menus", "ene_ideas", "ene_kpis", "candomo_recetas", "candomo_menus", "candomo_ideas", "candomo_kpis", "canitas_recetas", "canitas_menus", "canitas_ideas", "canitas_kpis", "cebo_recetas", "cebo_menus", "cebo_ideas", "cebo_kpis", "huerta_plantas"];
+const COLLECTIONS = ["recipes", "ingredientes", "avisos", "proyectos", "eventos", "proveedores", "practicantes", "centros", "habitaciones", "pedidosHistorial", "descargables", "empresas", "grupo_descargables", "oba_recetas", "oba_menus", "oba_ideas", "oba_kpis", "ene_recetas", "ene_menus", "ene_ideas", "ene_kpis", "candomo_recetas", "candomo_menus", "candomo_ideas", "candomo_kpis", "canitas_recetas", "canitas_menus", "canitas_ideas", "canitas_kpis", "cebo_recetas", "cebo_menus", "cebo_ideas", "cebo_kpis", "huerta_plantas"];
 
 const REST_COL_MAP = { oba: "oba", ene: "ene", candomo: "candomo", canitas: "canitas", cebo: "cebo" };
 
@@ -771,7 +771,7 @@ function startApp() {
 function renderAll() {
   if (!document.getElementById("app").classList.contains("visible")) return;
   const fns = [
-    rInicio, rRec, rPedLista, rMenu, calRender, rPrac, rProj, rAv, rGrupo,
+    rInicio, rRec, rPedLista, calRender, rPrac, rProj, rAv, rGrupo,
     () => { if (pedT === "resumen") rPedRes(); },
     () => { if (pedT === "prov") rPedProv(); },
     () => { if (pedT === "historial") rPedHistorial(); }
@@ -975,7 +975,6 @@ function rInicio() {
     </button>`).join("");
 
   // Feed
-  const activeMenu = D.menu.filter((item) => item.estado === "activo").slice(0, 4);
   const upcoming = [...D.eventos]
     .filter((e) => e.fecha >= today())
     .sort((a, b) => a.fecha.localeCompare(b.fecha))
@@ -983,16 +982,6 @@ function rInicio() {
   const recentNotices = [...D.avisos].reverse().slice(0, 2);
 
   let feed = "";
-  if (activeMenu.length) {
-    feed += `<div class="home-feed-block">
-      <div class="home-feed-header"><span class="home-feed-dot dot-menu"></span>Menú activo</div>
-      ${activeMenu.map((item) => `
-        <div class="home-feed-item">
-          <span class="home-feed-item-name">${safeText(item.plato)}</span>
-          <span class="home-feed-item-meta">${safeText(item.seccion)}</span>
-        </div>`).join("")}
-    </div>`;
-  }
   if (upcoming.length) {
     feed += `<div class="home-feed-block">
       <div class="home-feed-header"><span class="home-feed-dot dot-event"></span>Próximos eventos</div>
@@ -1909,58 +1898,6 @@ function dProv(index) {
   save("ingredientes");
 }
 
-function rMenu() {
-  document.getElementById("mbody").innerHTML = D.menu.length ? D.menu.map((item) => `
-    <div class="pc">
-      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
-        <div>
-          <div class="pt">${safeText(item.plato)}</div>
-          ${bsec(item.seccion)}
-          ${item.nota ? `<p style="margin-top:10px;color:#5e5a54">${safeText(item.nota)}</p>` : ""}
-          <div class="nd">${safeText(item.fecha)}</div>
-        </div>
-        <span class="ps s-${item.estado === "activo" ? "activo" : "pausado"}">${safeText(item.estado)}</span>
-      </div>
-      <div class="ca" style="margin-top:14px">
-        <button class="btn btn-s btn-o" onclick="oMM(${item.id})">Editar</button>
-        <button class="btn btn-s btn-d" onclick="dMenu(${item.id})">Eliminar</button>
-      </div>
-    </div>`).join("") : `<div class="notice"><strong>Sin cambios esta semana</strong><div>Añade un movimiento de carta cuando haga falta.</div></div>`;
-}
-
-function oMM(id) {
-  const item = id ? D.menu.find((menu) => menu.id === id) : null;
-  oModal(`
-    <h3>${item ? "Editar cambio" : "Nuevo cambio de menú"}</h3>
-    <div class="fr"><label>Plato *</label><input id="mp" value="${safeText(item?.plato || "")}"></div>
-    <div class="fr"><label>Sección</label><select id="ms">${[...SECS, "Bebida maridaje"].map((section) => `<option${item?.seccion === section ? " selected" : ""}>${section}</option>`).join("")}</select></div>
-    <div class="fr"><label>Estado</label><select id="me">${["activo", "pausado"].map((state) => `<option${item?.estado === state ? " selected" : ""}>${state}</option>`).join("")}</select></div>
-    <div class="fr"><label>Nota</label><textarea id="mn">${safeText(item?.nota || "")}</textarea></div>
-    <div class="fr"><label>Fecha</label><input type="date" id="mf" value="${safeText(item?.fecha || today())}"></div>
-    <div class="mf"><button class="secondary-btn" onclick="cModal()">Cancelar</button><button class="primary-btn" onclick="sMenu(${id || "null"})">Guardar</button></div>`);
-}
-
-function sMenu(id) {
-  const plate = document.getElementById("mp").value.trim();
-  if (!plate) return alert("El nombre es obligatorio");
-  const payload = {
-    plato: plate,
-    seccion: document.getElementById("ms").value,
-    estado: document.getElementById("me").value,
-    nota: document.getElementById("mn").value,
-    fecha: document.getElementById("mf").value
-  };
-  if (id) Object.assign(D.menu.find((item) => item.id === id), payload);
-  else D.menu.push({ id: nid++, ...payload });
-  save("menu");
-  cModal();
-}
-
-function dMenu(id) {
-  if (!confirm("¿Eliminar cambio de menú?")) return;
-  D.menu = D.menu.filter((item) => item.id !== id);
-  save("menu");
-}
 
 function calNav(delta) {
   cM += delta;
@@ -3240,7 +3177,6 @@ function iaCtx() {
 
   // OBA intranet data
   const recetas = D.recipes.map((r) => `${r.nombre} (${r.seccion})`).join(", ") || "ninguna";
-  const menuActivo = D.menu.filter((m) => m.estado === "activo").map((m) => `${m.plato} — ${m.seccion}`).join(", ") || "sin cambios";
   const avisosRec = [...D.avisos].slice(-5).reverse().map((a) => `[${a.fecha}${a.urgente ? " URGENTE" : ""}] ${a.titulo}: ${a.texto.slice(0, 80)}`).join("\n") || "ninguno";
   const proyectosActivos = D.proyectos.filter((p) => p.estado === "activo" || p.estado === "testeo").map((p) => `${p.nombre} (${p.estado}) — ${p.responsable}`).join(", ") || "ninguno";
   const pedidosPendientes = D.ingredientes.filter((i) => i.pedido).map((i) => `${i.nombre}${i.cantidad ? " x" + i.cantidad : ""}${i.proveedor ? " [" + i.proveedor + "]" : ""}`).join(", ") || "ninguno";
@@ -3264,7 +3200,6 @@ HOY: ${hoy}
 
 === OBA INTRANET ===
 RECETARIO (${D.recipes.length} platos): ${recetas}
-MENÚ ACTIVO: ${menuActivo}
 PEDIDOS PENDIENTES: ${pedidosPendientes}
 PROYECTOS ACTIVOS: ${proyectosActivos}
 PRACTICANTES ACTIVOS: ${pracActivos}
@@ -3336,22 +3271,6 @@ const IA_TOOLS = [
   {
     type: "function",
     function: {
-      name: "cambio_menu",
-      description: "Registra un cambio en el menú de OBA",
-      parameters: {
-        type: "object",
-        properties: {
-          plato: { type: "string", description: "Nombre del plato" },
-          seccion: { type: "string", description: "Sección del menú" },
-          nota: { type: "string", description: "Descripción del cambio" }
-        },
-        required: ["plato", "seccion"]
-      }
-    }
-  },
-  {
-    type: "function",
-    function: {
       name: "restaurante_accion",
       description: "Realiza una acción en un restaurante del grupo (eñe, Can Domo, Cañitas Maite, CEBO, OBA)",
       parameters: {
@@ -3392,12 +3311,6 @@ async function ejecutarHerramienta(name, args) {
       D.proyectos.push({ id, nombre: args.nombre, descripcion: args.descripcion, estado: args.estado || "activo", responsable: "IA", fecha: t, notas: "" });
       save("proyectos");
       return `Proyecto "${args.nombre}" creado en I+D con estado "${args.estado}".`;
-    }
-    case "cambio_menu": {
-      const id = await nextId("menu");
-      D.menu.push({ id, plato: args.plato, seccion: args.seccion || "", estado: "activo", fecha: t, nota: args.nota || "" });
-      save("menu");
-      return `Cambio de menú registrado: "${args.plato}" en ${args.seccion}.`;
     }
     case "restaurante_accion": {
       const col = REST_COL_MAP[args.restaurante] || args.restaurante;
