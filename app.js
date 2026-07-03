@@ -7863,6 +7863,7 @@ function loadReportes() {
       console.warn("reportes snapshot error:", err);
       rRepInner();
     });
+  _loadJsPDF().catch(() => {}); // precalienta el generador de PDF en segundo plano
 }
 
 function rRepInner() {
@@ -7874,12 +7875,20 @@ function rRepInner() {
 }
 
 // ── Dashboard ──────────────────────────────────────────
-function _repDashHTML() {
+function _repFilteredList() {
   const rfil = document.getElementById("rep-filter-rest")?.value || "";
   const mfil = document.getElementById("rep-filter-mes")?.value || "";
   let list = _reportesList;
   if (rfil) list = list.filter(r => r.restaurante === rfil);
   if (mfil) list = list.filter(r => r.mes === mfil);
+  // Destacados primero (orden estable: dentro de cada grupo se mantiene por fecha)
+  return list.slice().sort((a, b) => (b.destacado ? 1 : 0) - (a.destacado ? 1 : 0));
+}
+
+function _repDashHTML() {
+  const rfil = document.getElementById("rep-filter-rest")?.value || "";
+  const mfil = document.getElementById("rep-filter-mes")?.value || "";
+  const list = _repFilteredList();
 
   const urgentes = list.filter(r => r.urgencia === "Urgente OBA");
 
@@ -7923,11 +7932,7 @@ function _repDashHTML() {
 function rRepFilter() {
   const el = document.getElementById("rep-cards");
   if (!el) return;
-  const rfil = document.getElementById("rep-filter-rest")?.value || "";
-  const mfil = document.getElementById("rep-filter-mes")?.value || "";
-  let list = _reportesList;
-  if (rfil) list = list.filter(r => r.restaurante === rfil);
-  if (mfil) list = list.filter(r => r.mes === mfil);
+  const list = _repFilteredList();
   el.innerHTML = list.length
     ? list.map(r => _repCardHTML(r)).join("")
     : `<div class="rep-dash-empty"><p>No hay reportes con estos filtros.</p></div>`;
@@ -7950,11 +7955,12 @@ function _repCardHTML(r) {
     kpis.ticketMedio ? `<div class="rep-card-kpi"><strong>${safeText(String(kpis.ticketMedio))}€</strong><span>Ticket medio</span></div>` : "",
   ].filter(Boolean).join("");
 
+  const dest = !!r.destacado;
   return `
-    <button class="rep-card" onclick="verReporte('${safeText(r._fsId)}')">
+    <div class="rep-card${dest ? " destacada" : ""}" onclick="verReporte('${safeText(r._fsId)}')">
       <div class="rep-card-head">
         <div>
-          <div class="rep-card-rest">${safeText(r.restaurante||"—")}</div>
+          <div class="rep-card-rest">${dest ? '<span class="rep-star">★</span> ' : ""}${safeText(r.restaurante||"—")}</div>
           <div class="rep-card-meta">${safeText(r.mes||"")} ${safeText(String(r.anio||""))} · ${safeText(r.responsable||"")}</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
@@ -7963,7 +7969,12 @@ function _repCardHTML(r) {
         </div>
       </div>
       ${kpiHTML ? `<div class="rep-card-kpis">${kpiHTML}</div>` : ""}
-    </button>`;
+      <div class="rep-card-actions">
+        <button class="rep-act-btn${dest ? " active" : ""}" onclick="event.stopPropagation();repToggleDestacado('${safeText(r._fsId)}')">${dest ? "★ Destacado" : "☆ Destacar"}</button>
+        <button class="rep-act-btn" onclick="event.stopPropagation();repSharePDF('${safeText(r._fsId)}')">Compartir PDF</button>
+        <button class="rep-act-btn rep-act-danger" onclick="event.stopPropagation();repEliminar('${safeText(r._fsId)}')">Eliminar</button>
+      </div>
+    </div>`;
 }
 
 // ── Form ───────────────────────────────────────────────
@@ -8373,6 +8384,155 @@ function _repRenderSent() {
     </div>`;
 }
 
+// ── Acciones sobre reportes: destacar, eliminar, PDF ──
+function repToggleDestacado(fsId) {
+  const r = _reportesList.find(x => x._fsId === fsId);
+  if (!r || storageMode !== "firebase") return;
+  db.collection("reportes").doc(fsId).update({ destacado: !r.destacado })
+    .catch(err => { console.error("repToggleDestacado:", err); toast("No se pudo actualizar.", "error"); });
+}
+
+function repEliminar(fsId) {
+  const r = _reportesList.find(x => x._fsId === fsId);
+  if (!r || storageMode !== "firebase") return;
+  if (!confirm(`¿Eliminar el reporte de ${r.restaurante || "?"} — ${r.mes || "?"} ${r.anio || ""}?\nEsta acción no se puede deshacer.`)) return;
+  db.collection("reportes").doc(fsId).delete()
+    .then(() => {
+      toast("Reporte eliminado.");
+      if (_repView === "detail" && _repActiveId === fsId) {
+        _repView = "dashboard";
+        _repActiveId = null;
+        rRepInner();
+      }
+    })
+    .catch(err => { console.error("repEliminar:", err); toast("No se pudo eliminar.", "error"); });
+}
+
+// jsPDF se carga bajo demanda (y se precalienta al abrir el dashboard)
+let _jsPDFPromise = null;
+function _loadJsPDF() {
+  if (window.jspdf?.jsPDF) return Promise.resolve(window.jspdf.jsPDF);
+  if (_jsPDFPromise) return _jsPDFPromise;
+  _jsPDFPromise = new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js";
+    s.onload = () => resolve(window.jspdf.jsPDF);
+    s.onerror = () => { _jsPDFPromise = null; reject(new Error("No se pudo cargar el generador de PDF")); };
+    document.head.appendChild(s);
+  });
+  return _jsPDFPromise;
+}
+
+function _repBuildPdf(jsPDF, r) {
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const W = 210, M = 18, CW = W - M * 2;
+  let y = 20;
+  const ensure = (h) => { if (y + h > 279) { doc.addPage(); y = 20; } };
+  const title = (t) => {
+    ensure(14);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(10.5); doc.setTextColor(130);
+    doc.text(t.toUpperCase(), M, y);
+    y += 2.5;
+    doc.setDrawColor(225); doc.line(M, y, W - M, y);
+    y += 6;
+  };
+  const kv = (k, v) => {
+    const val = (v === null || v === undefined || v === "") ? "—" : String(v);
+    doc.setFontSize(10);
+    const lines = doc.splitTextToSize(val, CW - 48);
+    ensure(lines.length * 5 + 2);
+    doc.setFont("helvetica", "bold"); doc.setTextColor(90);
+    doc.text(k, M, y);
+    doc.setFont("helvetica", "normal"); doc.setTextColor(25);
+    doc.text(lines, M + 48, y);
+    y += lines.length * 5 + 1.5;
+  };
+  const lista = (k, arr) => kv(k, (arr && arr.length) ? arr.map(x => "• " + x).join("\n") : "—");
+
+  doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.setTextColor(0);
+  doc.text(`${r.restaurante || "—"} — ${r.mes || ""} ${r.anio || ""}`, M, y);
+  y += 7;
+  doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(130);
+  doc.text(`Reporte mensual · Responsable: ${r.responsable || "—"} · Urgencia: ${r.urgencia || "No urgente"}`, M, y);
+  y += 11;
+
+  const kpis = r.kpis || {}, carta = r.carta || {}, ev = r.eventos || {},
+        prov = r.proveedores || {}, eq = r.equipo || {}, cal = r.calidad || {}, no = r.notas || {};
+
+  title("Cifras del mes");
+  kv("Facturación", kpis.facturacion != null ? kpis.facturacion.toLocaleString("es-ES") + " €" : null);
+  kv("Comensales", kpis.comensales);
+  kv("Ticket medio", kpis.ticketMedio != null ? kpis.ticketMedio + " €" : null);
+  kv("Eventos", kpis.eventos);
+  kv("Valoración", kpis.valoracion);
+
+  title("Eventos");
+  lista("Realizados", ev.realizados);
+  lista("Próximos", ev.proximos);
+
+  title("Carta y recetas");
+  kv("Platos activos", carta.platosActivos);
+  kv("Recetas modificadas", carta.recetasModificadas);
+  kv("Cambios", carta.cambios);
+  kv("Plato destacado", carta.platoDestacado);
+
+  title("Proveedores");
+  lista("Cambios", prov.cambios);
+  lista("Incidencias", prov.incidencias);
+
+  title("Equipo");
+  kv("Plantilla", eq.plantilla != null ? eq.plantilla + " personas" : null);
+  kv("Altas y bajas", eq.altasBajas);
+  kv("Observaciones", eq.observaciones);
+
+  title("Calidad y reseñas");
+  kv("Valoración online", cal.valoracionOnline != null ? cal.valoracionOnline + " / 5" : null);
+  kv("Reseñas del mes", cal.resenas);
+  lista("Incidencias", cal.incidencias);
+
+  title("Notas y próximos pasos");
+  kv("Observaciones", no.observaciones);
+  lista("Prioridades", no.prioridades);
+  kv("Atención OBA", no.urgenciaOba);
+
+  ensure(12);
+  y += 4;
+  doc.setFontSize(8); doc.setTextColor(160);
+  doc.text("Generado desde la Intranet OBA", M, y);
+  return doc;
+}
+
+async function repSharePDF(fsId) {
+  const r = _reportesList.find(x => x._fsId === fsId);
+  if (!r) return;
+  try {
+    const jsPDF = await _loadJsPDF();
+    const doc = _repBuildPdf(jsPDF, r);
+    const clean = (s) => String(s || "").trim().replace(/[^\wáéíóúüñÁÉÍÓÚÜÑ-]+/g, "_");
+    const filename = `Reporte_${clean(r.restaurante)}_${clean(r.mes)}_${r.anio || ""}.pdf`;
+    const blob = doc.output("blob");
+    const file = new File([blob], filename, { type: "application/pdf" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      // Hoja nativa de compartir: el usuario elige WhatsApp, Mail, etc.
+      await navigator.share({ files: [file], title: `Reporte ${r.restaurante || ""} — ${r.mes || ""} ${r.anio || ""}` });
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      toast("PDF descargado — adjúntalo en WhatsApp o correo.", "ok");
+    }
+  } catch (err) {
+    if (err && err.name === "AbortError") return; // el usuario cerró la hoja de compartir
+    console.error("repSharePDF:", err);
+    toast("No se pudo generar el PDF.", "error");
+  }
+}
+
 // ── Detail view ────────────────────────────────────────
 function verReporte(fsId) {
   _repActiveId = fsId;
@@ -8400,13 +8560,19 @@ function _repDetailHTML(fsId) {
   const row = (label, val) => `<div class="rep-detail-row"><span class="rep-detail-label">${label}</span><span>${val || "—"}</span></div>`;
 
   return `
-    <div class="rep-form-head" style="margin-bottom:16px">
+    <div class="rep-form-head" style="margin-bottom:12px">
       <button class="ghost-btn ghost-btn-sm" onclick="repBack()">← Volver</button>
       <div style="flex:1">
-        <div class="eyebrow" style="margin:0">${safeText(r.restaurante||"")} · ${safeText(r.mes||"")} ${safeText(String(r.anio||""))}</div>
+        <div class="eyebrow" style="margin:0">${r.destacado ? '<span class="rep-star">★</span> ' : ""}${safeText(r.restaurante||"")} · ${safeText(r.mes||"")} ${safeText(String(r.anio||""))}</div>
         <div style="font-size:13px;color:var(--muted)">Responsable: ${safeText(r.responsable||"")}</div>
       </div>
       ${_repUrgBadge(r.urgencia)}
+    </div>
+
+    <div class="rep-detail-actions">
+      <button class="rep-act-btn${r.destacado ? " active" : ""}" onclick="repToggleDestacado('${safeText(fsId)}')">${r.destacado ? "★ Destacado" : "☆ Destacar"}</button>
+      <button class="rep-act-btn" onclick="repSharePDF('${safeText(fsId)}')">Compartir PDF</button>
+      <button class="rep-act-btn rep-act-danger" onclick="repEliminar('${safeText(fsId)}')">Eliminar</button>
     </div>
 
     <div class="rep-detail-section">
