@@ -5468,6 +5468,35 @@ function registerPWA() {
     });
   }
 
+  // Version poll independent of the SW: fetch index.html bypassing every
+  // cache and compare the app.js version it references with the one running.
+  // Catches clients pinned by stale HTTP-cache entries that the SW misses.
+  const _myV = (() => {
+    const s = document.querySelector('script[src*="app.js"]');
+    const m = s && s.src.match(/[?&]v=(\d+)/);
+    return m ? m[1] : null;
+  })();
+  if (_myV) {
+    const checkVersion = () => {
+      fetch("./index.html", { cache: "no-store" })
+        .then((r) => (r.ok ? r.text() : ""))
+        .then((html) => {
+          const m = html.match(/app\.js\?v=(\d+)/);
+          if (!m || m[1] === _myV) return;
+          const guard = sessionStorage.getItem("oba_ver_reload");
+          if (guard === m[1]) return; // already tried this version; avoid loops
+          sessionStorage.setItem("oba_ver_reload", m[1]);
+          location.reload();
+        })
+        .catch(() => {});
+    };
+    setInterval(checkVersion, 60000);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") checkVersion();
+    });
+    setTimeout(checkVersion, 5000);
+  }
+
   const installCard = document.getElementById("install-card");
   const isInstallBannerDismissed = () => localStorage.getItem(INSTALL_BANNER_DISMISSED_KEY) === "1";
   const hideInstallCardOnly = () => {
