@@ -3545,6 +3545,14 @@ p, span, div, label, td, th, input, select, textarea, button{
 .rep-form-head-info .eyebrow{margin:0;font-size:10px}
 .rep-form-head-title{font-weight:700;font-size:.95rem;margin-top:1px}
 
+/* Loading skeleton */
+@keyframes rep-shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.rep-skeleton-wrap{padding:4px 0}
+.rep-skeleton-head,.rep-skeleton-card{border-radius:16px;background:linear-gradient(90deg,var(--surface) 25%,rgba(118,118,128,.1) 50%,var(--surface) 75%);background-size:200% 100%;animation:rep-shimmer 1.4s infinite}
+.rep-skeleton-head{height:64px;margin-bottom:16px}
+.rep-skeleton-card{height:100px;margin-bottom:10px}
+.rep-skeleton-card--short{height:72px}
+
 /* Dashboard */
 .rep-dash-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
 .rep-dash-filters .field-select{flex:1;min-width:140px}

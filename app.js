@@ -570,6 +570,7 @@ async function initData() {
     if (canUseFirebase) {
       firebase.initializeApp(FB);
       db = firebase.firestore();
+      db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
       const _timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 8000));
       await Promise.race([loadFromFirebase(), _timeout]);
       storageMode = "firebase";
@@ -7769,7 +7770,20 @@ function loadReportes() {
     rRepInner();
     return;
   }
-  if (_reportesUnsub) return; // already subscribed
+  if (_reportesUnsub) {
+    rRepInner(); // already subscribed, data ready
+    return;
+  }
+  // Show skeleton while first snapshot loads
+  const el = document.getElementById("rep-inner");
+  if (el && !_reportesList.length) {
+    el.innerHTML = `<div class="rep-skeleton-wrap">
+      <div class="rep-skeleton-head"></div>
+      <div class="rep-skeleton-card"></div>
+      <div class="rep-skeleton-card"></div>
+      <div class="rep-skeleton-card rep-skeleton-card--short"></div>
+    </div>`;
+  }
   _reportesUnsub = db.collection("reportes")
     .orderBy("fechaEnvio", "desc")
     .onSnapshot(snap => {
