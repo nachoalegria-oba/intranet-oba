@@ -3464,6 +3464,27 @@ p, span, div, label, td, th, input, select, textarea, button{
   #pdf-import-banner { display:none !important; }
 }
 
+/* ── Modo encargado (cuenta de restaurante) ── */
+#app.enc-mode .main-nav{display:grid !important;grid-template-columns:repeat(2,minmax(0,1fr)) !important;max-width:420px}
+#app.enc-mode .main-nav .nav-btn{display:none}
+#app.enc-mode .main-nav .nav-btn[data-panel="grupo"],
+#app.enc-mode .main-nav .nav-btn[data-panel="reportes"]{display:block}
+#app.enc-mode .mobile-nav-toggle{display:none !important}
+#app.enc-mode .hamburger-btn{display:none !important}
+body.enc-mode #hamburger-menu{display:none !important}
+body.enc-mode #hamburger-overlay{display:none !important}
+#app.enc-mode .emp-back{display:none !important}
+#app.enc-mode .topbar-brand>div{display:none}
+
+/* Modal de usuarios */
+.usr-list{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;margin-top:10px}
+.usr-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:12px}
+.usr-row.usr-off{opacity:.55}
+.usr-info{flex:1;min-width:0;display:flex;flex-direction:column}
+.usr-info strong{font-size:14px}
+.usr-info span{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.usr-meta{text-transform:capitalize}
+
 /* ── Reportes-only mode (login con credenciales de reportes) ── */
 #app.rep-only .main-nav{display:none !important}
 #app.rep-only .mobile-nav-toggle{display:none !important}

@@ -29,10 +29,11 @@
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
   </noscript>
-  <link rel="stylesheet" href="./styles.css?v=166">
+  <link rel="stylesheet" href="./styles.css?v=167">
   <script defer src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <!-- Recovery: reload when SW updates (even if app.js failed to parse) -->
   <script>
     window.__appLoaded = false;
@@ -88,7 +89,7 @@
       <div class="login-status" id="ls-sub">Conectando...</div>
       <div class="login-form" id="lf" style="display:none">
         <label class="sr-only" for="usr">Usuario</label>
-        <input class="login-input" type="text" id="usr" placeholder="Usuario (opcional)" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('pwd').focus()">
+        <input class="login-input" type="text" id="usr" placeholder="Usuario o email (opcional)" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('pwd').focus()">
         <label class="sr-only" for="pwd">Contraseña</label>
         <input class="login-input" type="password" id="pwd" placeholder="Contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
         <button class="primary-btn" onclick="login()">Entrar</button>
@@ -113,6 +114,7 @@
       </div>
 
       <div class="topbar-actions">
+<button class="ghost-btn ghost-btn-sm topbar-users-btn" id="users-btn" style="display:none" onclick="oUsuarios()">Usuarios</button>
 <button class="ghost-btn ghost-btn-sm topbar-logout-btn" onclick="logout()">Salir</button>
       </div>
     </header>
@@ -689,6 +691,6 @@
     </button>
   </div>
 
-  <script defer src="./app.js?v=179"></script>
+  <script defer src="./app.js?v=180"></script>
 </body>
 </html>

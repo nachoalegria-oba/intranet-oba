@@ -296,3 +296,93 @@ exports.backupSemanal = onSchedule(
     console.log(`Backup ${fecha}: ${Object.keys(out).length} colecciones, ${total} documentos.`);
   }
 );
+
+// ═══════════════════════════════════════════════════════
+// GESTIÓN DE USUARIOS (solo administradores)
+// Crea/actualiza cuentas de Firebase Auth + su perfil en la
+// colección "usuarios". El que llama debe enviar su ID token
+// (Authorization: Bearer <token>) y tener rol "admin".
+// ═══════════════════════════════════════════════════════
+async function _verificarAdmin(req) {
+  if (!admin.apps.length) admin.initializeApp();
+  const header = req.headers.authorization || "";
+  const idToken = header.startsWith("Bearer ") ? header.slice(7) : null;
+  if (!idToken) return null;
+  try {
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const doc = await admin.firestore().collection("usuarios").doc(decoded.uid).get();
+    if (doc.exists && doc.data().rol === "admin" && doc.data().activo !== false) return decoded;
+  } catch (e) {
+    console.warn("verificarAdmin:", e.message);
+  }
+  return null;
+}
+
+exports.crearUsuario = onRequest(
+  { region: "europe-west1", cors: true },
+  async (req, res) => {
+    if (req.method !== "POST") { res.status(405).json({ error: "Método no permitido" }); return; }
+    const caller = await _verificarAdmin(req);
+    if (!caller) { res.status(403).json({ error: "Solo administradores" }); return; }
+
+    const { nombre, email, password, rol, restaurante } = req.body || {};
+    if (!nombre || !email || !password || password.length < 6) {
+      res.status(400).json({ error: "Faltan datos o la contraseña es demasiado corta" });
+      return;
+    }
+    if (!["admin", "encargado", "reportes"].includes(rol)) {
+      res.status(400).json({ error: "Rol no válido" });
+      return;
+    }
+    try {
+      const user = await admin.auth().createUser({ email, password, displayName: nombre });
+      await admin.firestore().collection("usuarios").doc(user.uid).set({
+        nombre, email, rol,
+        restaurante: restaurante || "",
+        activo: true,
+        creado: admin.firestore.FieldValue.serverTimestamp(),
+        creadoPor: caller.email || caller.uid,
+      });
+      console.log(`Usuario creado: ${email} (${rol}) por ${caller.email}`);
+      res.json({ ok: true, uid: user.uid });
+    } catch (e) {
+      const msg = e.code === "auth/email-already-exists"
+        ? "Ya existe una cuenta con ese email"
+        : e.message;
+      res.status(400).json({ error: msg });
+    }
+  }
+);
+
+exports.actualizarUsuario = onRequest(
+  { region: "europe-west1", cors: true },
+  async (req, res) => {
+    if (req.method !== "POST") { res.status(405).json({ error: "Método no permitido" }); return; }
+    const caller = await _verificarAdmin(req);
+    if (!caller) { res.status(403).json({ error: "Solo administradores" }); return; }
+
+    const { uid, activo, rol, restaurante, nombre } = req.body || {};
+    if (!uid) { res.status(400).json({ error: "Falta uid" }); return; }
+    if (uid === caller.uid && activo === false) {
+      res.status(400).json({ error: "No puedes desactivar tu propia cuenta" });
+      return;
+    }
+    try {
+      const cambios = {};
+      if (typeof activo === "boolean") {
+        cambios.activo = activo;
+        await admin.auth().updateUser(uid, { disabled: !activo });
+      }
+      if (rol && ["admin", "encargado", "reportes"].includes(rol)) cambios.rol = rol;
+      if (typeof restaurante === "string") cambios.restaurante = restaurante;
+      if (nombre) cambios.nombre = nombre;
+      if (Object.keys(cambios).length) {
+        await admin.firestore().collection("usuarios").doc(uid).update(cambios);
+      }
+      console.log(`Usuario ${uid} actualizado por ${caller.email}:`, JSON.stringify(cambios));
+      res.json({ ok: true });
+    } catch (e) {
+      res.status(400).json({ error: e.message });
+    }
+  }
+);

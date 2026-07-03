@@ -3,6 +3,21 @@ const REPORTES_USER = "reportescañitasgastro";
 const REPORTES_PWD  = "reportescañitasgastro";
 const REPORTES_SESSION_KEY = "oba_reportes_unlocked_v1";
 const REPORTES_ONLY_KEY    = "oba_reportes_only_v1";
+
+// ── Cuentas con roles (Firebase Auth) ──────────────────
+// Roles: "admin" (todo), "encargado" (su restaurante + sus reportes),
+// "reportes" (solo formulario de reporte).
+const ROL_KEY        = "oba_rol_v1";
+const ENC_REST_KEY   = "oba_enc_rest_v1";
+const USER_NOMBRE_KEY = "oba_user_nombre_v1";
+const REST_THEME_MAP = {
+  "OBA": "oba",
+  "ME x Cañitas Maite Malaga": "canitas",
+  "Cebo": "cebo",
+  "EÑE": "ene",
+  "Can Domo": "candomo"
+};
+const FN_BASE = "https://europe-west1-intranet-oba.cloudfunctions.net";
 const FB = {
   apiKey: "AIzaSyAUUgLnKnh1xUbCjis4nPoEzoLLrJp9loY",
   authDomain: "intranet-oba.firebaseapp.com",
@@ -555,6 +570,8 @@ function showLoginForm() {
     if (greetEl) greetEl.innerHTML = getGreeting();
     if (sessionStorage.getItem(REPORTES_ONLY_KEY) === "1") {
       _repOnlyStart();
+    } else if (_esEncargado()) {
+      _encargadoStart();
     } else {
       _dataReady.then(() => {
         startApp();
@@ -727,6 +744,12 @@ function login() {
     }
   };
 
+  // Login con cuenta personal (email + contraseña → Firebase Auth)
+  if (usr.includes("@")) {
+    _loginConEmail(usr, pwd, errorEl, _enterApp);
+    return;
+  }
+
   if (usr === REPORTES_USER && pwd === REPORTES_PWD) {
     sessionStorage.setItem(REPORTES_SESSION_KEY, "1");
     sessionStorage.setItem(REPORTES_ONLY_KEY, "1");
@@ -741,7 +764,210 @@ function login() {
   }
 }
 
+// ── Gestión de usuarios (solo admins) ──────────────────
+function _updateUsersBtn() {
+  const btn = document.getElementById("users-btn");
+  if (btn) btn.style.display = _esAdmin() ? "" : "none";
+}
+
+async function oUsuarios() {
+  if (!_esAdmin()) return;
+  oModal(`<h3>Usuarios</h3><p style="color:var(--muted);font-size:13px">Cargando…</p>`);
+  try {
+    const snap = await db.collection("usuarios").orderBy("nombre").get();
+    const usuarios = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+    _renderUsuariosModal(usuarios);
+  } catch (e) {
+    oModal(`<h3>Usuarios</h3><p style="color:var(--red);font-size:13px">Error cargando usuarios: ${safeText(e.message)}</p>`);
+  }
+}
+
+function _renderUsuariosModal(usuarios) {
+  const restOpts = Object.keys(REST_THEME_MAP).map(r => `<option value="${safeText(r)}">${safeText(r)}</option>`).join("");
+  const filas = usuarios.map(u => `
+    <div class="usr-row${u.activo === false ? " usr-off" : ""}">
+      <div class="usr-info">
+        <strong>${safeText(u.nombre || "—")}</strong>
+        <span>${safeText(u.email || "")}</span>
+        <span class="usr-meta">${safeText(u.rol || "")}${u.restaurante ? " · " + safeText(u.restaurante) : ""}${u.activo === false ? " · DESACTIVADA" : ""}</span>
+      </div>
+      <button class="ghost-btn ghost-btn-sm" onclick="toggleUsuario('${safeText(u.uid)}', ${u.activo === false ? "true" : "false"})">${u.activo === false ? "Reactivar" : "Desactivar"}</button>
+    </div>`).join("") || `<p style="color:var(--muted);font-size:13px">No hay usuarios todavía.</p>`;
+
+  oModal(`
+    <h3>Usuarios</h3>
+    <div class="usr-list">${filas}</div>
+    <h4 style="margin:18px 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Crear usuario</h4>
+    <div class="fr"><label>Nombre</label><input class="field-input" id="nu-nombre" placeholder="Nombre y apellido"></div>
+    <div class="fr"><label>Email</label><input class="field-input" id="nu-email" type="email" placeholder="correo@ejemplo.com"></div>
+    <div class="fr"><label>Contraseña temporal</label><input class="field-input" id="nu-pwd" placeholder="Mínimo 6 caracteres"></div>
+    <div class="fr"><label>Rol</label>
+      <select class="field-select" id="nu-rol" onchange="document.getElementById('nu-rest-wrap').style.display = this.value==='encargado' ? '' : 'none'">
+        <option value="encargado">Encargado (su restaurante + sus reportes)</option>
+        <option value="reportes">Solo reportes</option>
+        <option value="admin">Administrador (todo)</option>
+      </select>
+    </div>
+    <div class="fr" id="nu-rest-wrap"><label>Restaurante</label>
+      <select class="field-select" id="nu-rest">${restOpts}</select>
+    </div>
+    <button class="primary-btn" style="width:100%;margin-top:8px" id="nu-crear" onclick="crearUsuario()">Crear usuario</button>
+    <div class="login-error" id="nu-err" style="margin-top:8px"></div>
+  `);
+}
+
+async function crearUsuario() {
+  const nombre = document.getElementById("nu-nombre")?.value.trim();
+  const email = document.getElementById("nu-email")?.value.trim().toLowerCase();
+  const pwd = document.getElementById("nu-pwd")?.value;
+  const rol = document.getElementById("nu-rol")?.value;
+  const restaurante = rol === "encargado" ? (document.getElementById("nu-rest")?.value || "") : "";
+  const err = document.getElementById("nu-err");
+  const btn = document.getElementById("nu-crear");
+  const showErr = (m) => { if (err) err.textContent = m; };
+  if (!nombre || !email || !email.includes("@")) { showErr("Nombre y email válido son obligatorios."); return; }
+  if (!pwd || pwd.length < 6) { showErr("La contraseña debe tener al menos 6 caracteres."); return; }
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = "Creando…"; }
+    const token = await firebase.auth().currentUser.getIdToken();
+    const res = await fetch(`${FN_BASE}/crearUsuario`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify({ nombre, email, password: pwd, rol, restaurante })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    toast(`Usuario ${nombre} creado.`, "ok");
+    oUsuarios();
+  } catch (e) {
+    console.error("crearUsuario:", e);
+    showErr("No se pudo crear: " + e.message);
+    if (btn) { btn.disabled = false; btn.textContent = "Crear usuario"; }
+  }
+}
+
+async function toggleUsuario(uid, activar) {
+  try {
+    const token = await firebase.auth().currentUser.getIdToken();
+    const res = await fetch(`${FN_BASE}/actualizarUsuario`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify({ uid, activo: activar })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    toast(activar ? "Cuenta reactivada." : "Cuenta desactivada.", "ok");
+    oUsuarios();
+  } catch (e) {
+    toast("No se pudo actualizar: " + e.message, "error");
+  }
+}
+
+// ── Login con cuenta personal ──────────────────────────
+async function _loginConEmail(email, pwd, errorEl, _enterApp) {
+  const showErr = (msg) => {
+    if (errorEl) { errorEl.textContent = msg; setTimeout(() => { errorEl.textContent = ""; }, 3500); }
+  };
+  if (typeof firebase === "undefined" || !firebase.auth || storageMode !== "firebase") {
+    showErr("El acceso con cuenta no está disponible ahora mismo.");
+    return;
+  }
+  try {
+    const cred = await firebase.auth().signInWithEmailAndPassword(email.toLowerCase(), pwd);
+    const perfil = await _cargarPerfilUsuario(cred.user);
+    if (!perfil) {
+      await firebase.auth().signOut().catch(() => {});
+      showErr("Tu cuenta no está dada de alta en la intranet. Habla con un administrador.");
+      return;
+    }
+    if (perfil.activo === false) {
+      await firebase.auth().signOut().catch(() => {});
+      showErr("Esta cuenta está desactivada.");
+      return;
+    }
+    sessionStorage.setItem(ROL_KEY, perfil.rol || "reportes");
+    sessionStorage.setItem(USER_NOMBRE_KEY, perfil.nombre || "");
+    if (perfil.restaurante) sessionStorage.setItem(ENC_REST_KEY, perfil.restaurante);
+    if (perfil.rol === "admin") {
+      _enterApp(false);
+    } else if (perfil.rol === "encargado") {
+      sessionStorage.setItem(REPORTES_SESSION_KEY, "1"); // sus reportes, sin gate extra
+      sessionStorage.setItem("oba-auth", "1");
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("app").classList.add("visible");
+      setLoginMode(false);
+      _encargadoStart();
+    } else {
+      sessionStorage.setItem(REPORTES_SESSION_KEY, "1");
+      sessionStorage.setItem(REPORTES_ONLY_KEY, "1");
+      _enterApp(true);
+    }
+  } catch (err) {
+    console.warn("login email:", err.code || err.message);
+    showErr(err.code === "auth/too-many-requests"
+      ? "Demasiados intentos. Espera unos minutos."
+      : "Email o contraseña incorrectos.");
+  }
+}
+
+// Carga el perfil (usuarios/{uid}). Bootstrap: si la colección está vacía,
+// la primera persona que inicia sesión se convierte en administrador.
+async function _cargarPerfilUsuario(user) {
+  const ref = db.collection("usuarios").doc(user.uid);
+  const snap = await ref.get();
+  if (snap.exists) return snap.data();
+  const any = await db.collection("usuarios").limit(1).get();
+  if (any.empty) {
+    const perfil = {
+      nombre: user.email.split("@")[0],
+      email: user.email,
+      rol: "admin",
+      restaurante: "",
+      activo: true,
+      creado: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    await ref.set(perfil);
+    return perfil;
+  }
+  return null;
+}
+
+// Modo encargado: su restaurante en Cañitas Gastro + sus reportes
+function _encargadoStart() {
+  document.getElementById("app")?.classList.add("enc-mode");
+  document.body.classList.add("enc-mode");
+  const label = formatLongDate(new Date());
+  const hd = document.getElementById("hdate");
+  if (hd) hd.textContent = label;
+  const greetEl = document.getElementById("greet-sub");
+  if (greetEl) greetEl.innerHTML = getGreeting();
+  _dataReady.then(() => {
+    startApp();
+    sp("grupo");
+  });
+}
+
+function _encEmpresaId() {
+  const rest = sessionStorage.getItem(ENC_REST_KEY) || "";
+  const theme = REST_THEME_MAP[rest];
+  return (D.empresas || []).find((e) => e.theme === theme)?.id || null;
+}
+
+function _esEncargado() {
+  return sessionStorage.getItem(ROL_KEY) === "encargado";
+}
+
+function _esAdmin() {
+  return sessionStorage.getItem(ROL_KEY) === "admin";
+}
+
 function logout() {
+  if (typeof firebase !== "undefined" && firebase.auth) firebase.auth().signOut().catch(() => {});
+  sessionStorage.removeItem(ROL_KEY);
+  sessionStorage.removeItem(ENC_REST_KEY);
+  sessionStorage.removeItem(USER_NOMBRE_KEY);
+  document.getElementById("app")?.classList.remove("enc-mode");
+  document.body.classList.remove("enc-mode");
   sessionStorage.removeItem("oba-auth");
   sessionStorage.removeItem(REPORTES_SESSION_KEY);
   sessionStorage.removeItem(REPORTES_ONLY_KEY);
@@ -803,6 +1029,7 @@ function seedEmpresas() {
 }
 
 function startApp() {
+  _updateUsersBtn();
   seedHabitaciones();
   seedEmpresas();
   const label = formatLongDate(new Date());
@@ -846,6 +1073,7 @@ function renderAll() {
 
 function sp(id) {
   if (sessionStorage.getItem(REPORTES_ONLY_KEY) === "1" && id !== "reportes") return;
+  if (_esEncargado() && id !== "grupo" && id !== "reportes") return;
   if (id === "grupo") { showGrupoPanel(); return; }
   if (id === "id") { showIDPanel(); return; }
   if (id === "huerta") { showHuertaPanel(); return; }
@@ -3840,6 +4068,13 @@ function showGrupoPanel() {
   closeHamburger();
   document.getElementById("ped-float-bar")?.classList.remove("visible");
 
+  if (_esEncargado()) {
+    const encId = _encEmpresaId();
+    if (encId) { grupoView = encId; rEmpresaDetalle(encId); }
+    else document.getElementById("panel-grupo-body").innerHTML = `<div class="notice">Tu restaurante no está configurado. Habla con un administrador.</div>`;
+    return;
+  }
+
   if (sessionStorage.getItem(CANITAS_SESSION_KEY) !== "1") {
     document.getElementById("panel-grupo-body").innerHTML = `
       <div style="display:flex;justify-content:center;align-items:center;min-height:60vh">
@@ -3859,6 +4094,11 @@ function showGrupoPanel() {
 }
 
 function rGrupo() {
+  if (_esEncargado()) {
+    const encId = _encEmpresaId();
+    if (encId) { grupoView = encId; rEmpresaDetalle(encId); }
+    return;
+  }
   if (sessionStorage.getItem(CANITAS_SESSION_KEY) !== "1") return; // panel locked — don't overwrite gate
   if (grupoSection === "descargables") { rGrupoDescargables(); return; }
   if (typeof grupoView === "number") { rEmpresaDetalle(grupoView); return; }
@@ -7765,8 +8005,9 @@ let _repAdjFiles = []; // File objects pendientes de subir con el reporte
 
 function _repInit() {
   _repAdjFiles = [];
+  const encRest = _esEncargado() ? (sessionStorage.getItem(ENC_REST_KEY) || "") : "";
   _repState = {
-    restaurante: "", mes: "", anio: new Date().getFullYear(), responsable: "",
+    restaurante: encRest, mes: "", anio: new Date().getFullYear(), responsable: "",
     urgencia: "No urgente",
     facturacion: "", comensales: "", ticketMedio: "", eventosCifra: "", valoracion: "",
     cartaPlatosActivos: "", cartaRecetasModificadas: "", cartaCambios: "", cartaPlatoDestacado: "",
@@ -7881,7 +8122,8 @@ function rRepInner() {
 
 // ── Dashboard ──────────────────────────────────────────
 function _repFilteredList() {
-  const rfil = document.getElementById("rep-filter-rest")?.value || "";
+  const encRest = _esEncargado() ? (sessionStorage.getItem(ENC_REST_KEY) || "") : "";
+  const rfil = encRest || document.getElementById("rep-filter-rest")?.value || "";
   const mfil = document.getElementById("rep-filter-mes")?.value || "";
   let list = _reportesList;
   if (rfil) list = list.filter(r => r.restaurante === rfil);
@@ -7924,9 +8166,9 @@ function _repDashHTML() {
     </div>
     ${alertsHTML}
     <div class="rep-dash-filters">
-      <select class="field-select" id="rep-filter-rest" onchange="rRepFilter()">
+      ${_esEncargado() ? "" : `<select class="field-select" id="rep-filter-rest" onchange="rRepFilter()">
         <option value="">Todos los restaurantes</option>${filterRest}
-      </select>
+      </select>`}
       <select class="field-select" id="rep-filter-mes" onchange="rRepFilter()">
         <option value="">Todos los meses</option>${filterMes}
       </select>
@@ -8026,7 +8268,7 @@ function _repFormHTML() {
         <div class="rep-section-name">Identificación</div>
       </div>
       <div class="fr"><label>Restaurante</label>
-        <select class="field-select" onchange="repUpdate('restaurante',this.value)">
+        <select class="field-select" onchange="repUpdate('restaurante',this.value)"${_esEncargado() ? " disabled" : ""}>
           <option value="">Selecciona…</option>${restOpts}
         </select>
       </div>
