@@ -5425,6 +5425,13 @@ function registerPWA() {
           }
         });
       });
+      // Check for new versions: on tab focus and every 60s.
+      // Without this, an installed PWA that stays open never sees updates.
+      const checkUpdate = () => reg.update().catch(() => {});
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") checkUpdate();
+      });
+      setInterval(checkUpdate, 60000);
     }).catch((error) => console.warn("SW error:", error));
     // Reload page when a new SW takes control so users always get fresh assets
     navigator.serviceWorker.addEventListener("controllerchange", () => window.location.reload());
