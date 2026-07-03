@@ -8223,7 +8223,7 @@ function _repFormHTML() {
         <div class="rep-section-letter">I</div>
         <div class="rep-section-name">Archivos adjuntos <span style="font-weight:400;color:var(--muted)">(opcional)</span></div>
       </div>
-      <div class="fr"><label>PDF, Excel, Word, imágenes… Máx. 5 archivos de 10 MB</label>
+      <div class="fr"><label>PDF, Excel, Word, imágenes… Máx. 5 archivos de 25 MB</label>
         <div class="rep-list-items" id="rep-adj-list">${_repAdjListHTML()}</div>
         <input type="file" id="rep-adj-input" multiple style="display:none"
           accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.ppt,.pptx,.png,.jpg,.jpeg,.heic,.txt"
@@ -8262,10 +8262,10 @@ function _repAdjListHTML() {
 
 function repAdjPick(input) {
   const MAX_FILES = 5;
-  const MAX_SIZE = 10 * 1024 * 1024;
+  const MAX_SIZE = 25 * 1024 * 1024;
   for (const f of Array.from(input.files || [])) {
     if (_repAdjFiles.length >= MAX_FILES) { toast(`Máximo ${MAX_FILES} archivos.`, "error"); break; }
-    if (f.size > MAX_SIZE) { toast(`"${f.name}" supera los 10 MB.`, "error"); continue; }
+    if (f.size > MAX_SIZE) { toast(`"${f.name}" supera los 25 MB.`, "error"); continue; }
     _repAdjFiles.push(f);
   }
   input.value = "";
