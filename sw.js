@@ -1,4 +1,4 @@
-const CACHE_NAME = "oba-intranet-v194";
+const CACHE_NAME = "oba-intranet-v195";
 
 // Empty APP_SHELL so install completes instantly and skipWaiting() always fires.
 // All caching happens at runtime via the fetch handler (network-first).
