@@ -107,7 +107,7 @@ exports.scanInvoice = onRequest(
 //
 // Configuración (una sola vez):
 //   firebase functions:secrets:set REPORTES_SMTP_USER   → correo que envía (ej. reportes@canitasgastro.com)
-//   firebase functions:secrets:set REPORTES_SMTP_PASS   → contraseña de aplicación (Gmail/Workspace)
+//   firebase functions:secrets:set REPORTES_SMTP_PASS   → contraseña normal del buzón (la del webmail)
 //   firebase deploy --only functions
 // ═══════════════════════════════════════════════════════
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
@@ -116,6 +116,8 @@ const nodemailer = require("nodemailer");
 const REPORTES_SMTP_USER = defineSecret("REPORTES_SMTP_USER");
 const REPORTES_SMTP_PASS = defineSecret("REPORTES_SMTP_PASS");
 const REPORTES_DESTINO = "reportes@canitasgastro.com";
+// Servidor de correo del dominio (webmail propio, según su registro MX)
+const REPORTES_SMTP_HOST = "mail.canitasgastro.com";
 
 const esc = (v) => String(v ?? "—").replace(/[&<>"']/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -208,22 +210,34 @@ exports.emailNuevoReporte = onDocumentCreated(
         <p style="margin-top:24px;color:#8E8E93;font-size:12px">Enviado automáticamente por la Intranet OBA.</p>
       </div>`;
 
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: REPORTES_SMTP_USER.value(),
-        pass: REPORTES_SMTP_PASS.value(),
-      },
-    });
-
-    await transporter.sendMail({
-      from: `"Intranet OBA" <${REPORTES_SMTP_USER.value()}>`,
+    const auth = {
+      user: REPORTES_SMTP_USER.value(),
+      pass: REPORTES_SMTP_PASS.value(),
+    };
+    const mail = {
+      from: `"Intranet OBA" <${auth.user}>`,
       to: REPORTES_DESTINO,
       subject: asunto,
       html,
-    });
-    console.log(`Email de reporte enviado: ${asunto}`);
+    };
+
+    // Intenta 465 (SSL directo) y si falla 587 (STARTTLS): los servidores
+    // de webmail de hosting usan uno u otro según el proveedor.
+    const configs = [
+      { host: REPORTES_SMTP_HOST, port: 465, secure: true, auth },
+      { host: REPORTES_SMTP_HOST, port: 587, secure: false, requireTLS: true, auth },
+    ];
+    let lastErr = null;
+    for (const cfg of configs) {
+      try {
+        await nodemailer.createTransport(cfg).sendMail(mail);
+        console.log(`Email de reporte enviado (puerto ${cfg.port}): ${asunto}`);
+        return;
+      } catch (err) {
+        lastErr = err;
+        console.warn(`Fallo enviando por puerto ${cfg.port}:`, err.message);
+      }
+    }
+    throw lastErr;
   }
 );
