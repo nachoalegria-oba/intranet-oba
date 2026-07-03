@@ -7761,7 +7761,10 @@ let _repState = {};
 
 const RESTAURANTES = ["OBA", "ME x Cañitas Maite Malaga", "Cebo", "EÑE", "Can Domo"];
 
+let _repAdjFiles = []; // File objects pendientes de subir con el reporte
+
 function _repInit() {
+  _repAdjFiles = [];
   _repState = {
     restaurante: "", mes: "", anio: new Date().getFullYear(), responsable: "",
     urgencia: "No urgente",
@@ -8214,9 +8217,24 @@ function _repFormHTML() {
       </div>
     </div>
 
+    <!-- I: Adjuntos -->
+    <div class="rep-section" id="rep-sec-adj">
+      <div class="rep-section-title">
+        <div class="rep-section-letter">I</div>
+        <div class="rep-section-name">Archivos adjuntos <span style="font-weight:400;color:var(--muted)">(opcional)</span></div>
+      </div>
+      <div class="fr"><label>PDF, Excel, Word, imágenes… Máx. 5 archivos de 10 MB</label>
+        <div class="rep-list-items" id="rep-adj-list">${_repAdjListHTML()}</div>
+        <input type="file" id="rep-adj-input" multiple style="display:none"
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.ppt,.pptx,.png,.jpg,.jpeg,.heic,.txt"
+          onchange="repAdjPick(this)">
+        <button type="button" class="secondary-btn" style="width:100%;margin-top:6px" onclick="document.getElementById('rep-adj-input').click()">+ Añadir archivo</button>
+      </div>
+    </div>
+
     <div style="padding:8px 0 32px;display:flex;gap:10px">
       ${repOnly ? "" : `<button class="ghost-btn" onclick="repBack()">Cancelar</button>`}
-      <button class="primary-btn" style="flex:1" onclick="sReporte()">Enviar reporte</button>
+      <button class="primary-btn" style="flex:1" id="rep-submit-btn" onclick="sReporte()">Enviar reporte</button>
     </div>
   </div>`;
 }
@@ -8224,6 +8242,41 @@ function _repFormHTML() {
 function repUpdate(key, val) {
   _repState[key] = val;
   _repUpdateProgress();
+}
+
+// ── Adjuntos del formulario ────────────────────────────
+function _fmtBytes(n) {
+  if (!n && n !== 0) return "";
+  if (n >= 1048576) return (n / 1048576).toFixed(1) + " MB";
+  if (n >= 1024) return Math.round(n / 1024) + " KB";
+  return n + " B";
+}
+
+function _repAdjListHTML() {
+  return _repAdjFiles.map((f, idx) => `
+    <div class="rep-list-item">
+      <span>📎 ${safeText(f.name)} <span style="color:var(--muted);font-size:11px">${_fmtBytes(f.size)}</span></span>
+      <button type="button" class="ghost-btn ghost-btn-sm" onclick="repAdjRemove(${idx})" style="padding:2px 8px;flex-shrink:0">✕</button>
+    </div>`).join("");
+}
+
+function repAdjPick(input) {
+  const MAX_FILES = 5;
+  const MAX_SIZE = 10 * 1024 * 1024;
+  for (const f of Array.from(input.files || [])) {
+    if (_repAdjFiles.length >= MAX_FILES) { toast(`Máximo ${MAX_FILES} archivos.`, "error"); break; }
+    if (f.size > MAX_SIZE) { toast(`"${f.name}" supera los 10 MB.`, "error"); continue; }
+    _repAdjFiles.push(f);
+  }
+  input.value = "";
+  const el = document.getElementById("rep-adj-list");
+  if (el) el.innerHTML = _repAdjListHTML();
+}
+
+function repAdjRemove(idx) {
+  _repAdjFiles.splice(idx, 1);
+  const el = document.getElementById("rep-adj-list");
+  if (el) el.innerHTML = _repAdjListHTML();
 }
 
 function repSetVal(val) {
@@ -8296,7 +8349,7 @@ function _repUpdateProgress() {
 }
 
 // ── Save ───────────────────────────────────────────────
-function sReporte() {
+async function sReporte() {
   const s = _repState;
   if (!s.restaurante || !s.mes || !s.responsable) {
     toast("Completa al menos restaurante, mes y responsable.", "error");
@@ -8306,7 +8359,34 @@ function sReporte() {
     toast("Necesitas Firebase para guardar reportes.", "error");
     return;
   }
+
+  const btn = document.getElementById("rep-submit-btn");
+  if (btn) { btn.disabled = true; btn.textContent = "Enviando…"; }
+  const _restoreBtn = () => { if (btn) { btn.disabled = false; btn.textContent = "Enviar reporte"; } };
+
+  // Subir adjuntos a Storage antes de guardar el reporte
+  let adjuntos = [];
+  if (_repAdjFiles.length && firebase.storage) {
+    try {
+      for (let i = 0; i < _repAdjFiles.length; i++) {
+        const f = _repAdjFiles[i];
+        if (btn) btn.textContent = `Subiendo archivo ${i + 1}/${_repAdjFiles.length}…`;
+        const ref = firebase.storage().ref(`reportes_adjuntos/${Date.now()}_${f.name}`);
+        const snap = await ref.put(f);
+        const url = await snap.ref.getDownloadURL();
+        adjuntos.push({ nombre: f.name, url, tipo: f.type || "", tamano: f.size || 0 });
+      }
+    } catch (e) {
+      console.error("Error subiendo adjuntos:", e);
+      toast("Error subiendo un archivo adjunto: " + e.message, "error");
+      _restoreBtn();
+      return;
+    }
+    if (btn) btn.textContent = "Enviando…";
+  }
+
   const doc = {
+    adjuntos,
     restaurante: s.restaurante,
     mes: s.mes,
     anio: Number(s.anio) || new Date().getFullYear(),
@@ -8360,6 +8440,7 @@ function sReporte() {
         scrollTop();
       } else {
         toast("Reporte enviado correctamente.", "ok");
+        _repInit();
         _repView = "dashboard";
         rRepInner();
         scrollTop();
@@ -8368,6 +8449,7 @@ function sReporte() {
     .catch(err => {
       console.error("Error guardando reporte:", err);
       toast("Error al guardar el reporte. Inténtalo de nuevo.", "error");
+      _restoreBtn();
     });
 }
 
@@ -8496,6 +8578,11 @@ function _repBuildPdf(jsPDF, r) {
   kv("Observaciones", no.observaciones);
   lista("Prioridades", no.prioridades);
   kv("Atención OBA", no.urgenciaOba);
+
+  if (r.adjuntos && r.adjuntos.length) {
+    title("Archivos adjuntos");
+    lista("Archivos", r.adjuntos.map(a => a.nombre || "archivo"));
+  }
 
   ensure(12);
   y += 4;
@@ -8629,5 +8716,16 @@ function _repDetailHTML(fsId) {
       ${notas.observaciones ? `<div class="rep-detail-row"><span class="rep-detail-label">Observaciones</span><span>${safeText(notas.observaciones)}</span></div>` : ""}
       ${notas.prioridades && notas.prioridades.length ? `<div style="margin-top:8px">${row("Prioridades","")}</div>${tagList(notas.prioridades)}` : ""}
       <div style="margin-top:10px">${row("Atención OBA", safeText(notas.urgenciaOba||"No urgente"))}</div>
-    </div>`;
+    </div>
+
+    ${r.adjuntos && r.adjuntos.length ? `
+    <div class="rep-detail-section">
+      <h4>Archivos adjuntos</h4>
+      ${r.adjuntos.map(a => `
+        <a class="rep-adj-link" href="${safeText(a.url)}" target="_blank" rel="noopener">
+          <span class="rep-adj-ico">📎</span>
+          <span class="rep-adj-name">${safeText(a.nombre || "archivo")}</span>
+          <span class="rep-adj-size">${_fmtBytes(a.tamano)}</span>
+        </a>`).join("")}
+    </div>` : ""}`;
 }

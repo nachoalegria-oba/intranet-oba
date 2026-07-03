@@ -207,8 +207,27 @@ exports.emailNuevoReporte = onDocumentCreated(
           ${fila("Atención OBA", esc(notas.urgenciaOba))}
         </table>
 
+        ${(r.adjuntos && r.adjuntos.length) ? `
+        <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:#8E8E93;border-bottom:1px solid #eee;padding-bottom:6px;margin-top:20px">Archivos adjuntos</h3>
+        <ul style="margin:8px 0 0;padding-left:18px">
+          ${r.adjuntos.map((a) => `<li><a href="${esc(a.url)}">${esc(a.nombre || "archivo")}</a></li>`).join("")}
+        </ul>` : ""}
+
         <p style="margin-top:24px;color:#8E8E93;font-size:12px">Enviado automáticamente por la Intranet OBA.</p>
       </div>`;
+
+    // Adjuntar los archivos al correo (hasta 15 MB en total; el resto
+    // queda accesible por los enlaces del cuerpo del mensaje).
+    const attachments = [];
+    if (Array.isArray(r.adjuntos)) {
+      let total = 0;
+      for (const a of r.adjuntos) {
+        if (!a || !a.url) continue;
+        total += a.tamano || 0;
+        if (total > 15 * 1024 * 1024) break;
+        attachments.push({ filename: a.nombre || "adjunto", href: a.url });
+      }
+    }
 
     const auth = {
       user: REPORTES_SMTP_USER.value(),
@@ -219,6 +238,7 @@ exports.emailNuevoReporte = onDocumentCreated(
       to: REPORTES_DESTINO,
       subject: asunto,
       html,
+      attachments,
     };
 
     // Intenta 465 (SSL directo) y si falla 587 (STARTTLS): los servidores

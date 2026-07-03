@@ -3521,6 +3521,13 @@ body.rep-only #hamburger-overlay{display:none !important}
 .rep-card-kpi strong{font-size:1rem;font-family:Arial,Helvetica,sans-serif;line-height:1}
 .rep-card-kpi span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:3px}
 
+/* Adjuntos */
+.rep-adj-link{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--bg);border-radius:10px;margin-bottom:6px;text-decoration:none;color:var(--ink);font-size:13px;transition:background .12s}
+.rep-adj-link:hover{background:var(--surface3,#E8E8F0)}
+.rep-adj-ico{flex-shrink:0}
+.rep-adj-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.rep-adj-size{color:var(--muted);font-size:11px;flex-shrink:0}
+
 /* Acciones: destacar, PDF, eliminar */
 .rep-card.destacada{box-shadow:var(--shadow),0 0 0 1.5px var(--orange)}
 .rep-star{color:var(--orange)}
