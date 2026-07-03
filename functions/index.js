@@ -241,3 +241,38 @@ exports.emailNuevoReporte = onDocumentCreated(
     throw lastErr;
   }
 );
+
+// ═══════════════════════════════════════════════════════
+// COPIA DE SEGURIDAD SEMANAL DE FIRESTORE
+// Cada lunes a las 05:00 exporta todas las colecciones a un JSON
+// en Cloud Storage (carpeta backups/ del bucket del proyecto).
+// Para restaurar: descargar el JSON desde la consola de Firebase
+// (Storage → backups/) y reimportar los documentos.
+// ═══════════════════════════════════════════════════════
+const { onSchedule } = require("firebase-functions/v2/scheduler");
+const admin = require("firebase-admin");
+
+exports.backupSemanal = onSchedule(
+  {
+    schedule: "every monday 05:00",
+    timeZone: "Europe/Madrid",
+    region: "europe-west1",
+    memory: "512MiB",
+    timeoutSeconds: 300,
+  },
+  async () => {
+    if (!admin.apps.length) admin.initializeApp();
+    const db = admin.firestore();
+    const collections = await db.listCollections();
+    const out = {};
+    for (const col of collections) {
+      const snap = await col.get();
+      out[col.id] = snap.docs.map((d) => ({ _id: d.id, ...d.data() }));
+    }
+    const fecha = new Date().toISOString().slice(0, 10);
+    const file = admin.storage().bucket().file(`backups/firestore-${fecha}.json`);
+    await file.save(JSON.stringify(out), { contentType: "application/json" });
+    const total = Object.values(out).reduce((n, arr) => n + arr.length, 0);
+    console.log(`Backup ${fecha}: ${Object.keys(out).length} colecciones, ${total} documentos.`);
+  }
+);

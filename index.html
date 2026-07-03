@@ -20,9 +20,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://unpkg.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@300;500;700;900&family=Cormorant+Garamond:wght@300;400;600&family=Comfortaa:wght@700&display=swap" rel="stylesheet">
-  <link rel="preload" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.css"></noscript>
+  <!-- Solo los pesos de fuente que se usan de verdad -->
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@700&family=Cormorant+Garamond:wght@300;600&family=Comfortaa:wght@700&display=swap" rel="stylesheet">
+  <!-- Iconos: solo los estilos regular y fill (la app no usa los otros 4) -->
+  <link rel="preload" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+  </noscript>
   <link rel="stylesheet" href="./styles.css?v=165">
   <script defer src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
