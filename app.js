@@ -42,6 +42,7 @@ function setLoginMode(on) {
 
 function _applyRepOnlyMode() {
   document.getElementById("app")?.classList.add("rep-only");
+  document.body.classList.add("rep-only");
 }
 
 // --- Recipe scaling helpers ---
@@ -745,6 +746,7 @@ function logout() {
   sessionStorage.removeItem(REPORTES_SESSION_KEY);
   sessionStorage.removeItem(REPORTES_ONLY_KEY);
   document.getElementById("app")?.classList.remove("rep-only");
+  document.body.classList.remove("rep-only");
   _repView = "dashboard";
   const repInner = document.getElementById("rep-inner");
   if (repInner) repInner.innerHTML = "";

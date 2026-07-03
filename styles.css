@@ -3465,10 +3465,12 @@ p, span, div, label, td, th, input, select, textarea, button{
 }
 
 /* ── Reportes-only mode (login con credenciales de reportes) ── */
-#app.rep-only .main-nav{display:none}
-#app.rep-only .mobile-nav-toggle{display:none}
-#app.rep-only #hamburger-btn{display:none}
+#app.rep-only .main-nav{display:none !important}
+#app.rep-only .mobile-nav-toggle{display:none !important}
+#app.rep-only .hamburger-btn{display:none !important}
 #app.rep-only .topbar-brand>div{display:none}
+body.rep-only #hamburger-menu{display:none !important}
+body.rep-only #hamburger-overlay{display:none !important}
 
 /* ── Reportes Mensuales ──────────────────────────────── */
 /* Form wrapper: constrain width so it doesn't stretch on wide screens */
