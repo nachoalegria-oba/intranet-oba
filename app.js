@@ -7701,7 +7701,7 @@ let _repView = "dashboard"; // "dashboard" | "form" | "detail"
 let _repActiveId = null;
 let _repState = {};
 
-const RESTAURANTES = ["ME x Cañitas Maite Malaga", "Cebo", "EÑE", "Can Domo"];
+const RESTAURANTES = ["OBA", "ME x Cañitas Maite Malaga", "Cebo", "EÑE", "Can Domo"];
 
 function _repInit() {
   _repState = {
