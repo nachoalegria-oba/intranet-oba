@@ -552,17 +552,30 @@ function showLoginForm() {
     setLoginMode(false);
     const greetEl = document.getElementById("greet-sub");
     if (greetEl) greetEl.innerHTML = getGreeting();
-    startApp();
     if (sessionStorage.getItem(REPORTES_ONLY_KEY) === "1") {
-      _applyRepOnlyMode();
-      setTimeout(() => sp("reportes"), 50);
-    } else if (sessionStorage.getItem(REPORTES_SESSION_KEY) === "1") {
-      setTimeout(() => sp("reportes"), 50);
+      _repOnlyStart();
+    } else {
+      _dataReady.then(() => {
+        startApp();
+        if (sessionStorage.getItem(REPORTES_SESSION_KEY) === "1") sp("reportes");
+      });
     }
   } else {
     setLoginMode(true);
   }
 }
+
+// Lightweight startup for report writers: no renderAll, no facturas,
+// no seeds — straight to the report form.
+function _repOnlyStart() {
+  _applyRepOnlyMode();
+  const label = formatLongDate(new Date());
+  const hd = document.getElementById("hdate");
+  if (hd) hd.textContent = label;
+  sp("reportes");
+}
+
+let _dataReady = Promise.resolve();
 
 async function initData() {
   try {
@@ -571,19 +584,28 @@ async function initData() {
       firebase.initializeApp(FB);
       db = firebase.firestore();
       db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
-      const _timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 8000));
-      await Promise.race([loadFromFirebase(), _timeout]);
       storageMode = "firebase";
+      // Load data in the background: the login form shows immediately
+      // and startApp() waits on _dataReady.
+      const _timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 8000));
+      _dataReady = Promise.race([loadFromFirebase(), _timeout])
+        .catch((error) => {
+          console.warn("Firebase no disponible, usando local:", error);
+          storageMode = "local";
+          loadFromLocal();
+        })
+        .then(() => { computeNextId(); });
     } else {
       loadFromLocal();
       storageMode = "local";
+      computeNextId();
     }
   } catch (error) {
     console.warn("Firebase no disponible, usando local:", error);
     storageMode = "local";
     loadFromLocal();
+    computeNextId();
   }
-  computeNextId();
   showLoginForm();
 }
 
@@ -690,22 +712,24 @@ function login() {
   const usr = (usrInput?.value || "").trim();
   const pwd = pwdInput.value;
 
-  const _enterApp = (goReportes) => {
+  const _enterApp = (repOnly) => {
     sessionStorage.setItem("oba-auth", "1");
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("app").classList.add("visible");
     setLoginMode(false);
     const greetEl = document.getElementById("greet-sub");
     if (greetEl) greetEl.innerHTML = getGreeting();
-    startApp();
-    if (goReportes) setTimeout(() => sp("reportes"), 50);
+    if (repOnly) {
+      _repOnlyStart();
+    } else {
+      _dataReady.then(() => startApp());
+    }
   };
 
   if (usr === REPORTES_USER && pwd === REPORTES_PWD) {
     sessionStorage.setItem(REPORTES_SESSION_KEY, "1");
     sessionStorage.setItem(REPORTES_ONLY_KEY, "1");
     _enterApp(true);
-    _applyRepOnlyMode();
   } else if (!usr && pwd === PWD) {
     _enterApp(false);
   } else if (usr && !(usr === REPORTES_USER && pwd === REPORTES_PWD)) {
@@ -721,6 +745,9 @@ function logout() {
   sessionStorage.removeItem(REPORTES_SESSION_KEY);
   sessionStorage.removeItem(REPORTES_ONLY_KEY);
   document.getElementById("app")?.classList.remove("rep-only");
+  _repView = "dashboard";
+  const repInner = document.getElementById("rep-inner");
+  if (repInner) repInner.innerHTML = "";
   document.getElementById("login-screen").style.display = "flex";
   document.getElementById("app").classList.remove("visible");
   setLoginMode(true);
@@ -7728,7 +7755,14 @@ function showReportesPanel() {
   closeHamburger();
   const fb = document.getElementById("ped-float-bar");
   if (fb) fb.classList.remove("visible");
-  if (sessionStorage.getItem(REPORTES_SESSION_KEY) === "1") {
+  if (sessionStorage.getItem(REPORTES_ONLY_KEY) === "1") {
+    // Report writers: straight to a fresh form, never the dashboard.
+    if (_repView !== "form") {
+      _repInit();
+      _repView = "form";
+    }
+    rRepInner();
+  } else if (sessionStorage.getItem(REPORTES_SESSION_KEY) === "1") {
     loadReportes();
   } else {
     _repRenderGate();
@@ -7912,6 +7946,7 @@ function oReporteForm() {
 }
 
 function repBack() {
+  if (sessionStorage.getItem(REPORTES_ONLY_KEY) === "1") return; // no dashboard for report writers
   _repView = "dashboard";
   _repActiveId = null;
   rRepInner();
@@ -7920,13 +7955,14 @@ function repBack() {
 
 function _repFormHTML() {
   const s = _repState;
+  const repOnly = sessionStorage.getItem(REPORTES_ONLY_KEY) === "1";
   const restOpts = RESTAURANTES.map(r => `<option value="${safeText(r)}"${s.restaurante===r?" selected":""}>${safeText(r)}</option>`).join("");
   const mesOpts = MESES.map(m => `<option value="${safeText(m)}"${s.mes===m?" selected":""}>${safeText(m)}</option>`).join("");
   const anioOpts = [2024,2025,2026,2027].map(y => `<option value="${y}"${s.anio===y?" selected":""}>${y}</option>`).join("");
 
   return `<div class="rep-form-wrap">
     <div class="rep-form-head">
-      <button class="ghost-btn ghost-btn-sm" onclick="repBack()">← Volver</button>
+      ${repOnly ? "" : `<button class="ghost-btn ghost-btn-sm" onclick="repBack()">← Volver</button>`}
       <div class="rep-form-head-info">
         <div class="eyebrow" style="margin:0">Reporte mensual</div>
         <div class="rep-form-head-title">Nuevo reporte</div>
@@ -8137,7 +8173,7 @@ function _repFormHTML() {
     </div>
 
     <div style="padding:8px 0 32px;display:flex;gap:10px">
-      <button class="ghost-btn" onclick="repBack()">Cancelar</button>
+      ${repOnly ? "" : `<button class="ghost-btn" onclick="repBack()">Cancelar</button>`}
       <button class="primary-btn" style="flex:1" onclick="sReporte()">Enviar reporte</button>
     </div>
   </div>`;
@@ -8276,15 +8312,36 @@ function sReporte() {
 
   db.collection("reportes").add(doc)
     .then(() => {
-      toast("Reporte enviado correctamente.", "ok");
-      _repView = "dashboard";
-      rRepInner();
-      scrollTop();
+      if (sessionStorage.getItem(REPORTES_ONLY_KEY) === "1") {
+        _repInit();
+        _repRenderSent();
+        scrollTop();
+      } else {
+        toast("Reporte enviado correctamente.", "ok");
+        _repView = "dashboard";
+        rRepInner();
+        scrollTop();
+      }
     })
     .catch(err => {
       console.error("Error guardando reporte:", err);
       toast("Error al guardar el reporte. Inténtalo de nuevo.", "error");
     });
+}
+
+// Success screen for report writers (no dashboard access)
+function _repRenderSent() {
+  const el = document.getElementById("rep-inner");
+  if (!el) return;
+  el.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:24px">
+      <div style="background:var(--surface);border-radius:24px;box-shadow:var(--shadow);padding:40px 32px;width:100%;max-width:400px;text-align:center">
+        <div style="width:56px;height:56px;border-radius:50%;background:var(--green-soft);color:var(--green-deep);font-size:26px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">✓</div>
+        <h2 style="font-size:1.3rem;margin:0 0 6px">Reporte enviado</h2>
+        <p style="color:var(--muted);font-size:14px;margin:0 0 24px">Gracias. El equipo de OBA lo revisará.</p>
+        <button class="primary-btn" style="width:100%" onclick="oReporteForm()">Crear otro reporte</button>
+      </div>
+    </div>`;
 }
 
 // ── Detail view ────────────────────────────────────────
