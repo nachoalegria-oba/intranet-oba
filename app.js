@@ -8380,7 +8380,7 @@ function _repRenderSent() {
       <div style="background:var(--surface);border-radius:24px;box-shadow:var(--shadow);padding:40px 32px;width:100%;max-width:400px;text-align:center">
         <div style="width:56px;height:56px;border-radius:50%;background:var(--green-soft);color:var(--green-deep);font-size:26px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">✓</div>
         <h2 style="font-size:1.3rem;margin:0 0 6px">Reporte enviado</h2>
-        <p style="color:var(--muted);font-size:14px;margin:0 0 24px">Gracias. El equipo de OBA lo revisará.</p>
+        <p style="color:var(--muted);font-size:14px;margin:0 0 24px">Gracias. El equipo de Cañitas Gastro lo revisará.</p>
         <button class="primary-btn" style="width:100%" onclick="oReporteForm()">Crear otro reporte</button>
       </div>
     </div>`;
