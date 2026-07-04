@@ -386,3 +386,141 @@ exports.actualizarUsuario = onRequest(
     }
   }
 );
+
+// ═══════════════════════════════════════════════════════
+// RECORDATORIO MENSUAL DE REPORTES
+// El día 5 de cada mes a las 09:00 envía a cada encargado (usuarios
+// activos con rol "encargado") un email-dashboard con sus restaurantes
+// que aún NO han enviado el reporte del mes anterior, y un botón para
+// hacerlo. Si ya lo enviaron todos, no se les molesta.
+// Prueba manual (solo admins): POST /recordatorioReporteTest {to}
+// ═══════════════════════════════════════════════════════
+const MESES_REC = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const INTRANET_URL = "https://intranet.obarestaurante.es";
+
+async function _enviarEmailSMTP(mail) {
+  const auth = { user: REPORTES_SMTP_USER.value(), pass: REPORTES_SMTP_PASS.value() };
+  const configs = [
+    { host: REPORTES_SMTP_HOST, port: 465, secure: true, auth },
+    { host: REPORTES_SMTP_HOST, port: 587, secure: false, requireTLS: true, auth },
+  ];
+  let lastErr = null;
+  for (const cfg of configs) {
+    try {
+      await nodemailer.createTransport(cfg).sendMail({ from: `"Cañitas Gastro" <${auth.user}>`, ...mail });
+      return;
+    } catch (err) { lastErr = err; console.warn(`SMTP ${cfg.port}:`, err.message); }
+  }
+  throw lastErr;
+}
+
+function _htmlRecordatorio(nombre, pendientes, mes, anio) {
+  const filas = pendientes.map((r) => `
+    <tr>
+      <td style="padding:13px 16px;font-weight:600;font-size:15px;color:#111;border-bottom:1px solid #ECECF1">${esc(r)}</td>
+      <td style="padding:13px 16px;text-align:right;border-bottom:1px solid #ECECF1">
+        <span style="background:#FFF3E0;color:#B45309;font-size:11px;font-weight:700;letter-spacing:.05em;padding:5px 12px;border-radius:999px">PENDIENTE</span>
+      </td>
+    </tr>`).join("");
+  const saludo = nombre ? ` ${esc(String(nombre).split(" ")[0])}` : "";
+  return `
+  <div style="background:#F2F2F7;padding:28px 14px">
+    <div style="font-family:-apple-system,'Segoe UI',Arial,sans-serif;max-width:480px;margin:0 auto">
+      <div style="background:#111;border-radius:20px;padding:22px 26px;margin-bottom:14px">
+        <div style="color:#fff;font-size:26px;font-weight:700;letter-spacing:-1px">oba–</div>
+        <div style="color:#8E8E93;font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin-top:3px">Cañitas Gastro · Intranet</div>
+      </div>
+      <div style="background:#fff;border-radius:20px;padding:26px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.05)">
+        <h2 style="margin:0 0 6px;font-size:19px;color:#111;font-family:-apple-system,'Segoe UI',Arial,sans-serif">Hola${saludo} 👋</h2>
+        <p style="margin:0 0 20px;color:#555;font-size:14px;line-height:1.55">Toca enviar el <strong>reporte mensual de ${esc(mes)} ${anio}</strong>. Son 5 minutos y mantiene a todo el grupo alineado.</p>
+        <table style="width:100%;border-collapse:collapse;background:#F7F7FA;border-radius:14px;overflow:hidden">
+          <tr>
+            <td style="padding:10px 16px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#8E8E93">Restaurante</td>
+            <td style="padding:10px 16px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#8E8E93;text-align:right">Estado</td>
+          </tr>
+          ${filas}
+        </table>
+        <a href="${INTRANET_URL}" style="display:block;background:#007AFF;color:#fff;text-decoration:none;text-align:center;font-weight:700;font-size:15px;padding:16px;border-radius:14px;margin-top:20px;font-family:-apple-system,'Segoe UI',Arial,sans-serif">Hacer el reporte ahora →</a>
+        <p style="margin:14px 0 0;color:#8E8E93;font-size:12px;text-align:center">Entra con tu cuenta y pulsa “+ Nuevo reporte”.</p>
+      </div>
+      <p style="color:#8E8E93;font-size:11px;text-align:center;margin:0;font-family:-apple-system,'Segoe UI',Arial,sans-serif">Enviado automáticamente por la Intranet OBA</p>
+    </div>
+  </div>`;
+}
+
+async function _enviarRecordatorios(overrideTo) {
+  if (!admin.apps.length) admin.initializeApp();
+  const fdb = admin.firestore();
+
+  // Mes anterior según la hora de Madrid
+  const ahora = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Madrid" }));
+  let m = ahora.getMonth() - 1, y = ahora.getFullYear();
+  if (m < 0) { m = 11; y -= 1; }
+  const mesNombre = MESES_REC[m];
+
+  // Restaurantes que YA enviaron el reporte de ese mes
+  const repSnap = await fdb.collection("reportes").where("mes", "==", mesNombre).where("anio", "==", y).get();
+  const hechos = new Set(repSnap.docs.map((d) => d.data().restaurante));
+
+  // Encargados activos con pendientes
+  const usrSnap = await fdb.collection("usuarios").where("rol", "==", "encargado").get();
+  const enviados = [];
+  for (const doc of usrSnap.docs) {
+    const u = doc.data();
+    if (u.activo === false || !u.email) continue;
+    const rests = (Array.isArray(u.restaurantes) && u.restaurantes.length)
+      ? u.restaurantes
+      : (u.restaurante ? [u.restaurante] : []);
+    const pendientes = rests.filter((r) => !hechos.has(r));
+    if (!pendientes.length) continue;
+    await _enviarEmailSMTP({
+      to: overrideTo || u.email,
+      subject: `📋 Recordatorio: reporte de ${mesNombre} pendiente`,
+      html: _htmlRecordatorio(u.nombre, pendientes, mesNombre, y),
+    });
+    enviados.push(`${u.nombre || "?"} → ${overrideTo || u.email} (${pendientes.join(", ")})`);
+  }
+
+  // En modo prueba, si no había nada pendiente, enviar un ejemplo para ver el diseño
+  if (overrideTo && !enviados.length) {
+    await _enviarEmailSMTP({
+      to: overrideTo,
+      subject: `📋 [EJEMPLO] Recordatorio: reporte de ${mesNombre} pendiente`,
+      html: _htmlRecordatorio("Ejemplo", ["CEBO"], mesNombre, y),
+    });
+    enviados.push(`ejemplo → ${overrideTo}`);
+  }
+  return { mes: mesNombre, anio: y, enviados };
+}
+
+exports.recordatorioReporte = onSchedule(
+  {
+    schedule: "0 9 5 * *",
+    timeZone: "Europe/Madrid",
+    region: "europe-west1",
+    secrets: [REPORTES_SMTP_USER, REPORTES_SMTP_PASS],
+    retryCount: 2,
+  },
+  async () => {
+    const r = await _enviarRecordatorios(null);
+    console.log(`Recordatorios ${r.mes} ${r.anio}: ${r.enviados.length} enviados`, r.enviados);
+  }
+);
+
+exports.recordatorioReporteTest = onRequest(
+  { region: "europe-west1", cors: true, secrets: [REPORTES_SMTP_USER, REPORTES_SMTP_PASS] },
+  async (req, res) => {
+    if (req.method !== "POST") { res.status(405).json({ error: "Método no permitido" }); return; }
+    const caller = await _verificarAdmin(req);
+    if (!caller) { res.status(403).json({ error: "Solo administradores" }); return; }
+    const to = (req.body || {}).to || caller.email;
+    if (!to) { res.status(400).json({ error: "Falta destinatario" }); return; }
+    try {
+      const r = await _enviarRecordatorios(to);
+      res.json({ ok: true, ...r });
+    } catch (e) {
+      console.error("recordatorioReporteTest:", e);
+      res.status(500).json({ error: e.message });
+    }
+  }
+);

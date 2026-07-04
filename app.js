@@ -818,7 +818,31 @@ function _renderUsuariosModal(usuarios) {
     </div>
     <button class="primary-btn" style="width:100%;margin-top:8px" id="nu-crear" onclick="crearUsuario()">Crear usuario</button>
     <div class="login-error" id="nu-err" style="margin-top:8px"></div>
+    <h4 style="margin:22px 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Recordatorio mensual</h4>
+    <p style="font-size:12px;color:var(--muted);margin:0 0 10px">El día 5 de cada mes, cada encargado con reportes pendientes recibe un correo con un botón para hacerlo al momento.</p>
+    <button class="secondary-btn" style="width:100%" id="rec-test-btn" onclick="probarRecordatorio()">📬 Enviarme una prueba a mi correo</button>
   `);
+}
+
+async function probarRecordatorio() {
+  const btn = document.getElementById("rec-test-btn");
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = "Enviando prueba…"; }
+    const token = await firebase.auth().currentUser.getIdToken();
+    const res = await fetch(`${FN_BASE}/recordatorioReporteTest`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify({})
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    toast(`✓ Prueba enviada a tu correo (${data.enviados?.length || 0} email${data.enviados?.length === 1 ? "" : "s"}, mes: ${data.mes})`, "ok");
+  } catch (e) {
+    console.error("probarRecordatorio:", e);
+    toast("No se pudo enviar la prueba: " + e.message, "error");
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "📬 Enviarme una prueba a mi correo"; }
+  }
 }
 
 async function crearUsuario() {
