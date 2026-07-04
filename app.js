@@ -783,16 +783,21 @@ async function oUsuarios() {
 }
 
 function _renderUsuariosModal(usuarios) {
-  const restOpts = Object.keys(REST_THEME_MAP).map(r => `<option value="${safeText(r)}">${safeText(r)}</option>`).join("");
-  const filas = usuarios.map(u => `
+  const restChecks = Object.keys(REST_THEME_MAP).map(r =>
+    `<label class="nu-check"><input type="checkbox" class="nu-rest-check" value="${safeText(r)}"> ${safeText(r)}</label>`
+  ).join("");
+  const filas = usuarios.map(u => {
+    const rests = (Array.isArray(u.restaurantes) && u.restaurantes.length) ? u.restaurantes.join(", ") : (u.restaurante || "");
+    return `
     <div class="usr-row${u.activo === false ? " usr-off" : ""}">
       <div class="usr-info">
         <strong>${safeText(u.nombre || "—")}</strong>
         <span>${safeText(u.email || "")}</span>
-        <span class="usr-meta">${safeText(u.rol || "")}${u.restaurante ? " · " + safeText(u.restaurante) : ""}${u.activo === false ? " · DESACTIVADA" : ""}</span>
+        <span class="usr-meta">${safeText(u.rol || "")}${rests ? " · " + safeText(rests) : ""}${u.activo === false ? " · DESACTIVADA" : ""}</span>
       </div>
       <button class="ghost-btn ghost-btn-sm" onclick="toggleUsuario('${safeText(u.uid)}', ${u.activo === false ? "true" : "false"})">${u.activo === false ? "Reactivar" : "Desactivar"}</button>
-    </div>`).join("") || `<p style="color:var(--muted);font-size:13px">No hay usuarios todavía.</p>`;
+    </div>`;
+  }).join("") || `<p style="color:var(--muted);font-size:13px">No hay usuarios todavía.</p>`;
 
   oModal(`
     <h3>Usuarios</h3>
@@ -808,8 +813,8 @@ function _renderUsuariosModal(usuarios) {
         <option value="admin">Administrador (todo)</option>
       </select>
     </div>
-    <div class="fr" id="nu-rest-wrap"><label>Restaurante</label>
-      <select class="field-select" id="nu-rest">${restOpts}</select>
+    <div class="fr" id="nu-rest-wrap"><label>Restaurante(s) — marca uno o varios</label>
+      <div class="nu-rest-checks">${restChecks}</div>
     </div>
     <button class="primary-btn" style="width:100%;margin-top:8px" id="nu-crear" onclick="crearUsuario()">Crear usuario</button>
     <div class="login-error" id="nu-err" style="margin-top:8px"></div>
@@ -821,22 +826,29 @@ async function crearUsuario() {
   const email = document.getElementById("nu-email")?.value.trim().toLowerCase();
   const pwd = document.getElementById("nu-pwd")?.value;
   const rol = document.getElementById("nu-rol")?.value;
-  const restaurante = rol === "encargado" ? (document.getElementById("nu-rest")?.value || "") : "";
+  const restaurantes = rol === "encargado"
+    ? Array.from(document.querySelectorAll(".nu-rest-check:checked")).map(c => c.value)
+    : [];
   const err = document.getElementById("nu-err");
   const btn = document.getElementById("nu-crear");
   const showErr = (m) => { if (err) err.textContent = m; };
   if (!nombre || !email || !email.includes("@")) { showErr("Nombre y email válido son obligatorios."); return; }
   if (!pwd || pwd.length < 6) { showErr("La contraseña debe tener al menos 6 caracteres."); return; }
+  if (rol === "encargado" && !restaurantes.length) { showErr("Marca al menos un restaurante."); return; }
   try {
     if (btn) { btn.disabled = true; btn.textContent = "Creando…"; }
     const token = await firebase.auth().currentUser.getIdToken();
     const res = await fetch(`${FN_BASE}/crearUsuario`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-      body: JSON.stringify({ nombre, email, password: pwd, rol, restaurante })
+      body: JSON.stringify({ nombre, email, password: pwd, rol, restaurante: restaurantes[0] || "" })
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    // La lista completa de restaurantes se guarda directamente en el perfil
+    if (data.uid && restaurantes.length) {
+      await db.collection("usuarios").doc(data.uid).update({ restaurantes }).catch(() => {});
+    }
     toast(`Usuario ${nombre} creado.`, "ok");
     oUsuarios();
   } catch (e) {
@@ -887,7 +899,10 @@ async function _loginConEmail(email, pwd, errorEl, _enterApp) {
     }
     sessionStorage.setItem(ROL_KEY, perfil.rol || "reportes");
     sessionStorage.setItem(USER_NOMBRE_KEY, perfil.nombre || "");
-    if (perfil.restaurante) sessionStorage.setItem(ENC_REST_KEY, perfil.restaurante);
+    const rests = (Array.isArray(perfil.restaurantes) && perfil.restaurantes.length)
+      ? perfil.restaurantes
+      : (perfil.restaurante ? [perfil.restaurante] : []);
+    sessionStorage.setItem(ENC_REST_KEY, JSON.stringify(rests));
     if (perfil.rol === "admin") {
       _enterApp(false);
     } else if (perfil.rol === "encargado") {
@@ -932,10 +947,11 @@ async function _cargarPerfilUsuario(user) {
   return null;
 }
 
-// Modo encargado: su restaurante en Cañitas Gastro + sus reportes
+// Modo encargado: sus restaurantes en Cañitas Gastro + sus reportes
 function _encargadoStart() {
   document.getElementById("app")?.classList.add("enc-mode");
   document.body.classList.add("enc-mode");
+  if (_encRestList().length <= 1) document.getElementById("app")?.classList.add("enc-single");
   const label = formatLongDate(new Date());
   const hd = document.getElementById("hdate");
   if (hd) hd.textContent = label;
@@ -947,10 +963,20 @@ function _encargadoStart() {
   });
 }
 
-function _encEmpresaId() {
-  const rest = sessionStorage.getItem(ENC_REST_KEY) || "";
-  const theme = REST_THEME_MAP[rest];
-  return (D.empresas || []).find((e) => e.theme === theme)?.id || null;
+function _encRestList() {
+  const raw = sessionStorage.getItem(ENC_REST_KEY) || "";
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [String(parsed)];
+  } catch {
+    return [raw]; // sesiones antiguas guardaban el nombre a pelo
+  }
+}
+
+function _encEmpresaIds() {
+  const themes = _encRestList().map((r) => REST_THEME_MAP[r]).filter(Boolean);
+  return (D.empresas || []).filter((e) => themes.includes(e.theme)).map((e) => e.id);
 }
 
 function _esEncargado() {
@@ -967,6 +993,7 @@ function logout() {
   sessionStorage.removeItem(ENC_REST_KEY);
   sessionStorage.removeItem(USER_NOMBRE_KEY);
   document.getElementById("app")?.classList.remove("enc-mode");
+  document.getElementById("app")?.classList.remove("enc-single");
   document.body.classList.remove("enc-mode");
   sessionStorage.removeItem("oba-auth");
   sessionStorage.removeItem(REPORTES_SESSION_KEY);
@@ -4069,9 +4096,17 @@ function showGrupoPanel() {
   document.getElementById("ped-float-bar")?.classList.remove("visible");
 
   if (_esEncargado()) {
-    const encId = _encEmpresaId();
-    if (encId) { grupoView = encId; rEmpresaDetalle(encId); }
-    else document.getElementById("panel-grupo-body").innerHTML = `<div class="notice">Tu restaurante no está configurado. Habla con un administrador.</div>`;
+    const encIds = _encEmpresaIds();
+    if (!encIds.length) {
+      document.getElementById("panel-grupo-body").innerHTML = `<div class="notice">Tu restaurante no está configurado. Habla con un administrador.</div>`;
+    } else if (encIds.length === 1) {
+      grupoView = encIds[0];
+      rEmpresaDetalle(encIds[0]);
+    } else {
+      grupoSection = "restaurantes";
+      if (typeof grupoView !== "number" || !encIds.includes(grupoView)) grupoView = "dashboard";
+      rGrupo();
+    }
     return;
   }
 
@@ -4094,17 +4129,22 @@ function showGrupoPanel() {
 }
 
 function rGrupo() {
-  if (_esEncargado()) {
-    const encId = _encEmpresaId();
-    if (encId) { grupoView = encId; rEmpresaDetalle(encId); }
-    return;
+  const esEnc = _esEncargado();
+  const encIds = esEnc ? _encEmpresaIds() : [];
+  if (esEnc) {
+    if (!encIds.length) return;
+    if (encIds.length === 1) { grupoView = encIds[0]; rEmpresaDetalle(encIds[0]); return; }
+    grupoSection = "restaurantes"; // sin kit de apertura para encargados
+    if (typeof grupoView === "number" && !encIds.includes(grupoView)) grupoView = "dashboard";
+  } else if (sessionStorage.getItem(CANITAS_SESSION_KEY) !== "1") {
+    return; // panel locked — don't overwrite gate
   }
-  if (sessionStorage.getItem(CANITAS_SESSION_KEY) !== "1") return; // panel locked — don't overwrite gate
   if (grupoSection === "descargables") { rGrupoDescargables(); return; }
   if (typeof grupoView === "number") { rEmpresaDetalle(grupoView); return; }
 
-  const empresas = (D.empresas || []).slice().sort((a, b) => a.id - b.id);
-  const tabBar = `
+  let empresas = (D.empresas || []).slice().sort((a, b) => a.id - b.id);
+  if (esEnc) empresas = empresas.filter((e) => encIds.includes(e.id));
+  const tabBar = esEnc ? "" : `
     <div class="segmented-bar" style="margin-bottom:18px">
       <button class="segment-btn${grupoSection === "restaurantes" ? " active" : ""}" onclick="grupoSection='restaurantes';rGrupo()">Restaurantes</button>
       <button class="segment-btn${grupoSection === "descargables" ? " active" : ""}" onclick="grupoSection='descargables';rGrupo()">${ico('folder', 16)} Kit de apertura</button>
@@ -4287,6 +4327,7 @@ let grupoView = "dashboard";
 let restTab = "resumen"; // "resumen" | "recetario" | "menu" | "ideas" | "kpis"
 
 function rEmpresaDetalle(id, tab) {
+  if (_esEncargado() && !_encEmpresaIds().includes(id)) return;
   const e = (D.empresas || []).find((x) => x.id === id);
   if (!e) return;
   grupoView = id;
@@ -8005,9 +8046,9 @@ let _repAdjFiles = []; // File objects pendientes de subir con el reporte
 
 function _repInit() {
   _repAdjFiles = [];
-  const encRest = _esEncargado() ? (sessionStorage.getItem(ENC_REST_KEY) || "") : "";
+  const encRests = _esEncargado() ? _encRestList() : [];
   _repState = {
-    restaurante: encRest, mes: "", anio: new Date().getFullYear(), responsable: "",
+    restaurante: encRests.length === 1 ? encRests[0] : "", mes: "", anio: new Date().getFullYear(), responsable: "",
     urgencia: "No urgente",
     facturacion: "", comensales: "", ticketMedio: "", eventosCifra: "", valoracion: "",
     cartaPlatosActivos: "", cartaRecetasModificadas: "", cartaCambios: "", cartaPlatoDestacado: "",
@@ -8122,10 +8163,13 @@ function rRepInner() {
 
 // ── Dashboard ──────────────────────────────────────────
 function _repFilteredList() {
-  const encRest = _esEncargado() ? (sessionStorage.getItem(ENC_REST_KEY) || "") : "";
-  const rfil = encRest || document.getElementById("rep-filter-rest")?.value || "";
+  const rfil = document.getElementById("rep-filter-rest")?.value || "";
   const mfil = document.getElementById("rep-filter-mes")?.value || "";
   let list = _reportesList;
+  if (_esEncargado()) {
+    const rests = _encRestList();
+    list = list.filter(r => rests.includes(r.restaurante));
+  }
   if (rfil) list = list.filter(r => r.restaurante === rfil);
   if (mfil) list = list.filter(r => r.mes === mfil);
   // Destacados primero (orden estable: dentro de cada grupo se mantiene por fecha)
@@ -8148,7 +8192,8 @@ function _repDashHTML() {
       </div>
     </div>`).join("");
 
-  const filterRest = RESTAURANTES.map(r => `<option value="${safeText(r)}"${rfil===r?" selected":""}>${safeText(r)}</option>`).join("");
+  const restDisponibles = _esEncargado() ? _encRestList() : RESTAURANTES;
+  const filterRest = restDisponibles.map(r => `<option value="${safeText(r)}"${rfil===r?" selected":""}>${safeText(r)}</option>`).join("");
   const filterMes = MESES.map(m => `<option value="${safeText(m)}"${mfil===m?" selected":""}>${safeText(m)}</option>`).join("");
 
   const cardsHTML = list.length
@@ -8166,8 +8211,8 @@ function _repDashHTML() {
     </div>
     ${alertsHTML}
     <div class="rep-dash-filters">
-      ${_esEncargado() ? "" : `<select class="field-select" id="rep-filter-rest" onchange="rRepFilter()">
-        <option value="">Todos los restaurantes</option>${filterRest}
+      ${(_esEncargado() && restDisponibles.length <= 1) ? "" : `<select class="field-select" id="rep-filter-rest" onchange="rRepFilter()">
+        <option value="">Todos${_esEncargado() ? " los míos" : " los restaurantes"}</option>${filterRest}
       </select>`}
       <select class="field-select" id="rep-filter-mes" onchange="rRepFilter()">
         <option value="">Todos los meses</option>${filterMes}
@@ -8243,7 +8288,9 @@ function repBack() {
 function _repFormHTML() {
   const s = _repState;
   const repOnly = sessionStorage.getItem(REPORTES_ONLY_KEY) === "1";
-  const restOpts = RESTAURANTES.map(r => `<option value="${safeText(r)}"${s.restaurante===r?" selected":""}>${safeText(r)}</option>`).join("");
+  const encRests = _esEncargado() ? _encRestList() : [];
+  const restDisp = encRests.length ? encRests : RESTAURANTES;
+  const restOpts = restDisp.map(r => `<option value="${safeText(r)}"${s.restaurante===r?" selected":""}>${safeText(r)}</option>`).join("");
   const mesOpts = MESES.map(m => `<option value="${safeText(m)}"${s.mes===m?" selected":""}>${safeText(m)}</option>`).join("");
   const anioOpts = [2024,2025,2026,2027].map(y => `<option value="${y}"${s.anio===y?" selected":""}>${y}</option>`).join("");
 
@@ -8268,7 +8315,7 @@ function _repFormHTML() {
         <div class="rep-section-name">Identificación</div>
       </div>
       <div class="fr"><label>Restaurante</label>
-        <select class="field-select" onchange="repUpdate('restaurante',this.value)"${_esEncargado() ? " disabled" : ""}>
+        <select class="field-select" onchange="repUpdate('restaurante',this.value)"${encRests.length === 1 ? " disabled" : ""}>
           <option value="">Selecciona…</option>${restOpts}
         </select>
       </div>

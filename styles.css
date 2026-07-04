@@ -3473,8 +3473,11 @@ p, span, div, label, td, th, input, select, textarea, button{
 #app.enc-mode .hamburger-btn{display:none !important}
 body.enc-mode #hamburger-menu{display:none !important}
 body.enc-mode #hamburger-overlay{display:none !important}
-#app.enc-mode .emp-back{display:none !important}
+#app.enc-single .emp-back{display:none !important}
 #app.enc-mode .topbar-brand>div{display:none}
+.nu-rest-checks{display:flex;flex-direction:column;gap:6px;background:rgba(118,118,128,.08);border-radius:12px;padding:12px 14px}
+.nu-check{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+.nu-check input{width:16px;height:16px;accent-color:var(--blue)}
 
 /* Modal de usuarios */
 .usr-list{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;margin-top:10px}
