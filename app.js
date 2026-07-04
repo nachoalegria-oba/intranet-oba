@@ -5538,11 +5538,13 @@ function openRestRecipe(empId, col, id) {
   document.getElementById("restdet-body").innerHTML = restRecipePrintMarkup;
   const photoBtn = document.getElementById("restdet-photo-btn");
   if (photoBtn) {
+    photoBtn.style.display = "";
     if (recipe.hasPhoto || recipe.foto) {
-      photoBtn.style.display = "";
+      photoBtn.textContent = "Ver plato";
       photoBtn.onclick = () => viewRestPhoto(id, col);
     } else {
-      photoBtn.style.display = "none";
+      photoBtn.textContent = "＋ Foto";
+      photoBtn.onclick = () => attachRestPhoto(id, col);
     }
   }
   document.getElementById("restdet").classList.add("open");
@@ -5556,6 +5558,61 @@ function closeRestRecipe() {
   restRecipeEmpId = null;
   restRecipeCol = "";
   updateOverlayState();
+}
+
+// Comprimir imagen a JPEG data-URL (los docs de Firestore admiten máx. 1 MB)
+function _compressImage(file, maxDim = 1200, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("No se pudo leer la imagen")); };
+    img.src = url;
+  });
+}
+
+function attachRestPhoto(id, col) {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.onchange = async () => {
+    const file = input.files[0];
+    if (!file) return;
+    const colKey = `${col}_recetas`;
+    const recipe = (D[colKey] || []).find((r) => r._i === id);
+    if (!recipe) return;
+    try {
+      toast("Guardando foto…");
+      const foto = await _compressImage(file);
+      if (storageMode === "firebase" && db) {
+        // Foto en la colección {col}_recetas_fotos (upsert por _i)
+        const fsnap = await db.collection(`${col}_recetas_fotos`).where("_i", "==", id).limit(1).get();
+        if (fsnap.empty) await db.collection(`${col}_recetas_fotos`).add({ _i: id, foto });
+        else await fsnap.docs[0].ref.update({ foto });
+        // Marcar hasPhoto solo en el doc de esa receta
+        const rsnap = await db.collection(colKey).where("_i", "==", id).limit(1).get();
+        if (!rsnap.empty) await rsnap.docs[0].ref.update({ hasPhoto: true });
+      }
+      recipe.foto = foto;
+      recipe.hasPhoto = true;
+      _setPhoto(col, id, foto);
+      toast("✓ Foto guardada", "ok");
+      const btn = document.getElementById("restdet-photo-btn");
+      if (btn) { btn.textContent = "Ver plato"; btn.onclick = () => viewRestPhoto(id, col); }
+    } catch (e) {
+      console.error("attachRestPhoto:", e);
+      toast("No se pudo guardar la foto: " + e.message, "error");
+    }
+  };
+  input.click();
 }
 
 async function viewRestPhoto(id, col) {

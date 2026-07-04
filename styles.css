@@ -1202,8 +1202,9 @@ tbody td:last-child{
   -webkit-overflow-scrolling:touch;
   overscroll-behavior:contain;
   padding-bottom:24px;
-  background:rgba(8,8,8,.62);
-  backdrop-filter:blur(10px);
+  /* Sin backdrop-filter: crea un "containing block" que rompe la
+     cabecera fija/sticky de las fichas al hacer scroll. */
+  background:rgba(8,8,8,.78);
 }
 .detail-drawer.open{display:block}
 
@@ -1215,8 +1216,9 @@ tbody td:last-child{
 
 .drawer-head{
   position:sticky;
+  position:-webkit-sticky;
   top:max(12px, calc(env(safe-area-inset-top, 0px) + 8px));
-  z-index:2;
+  z-index:5;
   display:flex;
   align-items:flex-start;
   justify-content:space-between;
@@ -1226,6 +1228,7 @@ tbody td:last-child{
   border-radius:24px;
   background:#111;
   color:#fff;
+  box-shadow:0 8px 24px rgba(0,0,0,.28);
 }
 
 .drawer-head h2{
