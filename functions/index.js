@@ -426,9 +426,9 @@ function _htmlRecordatorio(nombre, pendientes, mes, anio) {
   return `
   <div style="background:#F2F2F7;padding:28px 14px">
     <div style="font-family:-apple-system,'Segoe UI',Arial,sans-serif;max-width:480px;margin:0 auto">
-      <div style="background:#111;border-radius:20px;padding:22px 26px;margin-bottom:14px">
-        <div style="color:#fff;font-size:26px;font-weight:700;letter-spacing:-1px">oba–</div>
-        <div style="color:#8E8E93;font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin-top:3px">Cañitas Gastro · Intranet</div>
+      <div style="background:#111;border-radius:20px;padding:24px 26px;margin-bottom:14px">
+        <img src="https://intranet-oba.web.app/icons/oba-logo-white.png" alt="OBA" width="92" style="display:block;width:92px;height:auto;margin-bottom:8px">
+        <div style="color:#8E8E93;font-size:11px;letter-spacing:.14em;text-transform:uppercase">Cañitas Gastro · Intranet</div>
       </div>
       <div style="background:#fff;border-radius:20px;padding:26px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.05)">
         <h2 style="margin:0 0 6px;font-size:19px;color:#111;font-family:-apple-system,'Segoe UI',Arial,sans-serif">Hola${saludo} 👋</h2>
