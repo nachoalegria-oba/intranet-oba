@@ -5304,8 +5304,113 @@ const _PDF_RECIPES = {
       "Poner 1 g de quinoa por plato y terminar con 3 g de aceite macha."
     ],
     notas: ""
+  },
+  "esturión ahumado": {
+    descripcion: "Mosaico de esturión ahumado al sarmiento sobre brandada de esturión, coronado con caviar Oscietra y flores de aliso blanco.",
+    alergenos: ["Pescado","Lácteos","Apio","Dióxido de azufre"],
+    ingredientes: [
+      {i:"Caviar Oscietra",c:"3",u:"g/ración"},
+      {i:"Flores de aliso blanco",c:"5",u:"uds/ración"}
+    ],
+    subrecetas: [
+      {
+        nombre: "Cebo esturión ahumado",
+        descripcion: "Rendimiento: de 10 kg de esturión fresco se obtienen 2 kg de esturión limpio.",
+        ingredientes: [
+          {i:"Esturión fresco",c:"10",u:"kg"},
+          {i:"Sarmiento",c:"",u:""}
+        ],
+        pasos: [
+          "Deslomar el esturión.",
+          "Retirar la piel al esturión (guardar para realizar posteriormente el subpase).",
+          "Cuadrar los lomos con el tamaño adecuado para ahumarlos; guardar los recortes frescos para otras elaboraciones.",
+          "Desangrar los lomos de esturión con una solución de agua marina y hielo.",
+          "Escurridos los lomos, enterrarlos en sal durante 12 minutos.",
+          "Lavar los lomos.",
+          "Secar.",
+          "Precalentar el horno a 60-65 °C en convección con ventilador al mínimo.",
+          "Con los lomos acomodados en rejillas dentro del horno, ahumar con sarmiento durante 40 minutos.",
+          "Comprobar la cocción y el ahumado hasta que sea necesario.",
+          "Con el esturión frío, filetearlo en tipo sashimi.",
+          "Disponer en papel sulfurizado 4 a 5 filetes superponiéndolos uno encima de otro para crear un mosaico.",
+          "Cortar con un cortapastas, el mismo que se usará para el círculo de brandada."
+        ]
+      },
+      {
+        nombre: "Cebo base brandada de esturión",
+        descripcion: "",
+        ingredientes: [
+          {i:"Esturión fresco (recortes)",c:"3,5",u:"kg"},
+          {i:"Aceite de girasol",c:"1,8",u:"l"},
+          {i:"Ajo",c:"260",u:"g"},
+          {i:"Apio",c:"330",u:"g"},
+          {i:"Cebolla tierna",c:"550",u:"g"},
+          {i:"Vino fino",c:"250",u:"g"},
+          {i:"Vino blanco",c:"180",u:"g"},
+          {i:"Nata de oveja",c:"3,13",u:"l"}
+        ],
+        pasos: [
+          "Confitar el esturión en el aceite de girasol a 80 °C durante 20-30 minutos.",
+          "Hacer un sofrito en blanco con el ajo, el apio y la cebolla tierna.",
+          "Añadir el vino fino y el vino blanco y reducir el sofrito.",
+          "Con los vinos reducidos, añadir el esturión confitado y la nata.",
+          "Cuando hierva, cocinar durante 10 minutos a fuego flojo.",
+          "Triturar.",
+          "Colar por chino fino."
+        ]
+      },
+      {
+        nombre: "Cebo brandada de esturión",
+        descripcion: "",
+        ingredientes: [
+          {i:"Cebo esturión ahumado (recortes)",c:"125",u:"g"},
+          {i:"Pasta de ajo",c:"40",u:"g"},
+          {i:"Base brandada de esturión",c:"500",u:"g"},
+          {i:"Patata asada",c:"400",u:"g"},
+          {i:"Aceite de ajo",c:"40",u:"g"},
+          {i:"Sal",c:"",u:""}
+        ],
+        pasos: [
+          "Asar la patata en el horno a unos 180 °C durante 30 minutos (según el tamaño de las patatas).",
+          "Añadir los ingredientes en la Thermomix a 80 °C durante 2 minutos a velocidad 3-4.",
+          "Subir a velocidad 10 hasta que la mezcla quede lisa y brillante.",
+          "Estirar en una placa, poner film a piel y enfriar para su posterior uso."
+        ]
+      },
+      {
+        nombre: "Cebo base beurre blanc",
+        descripcion: "",
+        ingredientes: [
+          {i:"Mantequilla de oveja",c:"160",u:"g"},
+          {i:"Ajo",c:"20",u:"g"},
+          {i:"Chalota",c:"280",u:"g"},
+          {i:"Cabeza de rape",c:"1",u:"kg"},
+          {i:"Nata de oveja",c:"720",u:"ml"},
+          {i:"Cava Privat",c:"750",u:"ml"}
+        ],
+        pasos: [
+          "Hacer un sofrito en blanco.",
+          "Añadir las cabezas de rape troceadas y el cava.",
+          "Dejar reducir el cava a la mitad.",
+          "Añadir la nata de oveja e infusionar durante 10 minutos.",
+          "Retirar las cabezas.",
+          "Triturar con toda la verdura.",
+          "Colar."
+        ]
+      }
+    ],
+    pasos: [
+      "Colocar con la ayuda de un cortapastas 14 gramos de brandada de esturión.",
+      "Disponer los lomos de esturión con la ayuda de una espatulina sobre la brandada.",
+      "Disponer bolas de caviar en forma de pentágono (3 g de caviar en total).",
+      "Colocar 5 flores de aliso blanco entre el caviar."
+    ],
+    notas: ""
   }
 };
+// Alias: el nombre completo con guión largo también resuelve a la misma receta
+_PDF_RECIPES["esturión ahumado – caviar oscietra"] = _PDF_RECIPES["esturión ahumado"];
+_PDF_RECIPES["esturión ahumado - caviar oscietra"] = _PDF_RECIPES["esturión ahumado"];
 
 function _pdfKey(nombre) {
   const full = (nombre || "").toLowerCase().trim();
