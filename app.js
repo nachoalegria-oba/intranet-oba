@@ -6492,6 +6492,30 @@ const _PDF_RECIPES = {
     pasos: [],
     notas: "Pendiente del PDF: recetas de la crema de maíz y de la espuma de cebolla (se compartirán más adelante)."
   },
+  "caramelo de malvavisco": {
+    descripcion: "SCOBY de kombucha de hibiscus con flores.",
+    alergenos: [],
+    ingredientes: [
+      {i:"Té hibiscus",c:"65",u:"g"},
+      {i:"Azúcar",c:"600",u:"g"},
+      {i:"Agua",c:"5",u:"l"},
+      {i:"Backslopping",c:"10",u:"%"}
+    ],
+    subrecetas: [],
+    pasos: [
+      "Preparar la infusión de hibiscus: llevar a hervor el té de hibiscus con el azúcar y 1/4 del agua total hasta que el azúcar se disuelva por completo.",
+      "Traspasar a un bote de plástico de 10 litros filtrando el líquido.",
+      "Añadir al líquido filtrado el resto del agua fría para atemperar la mezcla.",
+      "Trabajar por tandas: por cada 2 litros de infusión, triturar junto con scoby activo de kombucha y 200 ml de kombucha antigua; filtrar con trapo fino y reservar.",
+      "Repetir el proceso con toda la infusión, recordando agregar scoby y kombucha vieja en cada tanda.",
+      "Distribuir todo el líquido en gastronorms y tapar con un trapo blanco sujeto con gomas elásticas.",
+      "Fermentar en el armario a 27 °C durante 2-3 días.",
+      "Cuando el scoby esté desarrollado, disponerlo todo en la Ocoo junto con el líquido de la kombucha generada y 200 g de azúcar; cocinar a 70 °C durante 5 horas.",
+      "Reservar en frío junto al líquido durante 24 horas en nevera.",
+      "Para el plato: cortar el scoby cocido en cuadrados de 7 × 7 cm y guardarlos entre papel sulfurizado hasta el momento del pase."
+    ],
+    notas: ""
+  },
   "lucio en conserva": {
     descripcion: "Lucio en brunoise curado en shio koji, con mantequilla de espárrago, vili, caviar de lucio y tuile de kombu, sobre espiral de hojas de bambú.",
     alergenos: ["Pescado","Gluten","Huevos","Lácteos"],
