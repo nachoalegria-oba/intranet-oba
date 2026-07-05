@@ -5912,6 +5912,158 @@ const _PDF_RECIPES = {
     ],
     pasos: [],
     notas: "El montaje final no viene en el documento."
+  },
+  "truchas al sarmiento": {
+    descripcion: "Tres trozos pequeños de trucha marcada en la brasa al más puro estilo de The Fish Butchery, con pil pil de espirulina y pil pil tradicional.",
+    alergenos: ["Pescado","Huevos","Soja","Lácteos"],
+    ingredientes: [
+      {i:"Trucha arcoíris",c:"1",u:"filete"},
+      {i:"Hojas de capuccina",c:"1",u:"und"}
+    ],
+    subrecetas: [
+      {
+        nombre: "Caldo de bacalao",
+        descripcion: "Pendiente: la página del PDF está vacía.",
+        ingredientes: [],
+        pasos: []
+      },
+      {
+        nombre: "Kimizu de carne",
+        descripcion: "",
+        ingredientes: [
+          {i:"Yema de huevo",c:"150",u:"g"},
+          {i:"Vinagre de arroz",c:"10",u:"ml"},
+          {i:"Caldo de carne en polvo Knorr",c:"50",u:"g"},
+          {i:"Salsa de soja",c:"40",u:"g"},
+          {i:"Maicena",c:"30",u:"g"},
+          {i:"Azúcar",c:"50",u:"g"},
+          {i:"Sal",c:"10",u:"g"},
+          {i:"Agua",c:"500",u:"g"}
+        ],
+        pasos: [
+          "Pesar todos los ingredientes y colocarlos en la Thermomix.",
+          "Cocinar a 85 °C durante 10 minutos a velocidad 6.",
+          "Retirar la preparación y pasarla a un recipiente.",
+          "Cubrir con film a contacto para evitar que forme costra.",
+          "Dejar enfriar y conservar en refrigeración hasta su uso."
+        ]
+      },
+      {
+        nombre: "Agua de Lourdes",
+        descripcion: "",
+        ingredientes: [
+          {i:"Ajo quemado",c:"1",u:"diente"},
+          {i:"Caseína",c:"15",u:"g"},
+          {i:"Aceite de girasol",c:"80",u:"g"},
+          {i:"Vino fino",c:"30",u:"g"},
+          {i:"Caldo de bacalao",c:"50",u:"g"}
+        ],
+        pasos: [
+          "Introducir todos los ingredientes en un vaso.",
+          "Triturar con la túrmix hasta obtener una mezcla homogénea.",
+          "Reservar hasta el momento de su uso."
+        ]
+      },
+      {
+        nombre: "Pil pil de espirulina",
+        descripcion: "",
+        ingredientes: [
+          {i:"Kimizu de carne",c:"",u:""},
+          {i:"Agua de Lourdes",c:"",u:""},
+          {i:"Espirulina",c:"15",u:"g"}
+        ],
+        pasos: [
+          "Mezclar el kimizu de carne con el agua de Lourdes y calentar hasta 60 °C.",
+          "Añadir la espirulina al final para conservar mejor su color y propiedades.",
+          "Triturar con la túrmix hasta obtener una emulsión homogénea.",
+          "Pasar por un colador fino.",
+          "Reservar en un recipiente con film a contacto hasta el servicio."
+        ]
+      },
+      {
+        nombre: "Aceite infusionado de setas",
+        descripcion: "500 g en total. Cantidades por ingrediente pendientes de definir.",
+        ingredientes: [
+          {i:"Setas shiitake",c:"",u:""},
+          {i:"Pimienta",c:"",u:""},
+          {i:"Hondashi",c:"",u:""},
+          {i:"Alga kombu",c:"",u:""},
+          {i:"Aceite de girasol",c:"",u:""}
+        ],
+        pasos: [
+          "Introducir todos los ingredientes en una cacerola con el aceite de girasol.",
+          "Infusionar a 80 °C durante 15 minutos.",
+          "Las setas deben adquirir un ligero color dorado sin llegar a quemarse.",
+          "Colar el aceite y reservar."
+        ]
+      },
+      {
+        nombre: "Pil pil tradicional",
+        descripcion: "",
+        ingredientes: [
+          {i:"Caldo de bacalao",c:"",u:""},
+          {i:"Aceite infusionado de setas",c:"",u:""}
+        ],
+        pasos: [
+          "Colocar el caldo de bacalao en una cacerola.",
+          "Incorporar el aceite infusionado poco a poco, emulsionando continuamente con la túrmix.",
+          "Continuar añadiendo aceite hasta obtener la textura deseada.",
+          "Reservar con film a contacto hasta el servicio."
+        ]
+      }
+    ],
+    pasos: [
+      "Cortar cuadrados de 5 x 5 con la piel incluida.",
+      "Marcar en la parrilla por el lado de la piel con una cacerola con hielo encima, para generar presión y un maillard muy marcado: por el lado de la carne queda cruda pero atemperada.",
+      "Cortar en tiras gruesas la capuccina y reservar 3 trozos.",
+      "Para el montaje, disponer un trozo de trucha de lado para que se vean la piel y la carne, colocar por el lado de la carne la hoja de capuccina, y montar 3 unidades por plato."
+    ],
+    notas: "Pendiente del PDF: la receta del caldo de bacalao (la página viene vacía) y las cantidades del aceite infusionado de setas."
+  },
+  "cangrejos en tomate": {
+    descripcion: "Cangrejo desmigado sobre pasta de cangrejo y tostones de pan, terminado con suquet.",
+    alergenos: ["Crustáceos","Gluten"],
+    ingredientes: [
+      {i:"Cangrejo desmigado",c:"7",u:"g/pax"},
+      {i:"Pasta de cangrejo",c:"",u:""},
+      {i:"Tostones de pan",c:"4",u:"uds"},
+      {i:"Suquet",c:"",u:""},
+      {i:"Flores",c:"",u:""}
+    ],
+    subrecetas: [
+      {
+        nombre: "Carne de cangrejo",
+        descripcion: "",
+        ingredientes: [
+          {i:"Cangrejo",c:"1",u:"kg"}
+        ],
+        pasos: [
+          "Desmigar y limpiar muy meticulosamente el cangrejo.",
+          "Porcionar en raciones de 7 gramos por pax para el momento del servicio.",
+          "Antes del sale, mantener al vapor a 60 °C dentro del horno."
+        ]
+      },
+      {
+        nombre: "Suquet",
+        descripcion: "Pendiente: la elaboración no viene en el PDF.",
+        ingredientes: [],
+        pasos: []
+      },
+      {
+        nombre: "Pasta de cangrejo",
+        descripcion: "Pendiente: la elaboración no viene en el PDF.",
+        ingredientes: [],
+        pasos: []
+      }
+    ],
+    pasos: [
+      "Colocar en la base una carcasa de cangrejo (peso pendiente de definir).",
+      "Con la ayuda de un cortapastas pequeño, colocar la pasta de cangrejo.",
+      "Colocar 4 tostones de pan y encima el cangrejo desmigado.",
+      "Colocar las flores a elegir por la mañana.",
+      "Terminar con el suquet (cantidades pendientes de definir)."
+    ],
+    notas: "Pendiente del PDF: elaboraciones del suquet y de la pasta de cangrejo, peso de la carcasa base y cantidades de suquet al emplatar."
   }
 };
 // Alias: el nombre completo con guión largo también resuelve a la misma receta
@@ -5923,6 +6075,10 @@ _PDF_RECIPES["cuajada de castañas"] = _PDF_RECIPES["cuajada de tendones"];
 // Variantes de nombre en el recetario (Llanura)
 _PDF_RECIPES["cuajada leche de cabra"] = _PDF_RECIPES["cuajada de leche de cabra"];
 _PDF_RECIPES["tostones de trigo y cereal"] = _PDF_RECIPES["tostones de trigo y cereales"];
+// Variantes de nombre (Afluente)
+_PDF_RECIPES["trucha al sarmiento"] = _PDF_RECIPES["truchas al sarmiento"];
+_PDF_RECIPES["cangrejo en tomate"] = _PDF_RECIPES["cangrejos en tomate"];
+_PDF_RECIPES["cangrejo frito con tomate"] = _PDF_RECIPES["cangrejos en tomate"];
 
 // Aplicar datos PDF a una receta del recetario principal (D.recipes)
 function applyPdfRecipeMain(id) {
