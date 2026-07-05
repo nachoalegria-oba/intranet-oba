@@ -1,4 +1,4 @@
-const CACHE_NAME = "oba-intranet-v217";
+const CACHE_NAME = "oba-intranet-v218";
 
 // Instalación instantánea: sin APP_SHELL, el caché se llena en runtime.
 self.addEventListener("install", (event) => {

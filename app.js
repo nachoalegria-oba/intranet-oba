@@ -5622,6 +5622,273 @@ const _PDF_RECIPES = {
       "Terminar con la estrella de trufa."
     ],
     notas: "El PDF original no detalla el montaje final (orden orientativo según las menciones del documento)."
+  },
+  "cuajada de leche de cabra": {
+    descripcion: "Cuajada de leche de cabra con helado de calostro, fresas en koji y amazake de manzana oxidada.",
+    alergenos: ["Lácteos"],
+    ingredientes: [],
+    subrecetas: [
+      {
+        nombre: "Helado de calostro",
+        descripcion: "",
+        ingredientes: [
+          {i:"Calostro",c:"1800",u:"g"},
+          {i:"Nata",c:"240",u:"g"},
+          {i:"Gelatina (así en el PDF; revisar)",c:"200",u:"g"},
+          {i:"Leche condensada",c:"340",u:"g"},
+          {i:"Procrema",c:"144",u:"g"},
+          {i:"Maltodextrina",c:"122",u:"g"}
+        ],
+        pasos: [
+          "Pesar cada uno de los ingredientes por separado.",
+          "Mezclar los sólidos y los líquidos, todo en el vaso de la Thermomix.",
+          "Mezclar llevando a 70 °C durante 5 minutos.",
+          "Filtrar y dejar madurar durante 24 horas.",
+          "Llenar bolsas de vacío de 600 ml.",
+          "Congelar en el abatidor hasta -40 °C."
+        ]
+      },
+      {
+        nombre: "Fresas en koji",
+        descripcion: "",
+        ingredientes: [
+          {i:"Fresa blanca",c:"0,5-1",u:"kg"},
+          {i:"Mantequilla de koji",c:"",u:"C/S"}
+        ],
+        pasos: [
+          "Colocar las fresas sin el rabo en la deshidratadora a 45 °C durante aproximadamente 24 horas.",
+          "Cada 4 horas, untarlas con mantequilla de koji por todos los lados, dejando que se deshidraten y absorban la mantequilla.",
+          "Al obtener la textura deseada, reservar una parte para los petit fours y picar y congelar el resto."
+        ]
+      },
+      {
+        nombre: "Amazake de manzana oxidada",
+        descripcion: "",
+        ingredientes: [
+          {i:"Manzana Granny Smith",c:"5",u:"kg"},
+          {i:"Koji",c:"100",u:"g por cada 500 g de líquido"}
+        ],
+        pasos: [
+          "Procesar la manzana en la máquina de zumos para obtener un extracto puro.",
+          "Colocar todo el líquido sin filtrar en la Ocoo en modo honey glace; al terminar, enfriar.",
+          "Con el líquido frío, agregar el koji y dejar fermentar 2 días en el cuarto a 55 °C.",
+          "Pasteurizar a 70 °C en bolsa al vacío para detener el proceso enzimático.",
+          "Filtrar y reservar."
+        ]
+      },
+      {
+        nombre: "Espuma de amazake",
+        descripcion: "",
+        ingredientes: [
+          {i:"Amazake",c:"300",u:"g"},
+          {i:"Leche",c:"150",u:"g"},
+          {i:"Proespuma",c:"35",u:"g"}
+        ],
+        pasos: [
+          "Triturar el amazake con la proespuma y la leche.",
+          "Pasar por un colador fino para que no quede ningún sólido.",
+          "Cargar en el sifón con dos cargas y dejar reposar aproximadamente 12 horas."
+        ]
+      },
+      {
+        nombre: "Reducción de koji",
+        descripcion: "",
+        ingredientes: [
+          {i:"Agua",c:"3",u:"l"},
+          {i:"Koji oryzae",c:"1",u:"kg"},
+          {i:"Azúcar",c:"500",u:"g"}
+        ],
+        pasos: [
+          "Colocar todos los ingredientes en una bolsa al vacío.",
+          "Dejar en el armario a 55 °C durante 2 días.",
+          "Pasteurizar a 70 °C durante 15 minutos.",
+          "Filtrar y pasar a una cazuela para reducir el líquido.",
+          "Al llegar a 10 brix está listo; reservar en frío."
+        ]
+      }
+    ],
+    pasos: [],
+    notas: "Transcripción del PDF con términos dudosos (p. ej. '200 g de galatina' en el helado, 'mantequilla de colli'): revisar cantidades con cocina. El montaje final no viene en el documento."
+  },
+  "sopas frias de leche": {
+    descripcion: "Rulo de mochi relleno de queso marrón con praliné de avellana y crema de mochi.",
+    alergenos: ["Lácteos","Frutos de cáscara"],
+    ingredientes: [],
+    subrecetas: [
+      {
+        nombre: "Masa mochi",
+        descripcion: "",
+        ingredientes: [
+          {i:"Harina de arroz",c:"35",u:"g"},
+          {i:"Leche de vaca",c:"100",u:"g"},
+          {i:"Glucosa en polvo",c:"5",u:"g"}
+        ],
+        pasos: [
+          "Mezclar los sólidos y agregarlos a la leche.",
+          "Cocinar en el microondas unos 9 minutos, removiendo cada 30 segundos, hasta que la masa esté homogénea y cocida.",
+          "Disponer la masa estirada en un plaqué con film, enfriar y dejar reposar 12 horas antes de usar."
+        ]
+      },
+      {
+        nombre: "Crema de mochi",
+        descripcion: "",
+        ingredientes: [
+          {i:"Bly (así en el PDF; revisar)",c:"60",u:"g"},
+          {i:"Helado de calostro",c:"100",u:"g"},
+          {i:"Azúcar",c:"10",u:"g"},
+          {i:"Gelatina",c:"15",u:"g"}
+        ],
+        pasos: [
+          "Mezclar y batir todos los ingredientes excepto el azúcar y la gelatina hasta obtener la consistencia deseada.",
+          "Agregar el azúcar y la gelatina y terminar de mezclar.",
+          "Disponer en mangas para el servicio."
+        ]
+      },
+      {
+        nombre: "Queso marrón",
+        descripcion: "",
+        ingredientes: [
+          {i:"Queso crema",c:"500",u:"g"},
+          {i:"Queso manchego",c:"200",u:"g"}
+        ],
+        pasos: [
+          "Fundir ambos quesos en un cazo hasta que se homogenicen.",
+          "Colocar la mezcla entre paños en la Ocoo, 12 horas en el programa honey glace."
+        ]
+      },
+      {
+        nombre: "Tofe (para el queso marrón)",
+        descripcion: "",
+        ingredientes: [
+          {i:"Azúcar",c:"300",u:"g"},
+          {i:"Agua",c:"50",u:"g"},
+          {i:"Leche",c:"100",u:"g"},
+          {i:"Mantequilla",c:"100",u:"g"},
+          {i:"Nata 35-38% M.G.",c:"50",u:"g"},
+          {i:"Gelatina",c:"2",u:"g"},
+          {i:"Sal",c:"2",u:"g"}
+        ],
+        pasos: [
+          "Hacer un caramelo claro con el azúcar y los 50 g de agua.",
+          "Agregar la nata, la leche y al final la mantequilla, mezclando todo con la túrmix.",
+          "Finalizar incorporando la gelatina y la sal.",
+          "Mezclar la pasta de queso marrón con el tofe, triturar, pasar por cedazo y guardar en bolsas al vacío de 600 g."
+        ]
+      },
+      {
+        nombre: "Praliné de avellana",
+        descripcion: "",
+        ingredientes: [
+          {i:"Avellanas",c:"500",u:"g"},
+          {i:"Azúcar",c:"70% del peso",u:""}
+        ],
+        pasos: [
+          "Hacer un caramelo claro con el azúcar y dejar enfriar.",
+          "Tostar las avellanas en la salamandra por separado hasta el color y aroma deseados.",
+          "Mezclar ambos en la conchadora y triturar hasta formar la pasta de praliné."
+        ]
+      }
+    ],
+    pasos: [
+      "Disponer la pasta de queso marrón en mangas.",
+      "Estirar la masa mochi a 2 mm de grosor sobre papel sulfurizado, en forma cuadrada.",
+      "Mangar el queso marrón de forma tubular dentro de la masa mochi y girar hasta formar un rulo (tipo sushi). Cortar y congelar; repetir hasta acabar la masa.",
+      "Cortar los tubos en piezas de 5-6 cm y montar el praliné en la parte superior.",
+      "Con manga pastelera, dibujar una S con la crema de mochi de principio a fin.",
+      "Montar en el plato blanco o su vajilla correspondiente y pasar al pase."
+    ],
+    notas: "Transcripción del PDF con un término dudoso en la crema de mochi ('60 g de bly'): confirmar con cocina."
+  },
+  "tostones de trigo y cereales": {
+    descripcion: "Tuiles de cereales en cinco sabores con piñones garrapiñados, praliné de calabaza y pâte de fruit de limón.",
+    alergenos: ["Gluten","Huevos","Lácteos","Frutos de cáscara"],
+    ingredientes: [],
+    subrecetas: [
+      {
+        nombre: "Tuiles",
+        descripcion: "",
+        ingredientes: [
+          {i:"Mantequilla pomada",c:"50",u:"g"},
+          {i:"Azúcar glas",c:"50",u:"g"},
+          {i:"Claras",c:"50",u:"g"},
+          {i:"Harina todo uso",c:"50",u:"g"}
+        ],
+        pasos: [
+          "Partir de la mantequilla pomada y agregar el azúcar, las claras y la harina.",
+          "Mezclar todo hasta obtener una pasta y pasarla por cedazo.",
+          "Estirar en silpat sobre gastros usando los moldes para formar las tejas.",
+          "Dar a cada tuile un sabor distinto: almendra rallada, pipas de calabaza, palomitas y levadura tostada; dejar una sin topping (en el PDF: para espolvorear 'galatina'; revisar).",
+          "Hornear a 145-150 °C unos 7 minutos, revisando la cocción y ampliando de 2 en 2 minutos hasta obtener el color necesario."
+        ]
+      },
+      {
+        nombre: "Piñones garrapiñados",
+        descripcion: "",
+        ingredientes: [
+          {i:"Piñones",c:"",u:"C/S"},
+          {i:"Azúcar",c:"150",u:"g"},
+          {i:"Agua",c:"50",u:"g"}
+        ],
+        pasos: [
+          "Hacer un almíbar a 120 °C.",
+          "Agregar los piñones y remover; cuando empiece a cristalizar, retirar del fuego.",
+          "Dejar que el azúcar cristalice completamente.",
+          "Volver a la inducción a potencia 1800 hasta que el azúcar se derrita de nuevo y caramelice.",
+          "Retirar al alcanzar el color deseado, estirar en silpat o gastro, enfriar y reservar."
+        ]
+      },
+      {
+        nombre: "Praliné de calabaza",
+        descripcion: "",
+        ingredientes: [
+          {i:"Pipas de calabaza",c:"",u:"C/S"},
+          {i:"Azúcar",c:"60% del peso de las pipas",u:""},
+          {i:"Aceite de oliva virgen extra",c:"20",u:"g"},
+          {i:"Sal",c:"2",u:"g"}
+        ],
+        pasos: [
+          "Tostar las pipas de calabaza a 180 °C durante 6-7 minutos.",
+          "Triturarlas en la Thermomix.",
+          "Hacer un caramelo claro con el azúcar (60% del peso de las pipas).",
+          "Mezclar en la conchadora hasta obtener una pasta homogénea.",
+          "Terminar agregando el aceite de oliva y la sal."
+        ]
+      },
+      {
+        nombre: "Pâte de fruit de limón",
+        descripcion: "",
+        ingredientes: [
+          {i:"Sirope de limón",c:"150",u:"g"},
+          {i:"Agua",c:"100",u:"g"},
+          {i:"Glucosa",c:"15",u:"g"},
+          {i:"Agar-agar",c:"1",u:"g"},
+          {i:"Pectina",c:"2",u:"% del peso"}
+        ],
+        pasos: [
+          "Mezclar el sirope con todos los ingredientes y llevar a hervor unos 4 minutos.",
+          "Verter la mezcla en un recipiente estéril o tupper y dejar enfriar 12 horas.",
+          "Si falta consistencia, deshidratar un poco.",
+          "Enfriar, cortar en brunoise y reservar."
+        ]
+      },
+      {
+        nombre: "Sirope de limón",
+        descripcion: "",
+        ingredientes: [
+          {i:"Limones",c:"1",u:"kg"},
+          {i:"Azúcar",c:"100",u:"g"}
+        ],
+        pasos: [
+          "Pelar los limones con el pelador y retirar con una puntilla el exceso de parte blanca (amarga).",
+          "Blanquear las pieles partiendo de agua helada hasta hervir; tirar el agua y repetir el proceso desde agua fría unas 12 veces.",
+          "Mezclar las pieles con el zumo del mismo kilo de limones y el azúcar.",
+          "Hervir la mezcla hasta que las pieles estén cristalinas.",
+          "Enfriar, envasar al vacío y guardar."
+        ]
+      }
+    ],
+    pasos: [],
+    notas: "El PDF se corta justo al empezar el 'Cremoso de manzanilla': falta esa subreceta y el montaje final."
   }
 };
 // Alias: el nombre completo con guión largo también resuelve a la misma receta
@@ -5630,6 +5897,9 @@ _PDF_RECIPES["esturión ahumado - caviar oscietra"] = _PDF_RECIPES["esturión ah
 // La cuajada de tendones figura en el recetario como "Cuajada de Castañas con Aceite de Pino"
 _PDF_RECIPES["cuajada de castañas con aceite de pino"] = _PDF_RECIPES["cuajada de tendones"];
 _PDF_RECIPES["cuajada de castañas"] = _PDF_RECIPES["cuajada de tendones"];
+// Variantes de nombre en el recetario (Llanura)
+_PDF_RECIPES["cuajada leche de cabra"] = _PDF_RECIPES["cuajada de leche de cabra"];
+_PDF_RECIPES["tostones de trigo y cereal"] = _PDF_RECIPES["tostones de trigo y cereales"];
 
 // Aplicar datos PDF a una receta del recetario principal (D.recipes)
 function applyPdfRecipeMain(id) {
