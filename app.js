@@ -1460,7 +1460,7 @@ function buildFichaHTML(recipe, scale = 1) {
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
         ${recipe.seccion ? `<div><strong>Sección:</strong> ${safeText(recipe.seccion)}</div>` : ""}
         ${recipe.temporada ? `<div><strong>Temporada:</strong> ${safeText(recipe.temporada)}</div>` : ""}
-        ${recipe.raciones ? `<div><strong>Raciones:</strong> ${safeText(recipe.raciones)}</div>` : ""}
+        ${recipe.raciones ? `<div class="rec-raciones"><strong>Raciones:</strong> ${safeText(recipe.raciones)}</div>` : ""}
         ${recipe.tiempoElaboracion ? `<div><strong>Tiempo:</strong> ${safeText(recipe.tiempoElaboracion)}</div>` : ""}
         ${recipe.temperatura ? `<div><strong>Temperatura:</strong> ${safeText(recipe.temperatura)}</div>` : ""}
       </div>
@@ -1488,45 +1488,81 @@ function oRD(id) {
   updateOverlayState();
 }
 
-function printFicha() {
-  if (!activeRecipeId) return;
-  const recipe = D.recipes.find((item) => item.id === activeRecipeId);
-  if (!recipe) return;
+// CSS compartido para imprimir y guardar en PDF (recetario y fichas de restaurante)
+function _printRecipeCSS() {
+  return `
+    @page{size:A4;margin:15mm 15mm 16mm 15mm}
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{font-family:Arial,Helvetica,sans-serif;line-height:1.4;color:#1a1a1a;font-size:11px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+    /* Cabecera de la ficha: logo OBA arriba, limpio y alineado */
+    .print-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:10px;margin-bottom:14px;border-bottom:2px solid #1a1a1a}
+    .print-head-logo{width:88px;height:auto;display:block;filter:invert(1);flex-shrink:0}
+    .print-head-txt{min-width:0}
+    .print-head-tag{font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:#8a8478;margin-bottom:3px}
+    h1{font-size:22px;line-height:1.12;margin:0;font-weight:700;letter-spacing:-.01em}
+    .print-desc{color:#666;font-size:11.5px;margin:5px 0 0}
+
+    h4{font-size:10px;text-transform:uppercase;letter-spacing:.13em;color:#405735;border-bottom:1px solid #d8d3c8;padding-bottom:4px;margin:0 0 9px}
+    p{margin:0 0 8px}
+    strong{font-size:inherit}
+
+    /* Cada sección/subreceta no se parte entre páginas */
+    .rs{margin-bottom:16px;break-inside:avoid;page-break-inside:avoid}
+
+    .ig{display:grid;grid-template-columns:minmax(0,1fr) 60px 70px;gap:3px 12px;align-items:baseline;font-size:11px;margin-bottom:6px}
+    .ig>div{padding:2px 0;border-bottom:1px dotted #e3ded3}
+    .ih{font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:#8a8478;border-bottom:1px solid #cfc9bd !important;font-weight:700}
+
+    .sl{list-style:none;padding:0;margin:0}
+    .sl li{display:flex;gap:9px;margin-bottom:5px;padding:7px 10px;background:#f7f5ef;border-radius:4px;font-size:10.5px;break-inside:avoid;page-break-inside:avoid}
+    .sn{font-weight:700;color:#405735;min-width:15px;font-variant-numeric:tabular-nums}
+
+    .ca{display:flex;gap:6px;flex-wrap:wrap}
+    .badge{border:1px solid #b84337;color:#b84337;padding:2px 8px;border-radius:999px;font-size:9.5px;font-weight:600}
+    .notice{padding:10px 12px;border-left:3px solid #5f7f4c;background:#eef3ea;font-size:10px;border-radius:0 4px 4px 0;break-inside:avoid}
+
+    img{max-width:100%}
+
+    /* Ocultar en impresión lo que no corresponde a la ficha */
+    .recipe-brand,.scale-bar,#pdf-import-banner,.rep-detail-actions,.rec-raciones{display:none !important}
+  `;
+}
+
+function _openPrintDoc(recipe, markup) {
   const printLogo = logoWhiteUrl();
   const w = window.open("", "_blank");
+  if (!w) { toast("Permite las ventanas emergentes para imprimir.", "error"); return; }
+  const desc = recipe.descripcion ? `<p class="print-desc">${safeText(recipe.descripcion)}</p>` : "";
   w.document.write(`<!DOCTYPE html>
   <html lang="es">
   <head>
     <meta charset="UTF-8">
     <title>${safeText(recipe.nombre)}</title>
-    <style>
-      @page{size:A4;margin:14mm 12mm 14mm 12mm}
-      body{font-family:Arial,sans-serif;padding:0;margin:0;line-height:1.32;color:#111;font-size:11px}
-      h1{font-size:22px;line-height:1.1;margin:0 0 10px}
-      h4{font-size:10px;text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid #ddd;padding-bottom:5px;margin:14px 0 8px}
-      p{margin:0 0 8px}
-      strong{font-size:inherit}
-      .notice{padding:10px 12px;border-left:4px solid #5f7f4c;background:#eef3ea;font-size:10.5px}
-      .ig{display:grid;grid-template-columns:minmax(0,1.6fr) auto auto;gap:5px 10px;align-items:baseline;font-size:10.5px}
-      .ih{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#726b61}
-      .sl{list-style:none;padding:0;margin:0}
-      .sl li{display:flex;gap:8px;margin-bottom:6px;padding:8px 9px;background:#f6f4ee;font-size:10.5px}
-      .sn{font-weight:700;color:#405735;min-width:14px}
-      img{max-width:100%;display:block}
-      .recipe-brand{display:none}
-      .print-brand{position:fixed;top:10mm;right:12mm}
-      .print-brand img{width:78px;height:auto;display:block;filter:invert(1);background:transparent;border:none;box-shadow:none}
-      .rs{margin-bottom:12px}
-    </style>
+    <style>${_printRecipeCSS()}</style>
   </head>
   <body>
-    <div class="print-brand"><img src="${printLogo}" alt="OBA"></div>
-    <h1>${safeText(recipe.nombre)}</h1>
-    ${printRecipeMarkup}
+    <div class="print-head">
+      <div class="print-head-txt">
+        <div class="print-head-tag">Recetario OBA</div>
+        <h1>${safeText(recipe.nombre)}</h1>
+        ${desc}
+      </div>
+      <img class="print-head-logo" src="${printLogo}" alt="OBA">
+    </div>
+    ${markup}
   </body>
   </html>`);
   w.document.close();
-  setTimeout(() => w.print(), 250);
+  setTimeout(() => w.print(), 300);
+}
+
+function printFicha() {
+  if (!activeRecipeId) return;
+  const recipe = D.recipes.find((item) => item.id === activeRecipeId);
+  if (!recipe) return;
+  _openPrintDoc(recipe, printRecipeMarkup);
 }
 
 function saveFichaPdf() {
@@ -6672,7 +6708,7 @@ function buildRestFichaHTML(recipe, scale = 1) {
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
         ${recipe.seccion ? `<div><strong>Sección:</strong> ${safeText(recipe.seccion)}</div>` : ""}
         ${recipe.temporada ? `<div><strong>Temporada:</strong> ${safeText(recipe.temporada)}</div>` : ""}
-        ${recipe.raciones ? `<div><strong>Raciones:</strong> ${safeText(recipe.raciones)}</div>` : ""}
+        ${recipe.raciones ? `<div class="rec-raciones"><strong>Raciones:</strong> ${safeText(recipe.raciones)}</div>` : ""}
         ${recipe.tiempoElaboracion ? `<div><strong>Tiempo:</strong> ${safeText(recipe.tiempoElaboracion)}</div>` : ""}
         ${recipe.temperatura ? `<div><strong>Temperatura:</strong> ${safeText(recipe.temperatura)}</div>` : ""}
       </div>
@@ -6809,36 +6845,7 @@ function printRestFicha() {
   if (!activeRestRecipeId || !restRecipeCol) return;
   const recipe = (D[`${restRecipeCol}_recetas`] || []).find((r) => r._i === activeRestRecipeId);
   if (!recipe) return;
-  const w = window.open("", "_blank");
-  w.document.write(`<!DOCTYPE html>
-  <html lang="es">
-  <head>
-    <meta charset="UTF-8">
-    <title>${safeText(recipe.nombre)}</title>
-    <style>
-      @page{size:A4;margin:14mm 12mm 14mm 12mm}
-      body{font-family:Arial,sans-serif;padding:0;margin:0;line-height:1.32;color:#111;font-size:11px}
-      h1{font-size:22px;line-height:1.1;margin:0 0 10px}
-      h4{font-size:10px;text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid #ddd;padding-bottom:5px;margin:14px 0 8px}
-      p{margin:0 0 8px}
-      .notice{padding:10px 12px;border-left:4px solid #5f7f4c;background:#eef3ea;font-size:10.5px}
-      .ig{display:grid;grid-template-columns:minmax(0,1.6fr) auto auto;gap:5px 10px;align-items:baseline;font-size:10.5px}
-      .ih{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#726b61}
-      .sl{list-style:none;padding:0;margin:0}
-      .sl li{display:flex;gap:8px;margin-bottom:6px;padding:8px 9px;background:#f6f4ee;font-size:10.5px}
-      .sn{font-weight:700;color:#405735;min-width:14px}
-      .rs{margin-bottom:12px}
-      .ca{display:flex;gap:6px;flex-wrap:wrap}
-      .badge{border:1px solid #b84337;color:#b84337;padding:2px 7px;border-radius:4px;font-size:10px}
-    </style>
-  </head>
-  <body>
-    <h1>${safeText(recipe.nombre)}</h1>
-    ${restRecipePrintMarkup}
-  </body>
-  </html>`);
-  w.document.close();
-  setTimeout(() => w.print(), 250);
+  _openPrintDoc(recipe, restRecipePrintMarkup);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
