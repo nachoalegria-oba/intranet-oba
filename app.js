@@ -5627,6 +5627,9 @@ const _PDF_RECIPES = {
 // Alias: el nombre completo con guión largo también resuelve a la misma receta
 _PDF_RECIPES["esturión ahumado – caviar oscietra"] = _PDF_RECIPES["esturión ahumado"];
 _PDF_RECIPES["esturión ahumado - caviar oscietra"] = _PDF_RECIPES["esturión ahumado"];
+// La cuajada de tendones figura en el recetario como "Cuajada de Castañas con Aceite de Pino"
+_PDF_RECIPES["cuajada de castañas con aceite de pino"] = _PDF_RECIPES["cuajada de tendones"];
+_PDF_RECIPES["cuajada de castañas"] = _PDF_RECIPES["cuajada de tendones"];
 
 // Aplicar datos PDF a una receta del recetario principal (D.recipes)
 function applyPdfRecipeMain(id) {
