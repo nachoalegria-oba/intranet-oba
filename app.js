@@ -5922,10 +5922,28 @@ const _PDF_RECIPES = {
     ],
     subrecetas: [
       {
-        nombre: "Caldo de bacalao",
-        descripcion: "Pendiente: la página del PDF está vacía.",
-        ingredientes: [],
-        pasos: []
+        nombre: "Caldo de pieles de bacalao",
+        descripcion: "Para 8 l. El desalado y lavado es muy importante: las pieles deben perder por completo el olor a pescado salado.",
+        ingredientes: [
+          {i:"Agua (primera cocción)",c:"22,5",u:"l"},
+          {i:"Pieles de bacalao saladas",c:"15",u:"kg"},
+          {i:"Agua (segunda cocción)",c:"11,25",u:"l"}
+        ],
+        pasos: [
+          "Mise en place: descongelar las pieles de bacalao la víspera.",
+          "Desalar en un baño de agua, con mucha más agua que pieles; cambiar el agua tantas veces como sea necesario para eliminar toda la sal.",
+          "Lavar las pieles bajo un chorro de agua hasta eliminar el olor a pescado.",
+          "Primera cocción (1,5 l de agua por cada kg de piel): colocar las pieles en la basculante y cubrir con el agua.",
+          "Colocar rejillas de acero inoxidable sobre las pieles para sumergirlas por completo.",
+          "Llevar a ebullición y mantener un hervor muy suave durante 5 horas.",
+          "Cuando el caldo esté reducido a 25 brix, apagar la basculante y retirar las pieles con espumadera con mucho cuidado. Reservar las pieles.",
+          "Colar el caldo y volver a colar con un microcolador de 50 micras. Envasar en porciones de 1 l.",
+          "Segunda cocción (0,75 l de agua por cada kg de bacalao): volver a colocar las pieles recuperadas en la basculante y cubrir con los 11,25 l de agua.",
+          "Colocar de nuevo las rejillas para sumergir las pieles.",
+          "Llevar a ebullición y mantener un hervor muy suave hasta llegar a 25 brix.",
+          "Apagar la basculante y retirar las pieles con espumadera con cuidado.",
+          "Colar con microcolador de 50 micras y juntar los caldos de las dos cocciones. Envasar en porciones de 1 l."
+        ]
       },
       {
         nombre: "Kimizu de carne",
@@ -6018,7 +6036,7 @@ const _PDF_RECIPES = {
       "Cortar en tiras gruesas la capuccina y reservar 3 trozos.",
       "Para el montaje, disponer un trozo de trucha de lado para que se vean la piel y la carne, colocar por el lado de la carne la hoja de capuccina, y montar 3 unidades por plato."
     ],
-    notas: "Pendiente del PDF: la receta del caldo de bacalao (la página viene vacía) y las cantidades del aceite infusionado de setas."
+    notas: "Pendiente del PDF: las cantidades por ingrediente del aceite infusionado de setas (shiitake, pimienta, hondashi, kombu, girasol)."
   },
   "cangrejos en tomate": {
     descripcion: "Cangrejo desmigado sobre pasta de cangrejo y tostones de pan, terminado con suquet.",
