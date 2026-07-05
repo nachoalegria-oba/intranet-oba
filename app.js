@@ -5634,7 +5634,7 @@ const _PDF_RECIPES = {
         ingredientes: [
           {i:"Calostro",c:"1800",u:"g"},
           {i:"Nata",c:"240",u:"g"},
-          {i:"Gelatina (así en el PDF; revisar)",c:"200",u:"g"},
+          {i:"Galatina (dulce a base de leche, triturado en polvo)",c:"200",u:"g"},
           {i:"Leche condensada",c:"340",u:"g"},
           {i:"Procrema",c:"144",u:"g"},
           {i:"Maltodextrina",c:"122",u:"g"}
@@ -5708,7 +5708,7 @@ const _PDF_RECIPES = {
       }
     ],
     pasos: [],
-    notas: "Transcripción del PDF con términos dudosos (p. ej. '200 g de galatina' en el helado, 'mantequilla de colli'): revisar cantidades con cocina. El montaje final no viene en el documento."
+    notas: "El montaje final no viene en el documento."
   },
   "sopas frias de leche": {
     descripcion: "Rulo de mochi relleno de queso marrón con praliné de avellana y crema de mochi.",
@@ -5733,7 +5733,7 @@ const _PDF_RECIPES = {
         nombre: "Crema de mochi",
         descripcion: "",
         ingredientes: [
-          {i:"Bly (así en el PDF; revisar)",c:"60",u:"g"},
+          {i:"Vili (fermento láctico de la casa)",c:"60",u:"g"},
           {i:"Helado de calostro",c:"100",u:"g"},
           {i:"Azúcar",c:"10",u:"g"},
           {i:"Gelatina",c:"15",u:"g"}
@@ -5797,7 +5797,7 @@ const _PDF_RECIPES = {
       "Con manga pastelera, dibujar una S con la crema de mochi de principio a fin.",
       "Montar en el plato blanco o su vajilla correspondiente y pasar al pase."
     ],
-    notas: "Transcripción del PDF con un término dudoso en la crema de mochi ('60 g de bly'): confirmar con cocina."
+    notas: ""
   },
   "tostones de trigo y cereales": {
     descripcion: "Tuiles de cereales en cinco sabores con piñones garrapiñados, praliné de calabaza y pâte de fruit de limón.",
@@ -5817,7 +5817,7 @@ const _PDF_RECIPES = {
           "Partir de la mantequilla pomada y agregar el azúcar, las claras y la harina.",
           "Mezclar todo hasta obtener una pasta y pasarla por cedazo.",
           "Estirar en silpat sobre gastros usando los moldes para formar las tejas.",
-          "Dar a cada tuile un sabor distinto: almendra rallada, pipas de calabaza, palomitas y levadura tostada; dejar una sin topping (en el PDF: para espolvorear 'galatina'; revisar).",
+          "Dar a cada tuile un sabor distinto: almendra rallada, pipas de calabaza, palomitas y levadura tostada; dejar una sin topping para espolvorearla con polvo de galatina.",
           "Hornear a 145-150 °C unos 7 minutos, revisando la cocción y ampliando de 2 en 2 minutos hasta obtener el color necesario."
         ]
       },
@@ -5885,10 +5885,33 @@ const _PDF_RECIPES = {
           "Hervir la mezcla hasta que las pieles estén cristalinas.",
           "Enfriar, envasar al vacío y guardar."
         ]
+      },
+      {
+        nombre: "Cremoso de manzanilla (bavaresa de camomila)",
+        descripcion: "",
+        ingredientes: [
+          {i:"Nata",c:"200",u:"g"},
+          {i:"Leche",c:"200",u:"g"},
+          {i:"Gelatina",c:"8",u:"g"},
+          {i:"Yema",c:"70",u:"g"},
+          {i:"Azúcar",c:"110",u:"g"},
+          {i:"Nata 35% M.G.",c:"440",u:"g"},
+          {i:"Camomila (manzanilla)",c:"",u:"C/S"}
+        ],
+        pasos: [
+          "Poner a hidratar la gelatina en agua y hielo.",
+          "Blanquear el azúcar junto con la yema.",
+          "Llevar a hervor la nata y la leche, agregar la camomila, filmar y dejar infusionar 15 minutos fuera del fuego. Triturar y colar por cedazo.",
+          "Hacer una crema inglesa y añadir la gelatina al final de la cocción.",
+          "Dejar enfriar la crema inglesa a 23 °C (puede hacerse con un baño maría inverso sin parar de remover).",
+          "Semimontar la nata 35% con picos suaves e integrar la crema inglesa en la nata. Es muy importante que la nata esté muy fría y la crema inglesa bien templada.",
+          "Extender sobre los tapetes y congelar.",
+          "Cortar con cortapastas y reservar en congelación."
+        ]
       }
     ],
     pasos: [],
-    notas: "El PDF se corta justo al empezar el 'Cremoso de manzanilla': falta esa subreceta y el montaje final."
+    notas: "El montaje final no viene en el documento."
   }
 };
 // Alias: el nombre completo con guión largo también resuelve a la misma receta
