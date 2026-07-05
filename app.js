@@ -6223,6 +6223,211 @@ const _PDF_RECIPES = {
       "Para el montaje, colocar la mezcla en el vaso, tapar con los palos de bambú y colocar una boquilla del mismo bambú."
     ],
     notas: "El PDF no especifica los gramos de mezcla por vaso."
+  },
+  "alita de pollo rellena": {
+    descripcion: "Alita de pollo deshuesada y rellena de farsa de pollo, hígado y trufa, cocinada a baja temperatura y marcada, con pepitoria.",
+    alergenos: ["Gluten","Huevos","Lácteos","Frutos de cáscara","Dióxido de azufre"],
+    ingredientes: [
+      {i:"Alita de pollo",c:"25",u:"und"},
+      {i:"Shoyu de huevo",c:"",u:""}
+    ],
+    subrecetas: [
+      {
+        nombre: "Farsa",
+        descripcion: "",
+        ingredientes: [
+          {i:"Carne de pollo",c:"600",u:"g"},
+          {i:"Papada de cerdo",c:"120",u:"g"},
+          {i:"Pan brioche (hidratado en leche y bien escurrido)",c:"110",u:"g"},
+          {i:"Chalota",c:"80",u:"g"},
+          {i:"Colmenilla picada (hidratada y muy seca)",c:"40",u:"g"},
+          {i:"Trufa picada (recortes)",c:"40",u:"g"},
+          {i:"Palo cortado",c:"20",u:"g"},
+          {i:"Sal",c:"",u:"pizca"},
+          {i:"Pimienta negra molida",c:"2",u:"g"},
+          {i:"Hígado de pollo",c:"400",u:"g"}
+        ],
+        pasos: [
+          "Picar la carne de pollo junto con la papada en la picadora.",
+          "Hidratar el pan brioche en leche sin que quede muy líquido (debe quedar espeso para que la mezcla sea densa).",
+          "Pochar la chalota en manteca.",
+          "Picar el resto de ingredientes, ir añadiéndolos y mezclar todo junto a mano."
+        ]
+      },
+      {
+        nombre: "Montaje de la alita",
+        descripcion: "",
+        ingredientes: [],
+        pasos: [
+          "Limpiar la alita y deshuesarla; rellenar con la farsa.",
+          "Cerrar con film y anudar; envasar en bolsa de vacío al 100%.",
+          "Cocinar 1 h 30 a 68 °C en la roner. Reservar en frío.",
+          "En el doble anterior, marcar la alita con aceite y sal por todos los lados hasta dorar de forma homogénea.",
+          "Al sale, cortar el extremo y pincelar toda la alita con shoyu de huevo."
+        ]
+      },
+      {
+        nombre: "Pepitoria",
+        descripcion: "",
+        ingredientes: [
+          {i:"Demi de gallina",c:"500",u:"g"},
+          {i:"Cebolla pochada (700 g cebolla cruda)",c:"480",u:"g"},
+          {i:"Diente de ajo pochado",c:"4",u:"g"},
+          {i:"Almendra tostada",c:"240",u:"g"},
+          {i:"Yema cocida a baja temperatura",c:"8",u:"und"},
+          {i:"Vino fino",c:"160",u:"g"},
+          {i:"Azafrán",c:"1",u:"hebra"},
+          {i:"Nata reducida",c:"320",u:"g"},
+          {i:"Pimienta",c:"",u:""},
+          {i:"Sal",c:"",u:""}
+        ],
+        pasos: [
+          "Pochar en una cazuela la cebolla junto con el ajo.",
+          "Agregar la nata y dejar reducir.",
+          "Añadir el vino fino y la almendra tostada, y cocinar durante 5 minutos.",
+          "Retirar del fuego y pasar a un recipiente; añadir la yema, el azafrán y la demi.",
+          "Triturar con túrmix hasta que la salsa quede lo más lisa posible."
+        ]
+      },
+      {
+        nombre: "Demi de gallina (caldo de gallina)",
+        descripcion: "La grasa de la gallina aporta mucho sabor al caldo: se introduce en la olla al elaborarlo.",
+        ingredientes: [
+          {i:"Gallina",c:"15",u:"kg"},
+          {i:"Cebolla",c:"12",u:"kg"},
+          {i:"Ajo pelado",c:"1",u:"kg"},
+          {i:"Garbanzo seco",c:"2",u:"kg"},
+          {i:"Agua",c:"30",u:"l"},
+          {i:"Clara de huevo (para clarificar)",c:"1 por litro",u:""}
+        ],
+        pasos: [
+          "Remojar los garbanzos una noche.",
+          "Trocear la gallina separando pechugas, muslos con piernas, alas y carcasas; disponer en papel sulfurizado.",
+          "Asar en el horno a 220 °C hasta que la gallina esté muy dorada (aprox. 60 min).",
+          "Pelar los ajos, disponer en Thermomix cubiertos de agua y triturar en intervalos de 2 segundos hasta 3 veces; colar el agua y secar el ajo.",
+          "Confitar el ajo en olla con suficiente aceite de oliva hasta un dorado uniforme; separar el ajo del aceite (usar solo el ajo y guardar el aceite).",
+          "Cortar la cebolla en juliana fina y caramelizar de forma uniforme.",
+          "Introducir la cebolla y los ajos en la olla; añadir la gallina tostada y los garbanzos.",
+          "Añadir 30 l de agua y cocinar a hervor leve durante 4 horas.",
+          "Colar presionando bien, disponer en gastro honda con film y enfriar en nevera una noche.",
+          "Retirar la grasa por completo.",
+          "Por cada litro obtenido, montar en la KitchenAid 1 clara de huevo (nada de yema) hasta un merengue sólido.",
+          "Añadir el merengue al caldo en frío y llevar a casi hervor hasta que clarifique.",
+          "Colar con un filtro de tela sobre gastro de agujeros y, debajo, una gastro honda.",
+          "Reducir en olla alta hasta obtener 20 brix.",
+          "Enfriar, envasar en bolsas de 200 g y abatir."
+        ]
+      }
+    ],
+    pasos: [],
+    notas: ""
+  },
+  "gallina dorada en pebre": {
+    descripcion: "Dados de pechuga de pollo marcados a la brasa con albóndiga de pularda y andrajos.",
+    alergenos: ["Gluten","Huevos","Frutos de cáscara"],
+    ingredientes: [],
+    subrecetas: [
+      {
+        nombre: "Pechugas en dados",
+        descripcion: "4 dados por pax.",
+        ingredientes: [
+          {i:"Pechuga de pollo",c:"2",u:"kg"}
+        ],
+        pasos: [
+          "Envasar la pechuga con un poco de aceite y cocinar 1 h 30 a 65 °C en la roner (si son muslos: 2 horas a 68 °C).",
+          "Cortar en dados de 1 cm y reservar para el servicio.",
+          "Al servicio, atemperar y marcar con un poco de aceite en la brasa."
+        ]
+      },
+      {
+        nombre: "Albóndiga",
+        descripcion: "",
+        ingredientes: [
+          {i:"Pularda",c:"100",u:"g"},
+          {i:"Piñones",c:"5",u:"g"},
+          {i:"Perejil",c:"2",u:"g"},
+          {i:"Caseína de aceite",c:"2",u:"g"},
+          {i:"Chalota",c:"15",u:"g"},
+          {i:"Papada",c:"30",u:"g"},
+          {i:"Pan mojado (estrujar muy bien)",c:"57",u:"g"},
+          {i:"Sal",c:"",u:"pizca"},
+          {i:"Pimienta negra",c:"",u:"pizca"}
+        ],
+        pasos: [
+          "Procesar todo en Thermomix o máquina trituradora.",
+          "Pesar bolas de 7 gramos y reservar en nevera; deben estar muy frías para marcarlas.",
+          "Minutos antes del servicio, marcar las bolas uniformemente en sartén con papel sulfurizado y aceite; reservar en plaqué con papel absorbente.",
+          "En el sale, marcar las bolas por la brasa y rectificar de sal."
+        ]
+      },
+      {
+        nombre: "Andrajos",
+        descripcion: "",
+        ingredientes: [
+          {i:"Harina",c:"500",u:"g"},
+          {i:"Yema",c:"60",u:"g"},
+          {i:"Huevos",c:"2",u:"und"},
+          {i:"Sal",c:"",u:"pizca"}
+        ],
+        pasos: [
+          "Mezclar todos los ingredientes en KitchenAid, añadiendo un chorro de agua si es necesario, hasta obtener una masa homogénea.",
+          "Retirar del bol, filmar y guardar en nevera 1 hora.",
+          "Estirar con máquina de pasta en el número 4, con muy poca harina.",
+          "Cortar en trozos grandes que entren en una cazuela y cocinar en agua hirviendo 7 minutos con dos cucharaditas de colorante naranja; reservar en agua fría con hielo.",
+          "Troquelar con los cortapastas de gota y flor la mayor cantidad posible.",
+          "En un papel sulfurizado, armar una flor con 8 gotas y colocar la flor pequeña troquelada en el centro; reservar en nevera.",
+          "Al servicio, congelar en abatidor para que en el sale sea sencillo colocar en el bowl y atemperar con la lámpara."
+        ]
+      },
+      {
+        nombre: "Tonkatsu de gallina",
+        descripcion: "Pendiente: receta por compartir.",
+        ingredientes: [],
+        pasos: []
+      }
+    ],
+    pasos: [],
+    notas: "Pendiente del PDF: la receta del tonkatsu de gallina (se compartirá más adelante)."
+  },
+  "gachas de maiz y cerdo": {
+    descripcion: "Crema de maíz con crujiente de maíz y cerdo.",
+    alergenos: ["Gluten"],
+    ingredientes: [],
+    subrecetas: [
+      {
+        nombre: "Crema de maíz",
+        descripcion: "Pendiente: la receta no viene en el PDF.",
+        ingredientes: [],
+        pasos: []
+      },
+      {
+        nombre: "Crujiente de maíz",
+        descripcion: "",
+        ingredientes: [
+          {i:"Maíz deshidratado para palomitas",c:"200",u:"g"},
+          {i:"Aceite de girasol",c:"20",u:"ml"},
+          {i:"Panko",c:"200",u:"g"},
+          {i:"Sal",c:"",u:"pizca"},
+          {i:"Pimienta",c:"",u:"pizca"},
+          {i:"Levadura tostada",c:"80",u:"g"},
+          {i:"Aceite de koji",c:"100",u:"ml"}
+        ],
+        pasos: [
+          "Hacer palomitas de maíz en una cacerola con aceite de girasol.",
+          "Triturar las palomitas en Thermomix hasta obtener un polvo.",
+          "Tostar el polvo en sartén junto al panko, el aceite de koji y la levadura tostada hasta obtener unas migas doradas uniformemente.",
+          "Rectificar con sal y pimienta y reservar con un silica gel dentro."
+        ]
+      },
+      {
+        nombre: "Espuma de cebolla",
+        descripcion: "Pendiente: receta por compartir.",
+        ingredientes: [],
+        pasos: []
+      }
+    ],
+    pasos: [],
+    notas: "Pendiente del PDF: recetas de la crema de maíz y de la espuma de cebolla (se compartirán más adelante)."
   }
 };
 // Alias: el nombre completo con guión largo también resuelve a la misma receta
