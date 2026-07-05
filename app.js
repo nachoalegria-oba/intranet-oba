@@ -6422,14 +6422,35 @@ const _PDF_RECIPES = {
         ]
       },
       {
-        nombre: "Tonkatsu de gallina",
-        descripcion: "Pendiente: receta por compartir.",
-        ingredientes: [],
-        pasos: []
+        nombre: "Tonkatsu de gallina · Caldo de espinazo",
+        descripcion: "El tonkatsu se elabora juntando dos caldos. Este es el caldo de espinazo (con sus repas).",
+        ingredientes: [
+          {i:"Espinazo",c:"15",u:"kg"},
+          {i:"Agua (primer caldo)",c:"15",u:"l"},
+          {i:"Agua (repas 1)",c:"12",u:"l"},
+          {i:"Agua (repas 2)",c:"10",u:"l"}
+        ],
+        pasos: [
+          "Desangrar el espinazo en agua con hielo, en nevera, durante 12 horas.",
+          "Colar el agua, sacar el espinazo y disponerlo en gastronorms sin superponer pero llenando la bandeja.",
+          "Precalentar el horno a 200 °C sin humedad y con la ventilación al máximo.",
+          "Introducir el espinazo durante 25 min; si fuese necesario, dejar más tiempo en intervalos de 5 minutos hasta obtener un bonito color dorado.",
+          "Introducir los huesos en una olla grande (mín. 40 l) y añadir los 15 l de agua.",
+          "Poner a fuego medio-fuerte y, una vez hierva, bajar hasta un hervor muy leve durante 4 horas.",
+          "Desespumar el caldo cada cierto tiempo, sobre todo al principio.",
+          "Transcurridas las 4 horas, colar por chino fino y reservar en nevera en gastronorm honda, etiquetado.",
+          "Repas 1: disponer los huesos del primer caldo, añadir 12 l de agua y repetir el proceso (hervir, hervor suave 4 horas, colar y reservar).",
+          "Repas 2: con los huesos en la olla, añadir 10 l de agua y cocer igual; colar y conservar.",
+          "Una vez fríos el caldo y los repas, desgrasar.",
+          "Calentarlos y pasarlos por la tela especial de colado, sin dejar que se enfríen para que cuele con facilidad.",
+          "Juntar los tres caldos en la misma olla y llevar a ebullición con un hervor no muy agresivo para mantener los aromas.",
+          "Reducir el caldo hasta 15 brix.",
+          "Enfriar, envasar en bolsas de 200 g, abatir en bandejas planas y stockar en el congelador."
+        ]
       }
     ],
     pasos: [],
-    notas: "Pendiente del PDF: la receta del tonkatsu de gallina (se compartirá más adelante)."
+    notas: "Pendiente del PDF: el segundo caldo del tonkatsu de gallina (se compartirá más adelante)."
   },
   "gachas de maiz y cerdo": {
     descripcion: "Crema de maíz con crujiente de maíz y cerdo.",
