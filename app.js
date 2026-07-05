@@ -5551,12 +5551,20 @@ const _PDF_RECIPES = {
       },
       {
         nombre: "Piñas de pino encurtidas",
-        descripcion: "Pendiente de completar en el PDF original.",
+        descripcion: "",
         ingredientes: [
           {i:"Piñas de pino tiernas",c:"",u:"C/S"},
-          {i:"Azúcar",c:"100",u:"g"}
+          {i:"Sake",c:"150",u:"g"},
+          {i:"Vinagre",c:"200",u:"g"},
+          {i:"Azúcar",c:"200",u:"g"},
+          {i:"Agua",c:"50",u:"g"},
+          {i:"Sal",c:"5",u:"g"}
         ],
-        pasos: []
+        pasos: [
+          "Preparar el líquido de cocción mezclando el sake, el vinagre, el azúcar, el agua y la sal.",
+          "Cocinar las piñas en el líquido en la Ocoo durante 30 horas.",
+          "Envasar las piñas junto con su líquido de cocción."
+        ]
       },
       {
         nombre: "Shitake mini",
@@ -5613,7 +5621,7 @@ const _PDF_RECIPES = {
       "Repartir las setas braseadas: shitake mini, shimejis, seta de temporada y el anillo de colmenilla.",
       "Terminar con la estrella de trufa."
     ],
-    notas: "El PDF original deja las piñas de pino encurtidas sin elaboración definida y no detalla el montaje final (orden orientativo según las menciones del documento)."
+    notas: "El PDF original no detalla el montaje final (orden orientativo según las menciones del documento)."
   }
 };
 // Alias: el nombre completo con guión largo también resuelve a la misma receta
