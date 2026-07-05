@@ -5443,6 +5443,177 @@ const _PDF_RECIPES = {
       "Colocar 5 flores de aliso blanco entre el caviar."
     ],
     notas: ""
+  },
+  "cuajada de tendones": {
+    descripcion: "Cuajada cremosa de tendones de vaca con aire de setas, madroño, setas braseadas y estrella de trufa.",
+    alergenos: ["Huevos","Lácteos","Dióxido de azufre"],
+    ingredientes: [],
+    subrecetas: [
+      {
+        nombre: "Infusión de setas",
+        descripcion: "",
+        ingredientes: [
+          {i:"Polvo de boletus",c:"40",u:"g"},
+          {i:"Agua de botella",c:"1,5",u:"l"}
+        ],
+        pasos: [
+          "Juntar ambos ingredientes, llevar a ebullición y tapar con film.",
+          "Reposar 20 minutos, colar por paño y reservar el líquido."
+        ]
+      },
+      {
+        nombre: "Aire de setas",
+        descripcion: "",
+        ingredientes: [
+          {i:"Infusión de setas",c:"400",u:"g"},
+          {i:"Vino fino hervido",c:"20",u:"g"},
+          {i:"Mantequilla noisette",c:"120",u:"g"},
+          {i:"Sucro emul",c:"5",u:"g"},
+          {i:"Vinagre de manzana",c:"5",u:"g"},
+          {i:"Sal",c:"",u:""},
+          {i:"Pimienta",c:"",u:""}
+        ],
+        pasos: [
+          "Juntar todos los ingredientes en un cazo y emulsionar con túrmix.",
+          "Reservar en frío."
+        ]
+      },
+      {
+        nombre: "Tendón procesado",
+        descripcion: "",
+        ingredientes: [
+          {i:"Tendón de vaca",c:"150",u:"g"}
+        ],
+        pasos: []
+      },
+      {
+        nombre: "Base de tendones",
+        descripcion: "",
+        ingredientes: [
+          {i:"Tendón procesado",c:"200",u:"g"},
+          {i:"Agua",c:"200",u:"g"},
+          {i:"Infusión de setas",c:"200",u:"g"},
+          {i:"Garum de setas",c:"80",u:"g"},
+          {i:"Mantequilla noisette",c:"60",u:"g"},
+          {i:"Demiglace de gallina",c:"120",u:"g"},
+          {i:"Pimienta negra recién molida",c:"",u:""},
+          {i:"Sal",c:"",u:""}
+        ],
+        pasos: [
+          "Introducir todos los ingredientes en la Thermomix y programar velocidad 4 a 70 °C durante 10 minutos.",
+          "Transcurrido el tiempo, pasar rápidamente por cedazo a un bol.",
+          "Si se quiere reservar, envasar en bolsas de 440 g y guardar en nevera."
+        ]
+      },
+      {
+        nombre: "Cuajada de tendones",
+        descripcion: "Trabajar rápido y algo por encima de temperatura ambiente: el colágeno hace que cuaje antes de tiempo.",
+        ingredientes: [
+          {i:"Base de tendones",c:"440",u:"g"},
+          {i:"Huevos",c:"4",u:"uds"},
+          {i:"Yemas",c:"2",u:"uds"},
+          {i:"Sal",c:"",u:""}
+        ],
+        pasos: [
+          "Disponer todos los ingredientes en una jarra e integrarlos con la túrmix mixeando de arriba abajo durante un minuto.",
+          "Pasar la mezcla a un recipiente cuadrado y retirar el exceso de aire en la máquina de vacío.",
+          "Si la mezcla cuajara antes de tiempo, ponerla al baño maría sin dejar de remover solo hasta que se disuelva de nuevo.",
+          "Con la mezcla sin aire, disponer 40 gramos en la vajilla correspondiente.",
+          "Filmar los platos individualmente.",
+          "Con el horno precalentado a 90 °C al vapor, cocinar los platos 30 minutos.",
+          "Al finalizar, retirar rápidamente el film y dejar enfriar y secar 10 minutos.",
+          "Volver a filmar por completo la vajilla y reservar en nevera.",
+          "A la hora del servicio, programar el horno a 60 °C en continuo hasta el pase."
+        ]
+      },
+      {
+        nombre: "Madroño",
+        descripcion: "",
+        ingredientes: [
+          {i:"Madroño",c:"1",u:"bote"},
+          {i:"Demi de gallina",c:"60",u:"g"}
+        ],
+        pasos: [
+          "Abrir los madroños y partirlos por la mitad sin el cuesco.",
+          "Calentarlos muy suavemente en la demi para colocarlos sobre la espuma."
+        ]
+      },
+      {
+        nombre: "Estrella de trufa",
+        descripcion: "",
+        ingredientes: [
+          {i:"Trufa",c:"1",u:"ud"}
+        ],
+        pasos: [
+          "Congelar la trufa entera.",
+          "Laminarla en la laminadora de trufa y cortar las láminas con un cortapastas con forma de estrella."
+        ]
+      },
+      {
+        nombre: "Piñas de pino encurtidas",
+        descripcion: "Pendiente de completar en el PDF original.",
+        ingredientes: [
+          {i:"Piñas de pino tiernas",c:"",u:"C/S"},
+          {i:"Azúcar",c:"100",u:"g"}
+        ],
+        pasos: []
+      },
+      {
+        nombre: "Shitake mini",
+        descripcion: "",
+        ingredientes: [
+          {i:"Shitake",c:"1",u:"ud"},
+          {i:"Aceite",c:"",u:""},
+          {i:"Sal",c:"",u:""}
+        ],
+        pasos: [
+          "Pintar con aceite y marcar en la parrilla."
+        ]
+      },
+      {
+        nombre: "Shimeji a la brasa",
+        descripcion: "",
+        ingredientes: [
+          {i:"Shimeji",c:"5",u:"uds"},
+          {i:"Aceite",c:"",u:""},
+          {i:"Sal",c:"",u:""}
+        ],
+        pasos: [
+          "Agregar un poco de aceite a los shimejis y brasear en parrilla hasta que tomen un tono dorado."
+        ]
+      },
+      {
+        nombre: "Seta de temporada braseada",
+        descripcion: "",
+        ingredientes: [
+          {i:"Seta de temporada",c:"1",u:"ud"},
+          {i:"Aceite",c:"",u:""},
+          {i:"Sal",c:"",u:""}
+        ],
+        pasos: [
+          "Pintar la seta con aceite y colocarla en la parrilla hasta que esté tostada y acorde a lo que se busca."
+        ]
+      },
+      {
+        nombre: "Colmenilla",
+        descripcion: "",
+        ingredientes: [
+          {i:"Colmenilla",c:"1",u:"ud"}
+        ],
+        pasos: [
+          "Cortar la colmenilla en rodaja, de forma que quede como un anillo.",
+          "Brasearla dejándola lo más completa posible; cuidado, se puede romper."
+        ]
+      }
+    ],
+    pasos: [
+      "Servir la cuajada templada (horno a 60 °C) en su vajilla.",
+      "Cubrir con el aire de setas.",
+      "Colocar los madroños calientes sobre la espuma.",
+      "Repartir las setas braseadas: shitake mini, shimejis, seta de temporada y el anillo de colmenilla.",
+      "Terminar con la estrella de trufa."
+    ],
+    notas: "El PDF original deja las piñas de pino encurtidas sin elaboración definida y no detalla el montaje final (orden orientativo según las menciones del documento)."
   }
 };
 // Alias: el nombre completo con guión largo también resuelve a la misma receta
