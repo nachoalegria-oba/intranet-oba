@@ -575,7 +575,9 @@ function showLoginForm() {
     } else {
       _dataReady.then(() => {
         startApp();
-        if (sessionStorage.getItem(REPORTES_SESSION_KEY) === "1") sp("reportes");
+        // Restaurar la última sección visitada tras una recarga (no forzar reportes)
+        const lastPanel = sessionStorage.getItem("oba_last_panel");
+        if (lastPanel && lastPanel !== "inicio") setTimeout(() => sp(lastPanel), 30);
       });
     }
   } else {
@@ -983,7 +985,9 @@ function _encargadoStart() {
   if (greetEl) greetEl.innerHTML = getGreeting();
   _dataReady.then(() => {
     startApp();
-    sp("grupo");
+    // Restaurar su última sección (grupo o reportes); por defecto, su restaurante
+    const lastPanel = sessionStorage.getItem("oba_last_panel");
+    sp(lastPanel === "reportes" ? "reportes" : "grupo");
   });
 }
 
@@ -1125,6 +1129,8 @@ function renderAll() {
 function sp(id) {
   if (sessionStorage.getItem(REPORTES_ONLY_KEY) === "1" && id !== "reportes") return;
   if (_esEncargado() && id !== "grupo" && id !== "reportes") return;
+  // Recordar la sección actual para restaurarla tras una recarga automática
+  try { sessionStorage.setItem("oba_last_panel", id); } catch (e) {}
   if (id === "grupo") { showGrupoPanel(); return; }
   if (id === "id") { showIDPanel(); return; }
   if (id === "huerta") { showHuertaPanel(); return; }
@@ -7074,11 +7080,11 @@ function registerPWA() {
       });
       setInterval(checkUpdate, 60000);
     }).catch((error) => console.warn("SW error:", error));
-    // Reload page when a new SW takes control so users always get fresh assets
-    navigator.serviceWorker.addEventListener("controllerchange", () => window.location.reload());
-    // Also listen for explicit SW_UPDATED message
+    // Nueva versión: programar recarga diferida (se aplica cuando no estás usando la app)
+    const _defer = () => (window.__scheduleReload ? window.__scheduleReload() : window.location.reload());
+    navigator.serviceWorker.addEventListener("controllerchange", _defer);
     navigator.serviceWorker.addEventListener("message", (event) => {
-      if (event.data?.type === "SW_UPDATED") window.location.reload();
+      if (event.data?.type === "SW_UPDATED") _defer();
     });
   }
 
@@ -7100,7 +7106,9 @@ function registerPWA() {
           const guard = sessionStorage.getItem("oba_ver_reload");
           if (guard === m[1]) return; // already tried this version; avoid loops
           sessionStorage.setItem("oba_ver_reload", m[1]);
-          location.reload();
+          // Recarga diferida: no interrumpe mientras usas la intranet
+          if (window.__scheduleReload) window.__scheduleReload();
+          else location.reload();
         })
         .catch(() => {});
     };

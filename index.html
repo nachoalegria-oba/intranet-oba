@@ -37,13 +37,34 @@
   <!-- Recovery: reload when SW updates (even if app.js failed to parse) -->
   <script>
     window.__appLoaded = false;
-    if ('serviceWorker' in navigator) {
-      // Reload whenever a new SW takes control (update deployed)
-      navigator.serviceWorker.addEventListener('controllerchange', function() {
+
+    // Recarga diferida: nunca interrumpe mientras usas la página.
+    // Cuando hay una versión nueva, se marca como pendiente y solo se aplica
+    // cuando cambias de pestaña o llevas un rato sin tocar la intranet.
+    window.__lastActivity = Date.now();
+    ['pointerdown','keydown','scroll','touchstart','wheel'].forEach(function(ev){
+      window.addEventListener(ev, function(){ window.__lastActivity = Date.now(); }, { passive:true, capture:true });
+    });
+    window.__scheduleReload = function(){ window.__pendingReload = true; };
+    function __maybeReload(){
+      if (!window.__pendingReload) return;
+      // Aplica la actualización si la pestaña está oculta o llevas >90s sin interactuar
+      if (document.visibilityState === 'hidden' || (Date.now() - window.__lastActivity) > 90000) {
         location.reload();
+      }
+    }
+    document.addEventListener('visibilitychange', function(){
+      if (document.visibilityState === 'hidden') __maybeReload();
+    });
+    setInterval(__maybeReload, 20000);
+
+    if ('serviceWorker' in navigator) {
+      // Nueva versión del SW: programar recarga diferida (no interrumpir)
+      navigator.serviceWorker.addEventListener('controllerchange', function() {
+        window.__scheduleReload();
       });
       navigator.serviceWorker.addEventListener('message', function(e) {
-        if (e.data && e.data.type === 'SW_UPDATED') location.reload();
+        if (e.data && e.data.type === 'SW_UPDATED') window.__scheduleReload();
       });
     }
     // Fallback: if app still hasn't loaded after 5s, unregister SW + clear caches + reload once
@@ -691,6 +712,6 @@
     </button>
   </div>
 
-  <script defer src="./app.js?v=197"></script>
+  <script defer src="./app.js?v=198"></script>
 </body>
 </html>
