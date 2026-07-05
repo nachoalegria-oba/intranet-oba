@@ -6062,16 +6062,73 @@ const _PDF_RECIPES = {
         ]
       },
       {
-        nombre: "Suquet",
-        descripcion: "Pendiente: la elaboración no viene en el PDF.",
-        ingredientes: [],
-        pasos: []
+        nombre: "Caldo de marisco (para el suquet)",
+        descripcion: "",
+        ingredientes: [
+          {i:"Cangrejo azul",c:"10",u:"kg"},
+          {i:"Cebolla",c:"3",u:"kg"},
+          {i:"Ajo",c:"1",u:"kg"},
+          {i:"Puerro",c:"3",u:"kg"},
+          {i:"Zanahoria",c:"2",u:"kg"},
+          {i:"Tomate frito",c:"2",u:"kg"},
+          {i:"Vino blanco",c:"2",u:"l"},
+          {i:"Pimentón dulce",c:"15",u:"g"},
+          {i:"Pimentón picante",c:"6",u:"g"},
+          {i:"Agua",c:"25",u:"l"}
+        ],
+        pasos: [
+          "Pochar todas las verduras por separado.",
+          "En la misma olla donde se elaborará el caldo, marcar el cangrejo a fuego fuerte con abundante aceite hasta que esté bien dorado (en varias tandas si es necesario).",
+          "Añadir al cangrejo las verduras previamente cocinadas y, seguidamente, el pimentón; remover para que no se queme.",
+          "Inmediatamente, añadir el vino blanco y reducir a la mitad.",
+          "Añadir el tomate frito y dejar cocinar.",
+          "Añadir el agua y hervir lentamente durante 2 horas.",
+          "Reservar en frío durante 12 horas.",
+          "Desgrasar el caldo reservando la grasa, colar entre paños y reservar en nevera."
+        ]
+      },
+      {
+        nombre: "Suquet (por 1 litro de caldo)",
+        descripcion: "",
+        ingredientes: [
+          {i:"Caldo de bacalao",c:"400",u:"g"},
+          {i:"Bouquet garni (1 clavo, hinojo y melisa)",c:"1",u:"und"},
+          {i:"Mantequilla tostada",c:"15",u:"g"},
+          {i:"Vinagre",c:"10",u:"g"},
+          {i:"Amontillado",c:"40",u:"g"},
+          {i:"Caldo de marisco",c:"",u:""},
+          {i:"Grasa del caldo de marisco",c:"",u:""},
+          {i:"Texturizantes",c:"",u:""}
+        ],
+        pasos: [
+          "Reducir a la mitad el caldo de bacalao y mezclar con el caldo de marisco.",
+          "Infusionar con el bouquet garni.",
+          "Poner a punto de mantequilla tostada, vinagre y amontillado.",
+          "Agregar los texturizantes y la grasa del caldo de marisco, y turbinar.",
+          "Reservar para el servicio."
+        ]
       },
       {
         nombre: "Pasta de cangrejo",
-        descripcion: "Pendiente: la elaboración no viene en el PDF.",
-        ingredientes: [],
-        pasos: []
+        descripcion: "",
+        ingredientes: [
+          {i:"Ajos",c:"2",u:"uds"},
+          {i:"Cebollas",c:"8",u:"uds"},
+          {i:"Tomates",c:"8",u:"uds"},
+          {i:"Hojas de laurel",c:"2",u:"uds"},
+          {i:"Caldo de bacalao",c:"150",u:"g"},
+          {i:"Suquet",c:"250",u:"g"},
+          {i:"Palo cortado",c:"200",u:"ml"}
+        ],
+        pasos: [
+          "Cortar la cebolla y el ajo en mirepoix.",
+          "Escaldar el tomate, retirar la piel y cortar en mirepoix.",
+          "En una olla con aceite de oliva, pochar la cebolla junto con el ajo y las hojas de laurel hasta obtener un color dorado.",
+          "Agregar el palo cortado y el tomate, y pochar hasta que se deshaga.",
+          "Añadir el caldo de bacalao y el suquet, y dejar cocinar hasta que se evapore el 100% y se obtenga una pasta densa y jugosa.",
+          "Triturar en Thermomix a máxima potencia.",
+          "Reservar en bolsas de 150 g etiquetadas, abatir y mantener en congelador."
+        ]
       }
     ],
     pasos: [
@@ -6081,7 +6138,7 @@ const _PDF_RECIPES = {
       "Colocar las flores a elegir por la mañana.",
       "Terminar con el suquet (cantidades pendientes de definir)."
     ],
-    notas: "Pendiente del PDF: elaboraciones del suquet y de la pasta de cangrejo, peso de la carcasa base y cantidades de suquet al emplatar."
+    notas: "Pendiente del PDF: peso de la carcasa base y cantidades de suquet al emplatar."
   },
   "fritos de cangrejo": {
     descripcion: "Croqueta de cangrejo y merluza pinchada en una pinza de cangrejo, sobre chili crab y napada con la misma salsa.",
