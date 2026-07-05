@@ -1436,10 +1436,23 @@ function buildFichaHTML(recipe, scale = 1) {
         <span class="scale-label">raciones</span>
       </div>
     </div>` : "";
+
+  // Banner "datos PDF disponibles" (mismo mecanismo que las fichas de restaurante)
+  const nomKeyM = _pdfKey(recipe.nombre || "");
+  const pdfDataM = _PDF_RECIPES[nomKeyM];
+  const recipeStepsM = (recipe.pasos||[]).length + (recipe.subrecetas||[]).reduce((n,s)=>n+(s.pasos||[]).length,0);
+  const pdfStepsM = pdfDataM ? (pdfDataM.pasos||[]).length + (pdfDataM.subrecetas||[]).reduce((n,s)=>n+(s.pasos||[]).length,0) : 0;
+  const pdfBannerM = (pdfDataM && recipeStepsM < pdfStepsM) ? `
+    <div id="pdf-import-banner" style="background:#fff8e1;border:1.5px solid #f9a825;border-radius:12px;padding:14px 16px;margin-bottom:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px"><strong>Datos del PDF disponibles</strong><div style="font-size:13px;color:#7a6a20">Esta ficha se puede completar con la receta oficial en PDF (subrecetas, cantidades y pasos).</div></div>
+      <button class="primary-btn" id="pdf-import-btn" onclick="applyPdfRecipeMain(${recipe.id})">Aplicar datos PDF</button>
+    </div>` : "";
+
   return `
     <div class="recipe-brand">
       <img class="logo-mark logo-mark-black" src="${logoWhiteUrl()}" alt="OBA">
     </div>
+    ${pdfBannerM}
     ${photo}
     ${scaleBar}
     <div class="rs">
@@ -5435,6 +5448,25 @@ const _PDF_RECIPES = {
 // Alias: el nombre completo con guión largo también resuelve a la misma receta
 _PDF_RECIPES["esturión ahumado – caviar oscietra"] = _PDF_RECIPES["esturión ahumado"];
 _PDF_RECIPES["esturión ahumado - caviar oscietra"] = _PDF_RECIPES["esturión ahumado"];
+
+// Aplicar datos PDF a una receta del recetario principal (D.recipes)
+function applyPdfRecipeMain(id) {
+  const recipe = D.recipes.find((r) => r.id === id);
+  if (!recipe) return;
+  const data = _PDF_RECIPES[_pdfKey(recipe.nombre)];
+  if (!data) { toast("No hay datos PDF para esta receta", "err"); return; }
+  const btn = document.getElementById("pdf-import-btn");
+  if (btn) { btn.textContent = "Guardando…"; btn.disabled = true; }
+  if (data.descripcion) recipe.descripcion = data.descripcion;
+  recipe.ingredientes = data.ingredientes || recipe.ingredientes || [];
+  recipe.subrecetas = data.subrecetas || [];
+  recipe.pasos = data.pasos || [];
+  recipe.alergenos = data.alergenos || [];
+  if (data.notas) recipe.notas = data.notas;
+  save("recipes");
+  oRD(id);   // re-render de la ficha (el banner desaparece)
+  rRec();    // refrescar la tarjeta del grid
+}
 
 function _pdfKey(nombre) {
   const full = (nombre || "").toLowerCase().trim();
