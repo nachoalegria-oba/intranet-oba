@@ -6082,6 +6082,90 @@ const _PDF_RECIPES = {
       "Terminar con el suquet (cantidades pendientes de definir)."
     ],
     notas: "Pendiente del PDF: elaboraciones del suquet y de la pasta de cangrejo, peso de la carcasa base y cantidades de suquet al emplatar."
+  },
+  "fritos de cangrejo": {
+    descripcion: "Croqueta de cangrejo y merluza pinchada en una pinza de cangrejo, sobre chili crab y napada con la misma salsa.",
+    alergenos: ["Crustáceos","Pescado","Gluten","Soja","Moluscos"],
+    ingredientes: [],
+    subrecetas: [
+      {
+        nombre: "Chili crab",
+        descripcion: "Base ajustada a 1 kg de carabinero.",
+        ingredientes: [
+          {i:"Carabinero",c:"1",u:"kg"},
+          {i:"Miso de ají",c:"82",u:"g"},
+          {i:"Pasta Tom Yum",c:"60",u:"g"},
+          {i:"Ketchup",c:"86",u:"g"},
+          {i:"Pasta gochujang",c:"86",u:"g"},
+          {i:"Salsa de tomate",c:"375",u:"g"},
+          {i:"Cilantro",c:"50",u:"g"},
+          {i:"Azúcar de caña",c:"28",u:"g"},
+          {i:"Sake",c:"170",u:"ml"},
+          {i:"Salsa de soja",c:"20",u:"g"},
+          {i:"Agua",c:"190",u:"ml"},
+          {i:"Líquido base (ajuste textura)",c:"125",u:"ml"},
+          {i:"Xantana",c:"0,4",u:"g"},
+          {i:"Glucosa",c:"1,25",u:"g"}
+        ],
+        pasos: [
+          "Pesados los ingredientes, poner el aceite en la olla y precalentarlo a fuego fuerte.",
+          "Añadir los carabineros (o el marisco a utilizar) en tres tandas para que se marquen de manera homogénea, sacando cada tanda antes de marcar la siguiente.",
+          "Con todo el marisco marcado, añadir el sake y llevar a hervir para evaporar el alcohol.",
+          "Añadir los demás ingredientes de la base y dejar reposar media hora a unos 90 °C.",
+          "Triturar en la Thermomix o food processor grande y pasar por cedazo, de modo que no queden grumos ni cáscaras del marisco.",
+          "Añadir los ingredientes del ajuste de textura (líquido base, xantana y glucosa) y emulsionar con túrmix.",
+          "Guardar en bolsas de vacío de 200 g y congelar."
+        ]
+      },
+      {
+        nombre: "Croqueta de pescado",
+        descripcion: "",
+        ingredientes: [
+          {i:"Cangrejo",c:"100",u:"g"},
+          {i:"Merluza",c:"100",u:"g"},
+          {i:"Perejil",c:"",u:""},
+          {i:"Hondashi",c:"",u:""},
+          {i:"Polvo nori",c:"",u:""},
+          {i:"Caseína",c:"",u:""}
+        ],
+        pasos: [
+          "Descongelar la misma cantidad de merluza que de cangrejo y quitar la piel a la merluza.",
+          "Pasar la merluza a la Thermomix junto con la carne de cangrejo y triturar.",
+          "Picar el perejil y añadir con el polvo nori, el hondashi y la caseína; triturar todo junto.",
+          "Bolear la mezcla en bolas de 20 gramos y congelar; guardar en tuppers.",
+          "Cocer las bolas al horno con sonda hasta unos 50 °C en el interior (temperatura a cargo de Tommy).",
+          "Una vez hechas, pasar al abatidor, congelar y guardar."
+        ]
+      }
+    ],
+    pasos: [
+      "Añadir una cucharada de chili crab en la base del plato.",
+      "Pinchar la croqueta en una pinza de cangrejo y colocarla sobre la salsa.",
+      "Napar la croqueta con más chili crab.",
+      "Terminar con oxalis y capuchinas por encima (confirmar si se añade alguna flor extra)."
+    ],
+    notas: "Transcripción de audio del PDF: la temperatura exacta de cocción de la croqueta la define Tommy (~50 °C al interior) y queda por confirmar alguna flor extra en el montaje."
+  },
+  "blanco de almendras tiernas": {
+    descripcion: "Emulsión de almendra tierna con dashi y tamari, servida en vaso tapado con palos de bambú y boquilla del mismo bambú.",
+    alergenos: ["Huevos","Pescado","Soja","Frutos de cáscara"],
+    ingredientes: [
+      {i:"Tamari dashi",c:"20",u:"g"},
+      {i:"Yema",c:"1",u:"und"},
+      {i:"Huevo",c:"1",u:"und"},
+      {i:"Lima (su jugo)",c:"1",u:"und"},
+      {i:"Aceite de girasol",c:"200",u:"g"},
+      {i:"Dashi",c:"100",u:"g"}
+    ],
+    subrecetas: [],
+    pasos: [
+      "Colocar todos los ingredientes en la Thermomix menos el tamari dashi y el aceite.",
+      "Triturar a velocidad 7 e ir agregando el aceite poco a poco.",
+      "Al obtener una emulsión estable, agregar el tamari dashi.",
+      "Reservar en frío.",
+      "Para el montaje, colocar la mezcla en el vaso, tapar con los palos de bambú y colocar una boquilla del mismo bambú."
+    ],
+    notas: "El PDF no especifica los gramos de mezcla por vaso."
   }
 };
 // Alias: el nombre completo con guión largo también resuelve a la misma receta
