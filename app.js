@@ -6428,6 +6428,117 @@ const _PDF_RECIPES = {
     ],
     pasos: [],
     notas: "Pendiente del PDF: recetas de la crema de maíz y de la espuma de cebolla (se compartirán más adelante)."
+  },
+  "lucio en conserva": {
+    descripcion: "Lucio en brunoise curado en shio koji, con mantequilla de espárrago, vili, caviar de lucio y tuile de kombu, sobre espiral de hojas de bambú.",
+    alergenos: ["Pescado","Gluten","Huevos","Lácteos"],
+    ingredientes: [
+      {i:"Lucio en brunoise (o pescado disponible)",c:"10",u:"g"},
+      {i:"Mantequilla de espárragos",c:"3",u:"g"},
+      {i:"Vili",c:"1",u:"g"},
+      {i:"Caviar de lucio",c:"3",u:"g"},
+      {i:"Tuile de kombu",c:"1",u:"und"}
+    ],
+    subrecetas: [
+      {
+        nombre: "Curado del lucio",
+        descripcion: "",
+        ingredientes: [
+          {i:"Lucio (o pescado a elegir)",c:"",u:""},
+          {i:"Shio koji",c:"",u:""}
+        ],
+        pasos: [
+          "Dejar el pescado en shio koji durante 2 horas en nevera dentro de una bolsa de vacío.",
+          "Cortar en brunoise (10 g por ración)."
+        ]
+      },
+      {
+        nombre: "Tuile de kombu",
+        descripcion: "",
+        ingredientes: [
+          {i:"Harina",c:"50",u:"g"},
+          {i:"Clara de huevo",c:"50",u:"g"},
+          {i:"Mantequilla",c:"50",u:"g"},
+          {i:"Dextrosa",c:"50",u:"g"},
+          {i:"Polvo de kombu",c:"10",u:"g"},
+          {i:"Sal Maldon",c:"",u:"pizca"}
+        ],
+        pasos: [
+          "Para el polvo de kombu, tostar el kombu en horno a 150 °C durante 7-8 minutos y procesar hasta obtener un polvo fino.",
+          "Poner la mantequilla en pomada y mezclar con el resto de ingredientes.",
+          "Pasar por un cedazo para eliminar impurezas y reservar en bolsa de 200 g congelada.",
+          "Preparar una gastro con silpat en la base; estirar usando silpat cortados en las orillas para obtener un grosor uniforme.",
+          "Espolvorear el polvo de kombu por encima con un tamiz y añadir una pizca de sal Maldon.",
+          "Hornear a 150 °C durante 7-8 minutos.",
+          "Reservar en un tupper con silica gel; al servir, dejar en la deshidratadora para que recupere su dureza."
+        ]
+      }
+    ],
+    pasos: [
+      "Disponer las hojas de bambú en forma de círculos hasta obtener una espiral en el plato.",
+      "En el círculo central, colocar el lucio en brunoise.",
+      "Añadir la mantequilla de espárrago, luego el vili y, al final, las huevas de lucio para tapar y dejar a ras el centro del plato.",
+      "Para finalizar, colocar una lámina de tuile de kombu entre las hojas de bambú."
+    ],
+    notas: ""
+  },
+  "moje de primavera": {
+    descripcion: "Dashi de tomate cristalino con huevas de trucha, servido en cucurucho de hoja de bambú.",
+    alergenos: ["Pescado","Dióxido de azufre"],
+    ingredientes: [],
+    subrecetas: [
+      {
+        nombre: "Dashi",
+        descripcion: "",
+        ingredientes: [
+          {i:"Katsuobushi",c:"40",u:"g"},
+          {i:"Hondashi",c:"15",u:"g"},
+          {i:"Agua",c:"2",u:"l"},
+          {i:"Shiitake deshidratado",c:"12",u:"g"},
+          {i:"Sake",c:"530",u:"g"}
+        ],
+        pasos: [
+          "Infusionar en una cazuela el sake, el shiitake, el agua y el hondashi hasta que llegue a hervor.",
+          "Dejar hervir durante 10 minutos.",
+          "Apagar el calor y agregar el katsuobushi; filmar para que infusione bien.",
+          "Reservar en bolsas de vacío de 200 gramos en nevera."
+        ]
+      },
+      {
+        nombre: "Agua de tomate",
+        descripcion: "",
+        ingredientes: [
+          {i:"Tomate",c:"10",u:"kg"}
+        ],
+        pasos: [
+          "Triturar los tomates en Thermomix y guardar en gastro para congelar.",
+          "Hacer un crio: colocar el líquido congelado sobre trapos para filtrarlo poco a poco y que salga lo más cristalino posible.",
+          "Una vez descongelado/filtrado, reservar en bolsas de 500 g en el congelador.",
+          "Con los sólidos, consultar al encargado correspondiente."
+        ]
+      },
+      {
+        nombre: "Dashi de tomate",
+        descripcion: "",
+        ingredientes: [
+          {i:"Dashi",c:"30",u:"g"},
+          {i:"Agua de tomate",c:"50",u:"g"},
+          {i:"Vino fino",c:"10",u:"g"},
+          {i:"Xantana",c:"0,2% del peso",u:""},
+          {i:"Sal",c:"",u:"pizca"}
+        ],
+        pasos: [
+          "Triturar todo en túrmix durante 2 minutos.",
+          "Cuando esté homogéneo, rectificar con una pizca de sal.",
+          "Guardar en bolsas al vacío pequeñas de 150 gramos congeladas."
+        ]
+      }
+    ],
+    pasos: [
+      "Disponer 10 g de dashi de tomate dentro del cucurucho de hoja de bambú.",
+      "Colocar 3 g de huevas de trucha en la punta."
+    ],
+    notas: ""
   }
 };
 // Alias: el nombre completo con guión largo también resuelve a la misma receta
