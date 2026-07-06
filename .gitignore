@@ -2,3 +2,8 @@
 node_modules/
 functions/node_modules/
 .firebase/
+
+# Skills CLI (herramienta de agente, ajena a la intranet)
+.agents/
+.claude/skills/
+skills-lock.json
