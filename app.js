@@ -7487,8 +7487,108 @@ function fctFileChosen(e) {
   if (files.length) fctAddFiles(files);
 }
 
-function fctAddFiles(files) {
-  const valid = files.filter(f => f.type.startsWith("image/") || f.type === "application/pdf");
+// ── Normalización de archivos antes de escanear ──────────
+// Claude (el motor que lee las facturas) solo entiende imágenes JPEG/PNG/
+// WEBP/GIF. Las fotos HEIC del iPhone y los PDF de proveedores tienen que
+// convertirse a JPEG en el propio navegador ANTES de enviarlos: si se
+// mandan tal cual, la lectura falla o sale incompleta según el archivo —
+// justo el síntoma de "algunos sí, otros no".
+
+let _pdfJsLibPromise = null;
+function _loadPdfJsLib() {
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if (_pdfJsLibPromise) return _pdfJsLibPromise;
+  _pdfJsLibPromise = new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.min.js";
+    s.onload = () => {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js";
+      resolve(window.pdfjsLib);
+    };
+    s.onerror = () => { _pdfJsLibPromise = null; reject(new Error("No se pudo cargar el lector de PDF")); };
+    document.head.appendChild(s);
+  });
+  return _pdfJsLibPromise;
+}
+
+function _isHeicFile(file) {
+  const t = (file.type || "").toLowerCase();
+  if (t === "image/heic" || t === "image/heif") return true;
+  return /\.(heic|heif)$/i.test(file.name || "");
+}
+
+// Convierte HEIC a JPEG dibujándolo en un canvas. Solo funciona en
+// navegadores que sepan decodificar HEIC de forma nativa (Safari/iOS);
+// en Chrome/Firefox el <img> no cargará y se lanza un error claro.
+function _heicFileToJpeg(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    const timeout = setTimeout(() => {
+      URL.revokeObjectURL(url);
+      reject(new Error(`"${file.name}" es una foto HEIC y este navegador no puede leerla. En el iPhone: Ajustes → Cámara → Formatos → elige "Más compatible", o abre la foto y compártela como JPG.`));
+    }, 8000);
+    img.onload = () => {
+      clearTimeout(timeout);
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.getContext("2d").drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      canvas.toBlob((blob) => {
+        if (!blob) { reject(new Error(`No se pudo convertir "${file.name}".`)); return; }
+        resolve(new File([blob], file.name.replace(/\.(heic|heif)$/i, ".jpg"), { type: "image/jpeg" }));
+      }, "image/jpeg", 0.9);
+    };
+    img.onerror = () => {
+      clearTimeout(timeout);
+      URL.revokeObjectURL(url);
+      reject(new Error(`"${file.name}" es una foto HEIC y este navegador no puede leerla. En el iPhone: Ajustes → Cámara → Formatos → elige "Más compatible", o abre la foto y compártela como JPG.`));
+    };
+    img.src = url;
+  });
+}
+
+// Renderiza cada página del PDF a una imagen JPEG. Así el escáner de IA
+// siempre recibe imágenes reales, sin depender de cómo el servidor trate
+// el PDF original (con sus posibles cabeceras basura, tamaños o formatos
+// no estándar añadidos por según qué proveedor).
+async function _pdfFileToImageFiles(file) {
+  const pdfjsLib = await _loadPdfJsLib();
+  const cleanFile = await fctCleanPdf(file);
+  const buf = await cleanFile.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  const baseName = file.name.replace(/\.pdf$/i, "");
+  const out = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({ scale: 1 });
+    const scale = Math.min(2.2, 1900 / Math.max(viewport.width, viewport.height));
+    const scaledViewport = page.getViewport({ scale: Math.max(scale, 1) });
+    const canvas = document.createElement("canvas");
+    canvas.width = scaledViewport.width;
+    canvas.height = scaledViewport.height;
+    await page.render({ canvasContext: canvas.getContext("2d"), viewport: scaledViewport }).promise;
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.88));
+    if (!blob) continue;
+    const suffix = pdf.numPages > 1 ? `-p${i}` : "";
+    out.push(new File([blob], `${baseName}${suffix}.jpg`, { type: "image/jpeg" }));
+  }
+  if (!out.length) throw new Error(`No se pudo leer ninguna página de "${file.name}".`);
+  return out;
+}
+
+// Punto único de entrada: cualquier archivo (imagen válida, HEIC o PDF)
+// se convierte aquí en una o más imágenes JPEG/PNG listas para el escáner.
+async function fctNormalizeFile(file) {
+  if (file.type === "application/pdf") return _pdfFileToImageFiles(file);
+  if (_isHeicFile(file)) return [await _heicFileToJpeg(file)];
+  if (file.type.startsWith("image/")) return [file];
+  throw new Error(`Formato no compatible: "${file.name}".`);
+}
+
+async function fctAddFiles(files) {
+  const valid = files.filter(f => f.type.startsWith("image/") || f.type === "application/pdf" || _isHeicFile(f));
   if (!valid.length) { showToast("Formato no compatible. Usa JPG, PNG, HEIC o PDF.", "error"); return; }
 
   // Múltiples archivos distintos → modo lote (cada archivo = una factura)
@@ -7498,23 +7598,35 @@ function fctAddFiles(files) {
   }
 
   // Modo normal: añadir como páginas de la factura actual
-  let loaded = 0;
-  valid.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      fctFiles.push({ file, dataUrl: e.target.result });
-      loaded++;
-      if (loaded === valid.length) {
-        fctExtracted = null;
-        document.getElementById("fct-drop").style.display = "none";
-        document.getElementById("fct-preview-area").style.display = "";
-        document.getElementById("fct-result").style.display = "none";
-        fctRenderThumbs();
-        const n = fctFiles.length;
-        document.getElementById("fct-scan-status").textContent =
-          n === 1 ? "1 página lista para escanear" : `${n} páginas listas para escanear`;
+  const status = document.getElementById("fct-scan-status");
+  document.getElementById("fct-drop").style.display = "none";
+  document.getElementById("fct-preview-area").style.display = "";
+  document.getElementById("fct-result").style.display = "none";
+  if (status) status.textContent = "Preparando archivo…";
+  try {
+    for (const file of valid) {
+      const images = await fctNormalizeFile(file);
+      for (const img of images) {
+        fctFiles.push({ file: img, dataUrl: await fctToDataUrl(img) });
       }
-    };
+    }
+    fctExtracted = null;
+    fctRenderThumbs();
+    const n = fctFiles.length;
+    if (status) status.textContent = n === 1 ? "1 página lista para escanear" : `${n} páginas listas para escanear`;
+  } catch (err) {
+    console.error("fctAddFiles:", err);
+    showToast(err.message || "No se pudo preparar el archivo.", "error");
+    if (status) status.textContent = fctFiles.length ? `${fctFiles.length} página(s) lista(s) para escanear` : "";
+    if (!fctFiles.length) fctReset();
+  }
+}
+
+function fctToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
     reader.readAsDataURL(file);
   });
 }
@@ -7529,25 +7641,35 @@ function fctInitBatch(files) {
   fctLoadBatchItem(0);
 }
 
-function fctLoadBatchItem(idx) {
+async function fctLoadBatchItem(idx) {
   const item = fctQueue[idx];
   if (!item) return;
   fctFiles = [];
   fctExtracted = null;
   document.getElementById("fct-result").style.display = "none";
-  const reader = new FileReader();
-  reader.onload = e => {
-    fctFiles = [{ file: item.file, dataUrl: e.target.result }];
+  const status = document.getElementById("fct-scan-status");
+  if (status) status.textContent = `Preparando factura ${idx + 1} de ${fctQueue.length}…`;
+  try {
+    const images = await fctNormalizeFile(item.file);
+    for (const img of images) {
+      fctFiles.push({ file: img, dataUrl: await fctToDataUrl(img) });
+    }
     fctRenderThumbs();
     fctRenderBatchBar();
-    document.getElementById("fct-scan-status").textContent =
-      `Factura ${idx + 1} de ${fctQueue.length} — lista para escanear`;
+    if (status) status.textContent = `Factura ${idx + 1} de ${fctQueue.length} — lista para escanear`;
     const btn = document.getElementById("fct-save-btn");
     if (btn) btn.innerHTML = idx < fctQueue.length - 1
       ? '<i class="ph-fill ph-floppy-disk"></i> Guardar y siguiente'
       : '<i class="ph-fill ph-floppy-disk"></i> Guardar factura';
-  };
-  reader.readAsDataURL(item.file);
+  } catch (err) {
+    console.error("fctLoadBatchItem:", err);
+    item.status = "error";
+    showToast(err.message || `No se pudo preparar "${item.name}".`, "error");
+    fctRenderBatchBar();
+    const next = idx + 1;
+    if (next < fctQueue.length) fctLoadBatchItem(next);
+    else { fctQueue = []; fctQueueIdx = -1; fctReset(); }
+  }
 }
 
 function fctRenderBatchBar() {
