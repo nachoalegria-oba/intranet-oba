@@ -2318,6 +2318,25 @@ th,
 .desc-share-edit{color:var(--muted)}
 .desc-share-edit:hover{background:var(--surface-2);border-color:var(--ink);color:var(--ink)}
 .field-hint{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* Vista previa de documentos internos (checklists imprimibles) */
+.idoc-preview{max-height:60vh;overflow-y:auto;padding-right:2px}
+.idoc-pagina{margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+.idoc-pagina:last-child{border-bottom:none;margin-bottom:0}
+.idoc-tabla{display:grid;grid-template-columns:1fr 1fr 2.2fr;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.idoc-th{background:var(--surface2,#F0F0F5);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:8px 10px;font-weight:700}
+.idoc-td{padding:8px 10px;font-size:12.5px;border-top:1px solid var(--line)}
+.idoc-area{font-weight:700}
+.idoc-nombre{color:var(--muted)}
+.idoc-tareas{margin:0;padding-left:16px}
+.idoc-tareas li{margin-bottom:2px}
+@media(max-width:640px){
+  .idoc-tabla{grid-template-columns:1fr}
+  .idoc-th:nth-child(2),.idoc-th:nth-child(3){display:none}
+  .idoc-td{border-top:none}
+  .idoc-area{border-top:1px solid var(--line);padding-top:10px;margin-top:4px}
+}
+
 @media(max-width:720px){
   .desc-grid{grid-template-columns:1fr}
 }

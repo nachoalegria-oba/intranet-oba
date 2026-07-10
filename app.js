@@ -1087,6 +1087,7 @@ function startApp() {
   _updateUsersBtn();
   seedHabitaciones();
   seedEmpresas();
+  seedDescargablesInternos();
   const label = formatLongDate(new Date());
   document.getElementById("hdate").textContent = label;
   document.getElementById("ifecha").textContent = label;
@@ -3262,6 +3263,89 @@ function moverCañitas(idx, fromHabId) {
   rHab();
 }
 
+/* ── Documentos internos imprimibles ─────────────────────
+   Checklists/plantillas cuyo contenido vive en la propia intranet (no un
+   enlace externo): se pueden abrir, imprimir o guardar como PDF, y el
+   título de la tarjeta se puede renombrar libremente como cualquier otro
+   descargable. */
+const _INTERNAL_DOCS = {
+  "checklist-tareas": {
+    subtitulo: "Plantillas de reparto de tareas por turno",
+    paginas: [
+      {
+        titulo: "Limpieza y Orden",
+        intro: "Tareas específicas de cierre — escribe el nombre de cada persona en su casilla.",
+        tabla: [
+          { area: "Vajilla y Estanterías", tareas: ["Vajilla: limpiar superficies y reponer utensilios.", "Estanterías frías/calientes: limpiar superficies, que quede todo en su lugar."] },
+          { area: "Producción", tareas: ["Limpieza de mesas.", "Orden total de la zona de producción.", "Retirada de basura."] },
+          { area: "Cooler (Nevera de Servicio)", tareas: ["Limpieza de baldas y suelos de la nevera.", "Orden y tapado correcto de productos.", "FIFO riguroso etiquetado."] },
+          { area: "Zona de Pica", tareas: ["Limpieza.", "Orden de la pica, que quede todo limpio y recogido."] },
+          { area: "Bajos y Ventana", tareas: ["Bajos de servicio y del mesón de la ventana."] }
+        ],
+        notas: [
+          { titulo: "Mantenimiento de Áreas Frías", texto: "Cada persona es responsable de que los equipos de frío bajo su cargo (neveras, cámaras, estanterías refrigeradas o congeladores) queden en perfecto estado de orden, limpieza y etiquetado al finalizar el turno." },
+          { titulo: "Nevera de Servicio", texto: "Se debe prestar especial atención a que quede impecable, con los productos tapados y en sus ubicaciones correctas." },
+          { titulo: "Supervisión Final", texto: "Ningún miembro del equipo podrá retirarse sin que el Encargado de Turno haya verificado visualmente su área asignada. Si el área no está en condiciones de cierre de turno, deberá permanecer hasta que esté correcta." }
+        ]
+      },
+      {
+        titulo: "Comida de Equipo",
+        intro: "Tareas asignadas — escribe el nombre de cada persona en su casilla.",
+        tabla: [
+          { area: "Desmontar Comedor", tareas: ["Retirar platos, cubiertos y vasos usados.", "Limpiar mesas y superficies del comedor.", "Dejar el espacio listo para el montaje posterior."] },
+          { area: "Guardar Comida", tareas: ["Almacenar correctamente los alimentos sobrantes.", "Tapar y etiquetar si es necesario.", "Asegurar que todo quede en nevera o despensa según corresponda."] },
+          { area: "Lavado de Indumentaria", tareas: ["Lavar a fondo los gastronorm utilizados.", "Lavar y colgar la indumentaria de cocina empleada (delantales, paños, etc.)."] },
+          { area: "Lavado de Gastros y Apoyo", tareas: ["Lavar los gastronorm junto con el compañero asignado a Lavado de Indumentaria.", "Ayudar con la limpieza de utensilios de cocina usados durante la preparación y el servicio de la comida."] },
+          { area: "Montar el Comedor", tareas: ["Colocar vasos, cubiertos, platos y servilletas.", "Disponer todo lo necesario para que el equipo pueda comer.", "Verificar que el montaje esté completo antes del inicio de la comida."] }
+        ],
+        notas: [
+          { titulo: "Revisión Final", texto: "Una vez montado el comedor, la persona a cargo del montaje avisa al equipo para que puedan sentarse a comer." },
+          { titulo: "Aviso al Encargado", texto: "Avisar al Encargado si falta vajilla, cubiertos o algún elemento necesario para el montaje." }
+        ]
+      },
+      {
+        titulo: "Colada — Preparación y Montaje",
+        intro: "Tareas específicas — escribe el nombre de cada persona en su casilla.",
+        tabla: [
+          { area: "Colada", tareas: ["Poner en marcha las lavadoras con los trapos y paños de cocina.", "Realizar las coladas necesarias para el turno."] },
+          { area: "Producción y Servicio", tareas: ["Armar producción: preparar y montar producción con todos los utensilios necesarios.", "Rellenar Caja de Servicio: verificar y reponer el contenido de la caja de servicio."] },
+          { area: "Apoyo a Colada", tareas: ["Ayudar a colgar las coladas recién lavadas.", "Ayudar a descolgar y recoger la ropa seca de las cuerdas."] },
+          { area: "Apoyo a Colada y Secado", tareas: ["Ayudar a colgar la colada húmeda.", "Guardar ordenadamente todo lo que ya esté seco en su lugar correspondiente."] },
+          { area: "Armado General de Cocina", tareas: ["Encender y montar todos los equipos (hornos, inducciones).", "Revisar que todas las áreas estén listas para el servicio."] }
+        ],
+        notas: [
+          { titulo: "Prioridad de la Colada", texto: "Es fundamental tener trapos y paños limpios y secos antes de que comience el servicio fuerte. Si la lavadora termina su ciclo, se le da prioridad frente a otras tareas." },
+          { titulo: "Verificación de Equipos", texto: "Al armar la cocina, cualquier anomalía en neveras, inducciones o extracción debe ser reportada al Encargado." },
+          { titulo: "Trabajo en Equipo", texto: "Una vez finalizada la tarea individual, se espera que cada persona colabore con el armado general para agilizar la apertura." }
+        ]
+      }
+    ]
+  }
+};
+
+// Añade los documentos internos que aún no existan en Descargables (no
+// pisa el título si el usuario ya lo renombró, ni duplica si ya está).
+function seedDescargablesInternos() {
+  if (!D.descargables) D.descargables = [];
+  let changed = false;
+  Object.entries(_INTERNAL_DOCS).forEach(([docKey, doc], i) => {
+    const yaExiste = D.descargables.some((d) => d.docKey === docKey);
+    if (!yaExiste) {
+      D.descargables.push({
+        id: nid++,
+        titulo: doc.paginas?.[0]?.titulo && doc.paginas.length > 1 ? "Checklists de tareas por turno" : (doc.titulo || docKey),
+        descripcion: doc.subtitulo || "",
+        categoria: "Información general",
+        docKey,
+        url: "",
+        fechaSubida: today()
+      });
+      changed = true;
+    }
+  });
+  if (changed) save("descargables");
+}
+
 /* ── Descargables ── */
 const DESC_CATS = ["Normativa", "Cómo llegar", "Qué traer", "Información general"];
 
@@ -3290,8 +3374,9 @@ function rDescargables() {
               </div>
             </div>
             <div class="desc-card-actions">
+              ${d.docKey ? `<button class="btn btn-s btn-g desc-ver-btn" onclick="verDocInterno('${d.docKey}','${safeText(d.titulo).replace(/'/g, "\\'")}')">Ver / Imprimir</button>` : ""}
               ${d.url ? `<a class="btn btn-s btn-g desc-ver-btn" href="${safeText(d.url)}" target="_blank" rel="noopener">Ver ↗</a>` : ""}
-              <button class="desc-share-btn desc-share-wa" title="Enviar por WhatsApp" onclick="compartirDesc(${d.id},'wa')">
+              ${d.url ? `<button class="desc-share-btn desc-share-wa" title="Enviar por WhatsApp" onclick="compartirDesc(${d.id},'wa')">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.125.557 4.122 1.528 5.855L0 24l6.335-1.502A11.957 11.957 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 0 1-5.018-1.374l-.36-.213-3.757.89.946-3.658-.234-.376A9.818 9.818 0 1 1 12 21.818z"/></svg>
               </button>
               <button class="desc-share-btn desc-share-mail" title="Enviar por email" onclick="compartirDesc(${d.id},'email')">
@@ -3299,8 +3384,8 @@ function rDescargables() {
               </button>
               <button class="desc-share-btn desc-share-copy" title="Copiar enlace" onclick="compartirDesc(${d.id},'copy')">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              </button>
-              <button class="desc-share-btn desc-share-edit" title="Editar" onclick="oDescargableM(${d.id})">
+              </button>` : ""}
+              <button class="desc-share-btn desc-share-edit" title="Editar / Renombrar" onclick="oDescargableM(${d.id})">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               </button>
             </div>
@@ -3316,6 +3401,7 @@ function rDescargables() {
 }
 
 function descIcon(d) {
+  if (d.docKey) return ico('file-pdf', 16);
   if (d.url && d.url.match(/\.(pdf)$/i)) return ico('file-pdf', 16);
   if (d.url && d.url.match(/\.(png|jpg|jpeg|gif|webp)$/i)) return ico('image', 16);
   if (d.url && d.url.match(/^https?:\/\//)) return ico('link', 16);
@@ -3331,11 +3417,12 @@ function oDescargableM(id, catPreset) {
     <div class="fr"><label>Categoría</label><select id="dcat">
       ${DESC_CATS.map((c) => `<option${(d?.categoria || catPreset || DESC_CATS[0]) === c ? " selected" : ""}>${c}</option>`).join("")}
     </select></div>
+    ${d?.docKey ? `<div class="field-hint" style="margin-bottom:10px">Este documento se ve e imprime dentro de la intranet. Puedes cambiarle el título y la descripción libremente.</div>` : `
     <div class="fr">
       <label>Enlace al documento</label>
       <input id="durl" type="url" placeholder="https://drive.google.com/..." value="${safeText(d?.url || "")}">
       <div class="field-hint">Pega el enlace público del PDF (Google Drive, Dropbox, etc.)</div>
-    </div>
+    </div>`}
     <div class="mf">
       ${d ? `<button class="btn btn-d btn-s" onclick="dDescargable(${id})">Eliminar</button>` : ""}
       <button class="secondary-btn" onclick="cModal()">Cancelar</button>
@@ -3346,14 +3433,15 @@ function oDescargableM(id, catPreset) {
 function sDescargable(id) {
   const titulo = document.getElementById("dtit").value.trim();
   if (!titulo) return alert("El título es obligatorio");
+  const existente = id ? D.descargables.find((x) => x.id === id) : null;
   const payload = {
     titulo,
     descripcion: document.getElementById("ddesc").value.trim(),
     categoria: document.getElementById("dcat").value,
-    url: document.getElementById("durl").value.trim(),
-    fechaSubida: id ? (D.descargables.find((x) => x.id === id)?.fechaSubida || today()) : today()
+    url: existente?.docKey ? "" : (document.getElementById("durl")?.value.trim() || ""),
+    fechaSubida: existente?.fechaSubida || today()
   };
-  if (id) Object.assign(D.descargables.find((x) => x.id === id), payload);
+  if (id) Object.assign(existente, payload);
   else D.descargables.push({ id: nid++, ...payload });
   save("descargables");
   cModal();
@@ -3390,6 +3478,97 @@ function compartirDesc(id, method) {
       prompt("Copia este enlace:", url);
     });
   }
+}
+
+// Vista de solo lectura + impresión/PDF de un documento interno (checklist).
+// Usa el mismo modal grande de la app; el botón Imprimir abre una ventana
+// aparte con maquetación A4, logo OBA y una página por sección.
+function verDocInterno(docKey, tituloMostrado) {
+  const doc = _INTERNAL_DOCS[docKey];
+  if (!doc) return;
+  const paginasHtml = (doc.paginas || []).map((p) => `
+    <div class="idoc-pagina">
+      <h4 style="margin-bottom:2px">${safeText(p.titulo)}</h4>
+      ${p.intro ? `<p style="color:var(--muted);font-size:12.5px;margin-bottom:10px">${safeText(p.intro)}</p>` : ""}
+      <div class="idoc-tabla">
+        <div class="idoc-th">Área asignada</div><div class="idoc-th">Nombre</div><div class="idoc-th">Tareas específicas</div>
+        ${p.tabla.map((row) => `
+          <div class="idoc-td idoc-area">${safeText(row.area)}</div>
+          <div class="idoc-td idoc-nombre"></div>
+          <div class="idoc-td"><ul class="idoc-tareas">${row.tareas.map((t) => `<li>${safeText(t)}</li>`).join("")}</ul></div>
+        `).join("")}
+      </div>
+      ${(p.notas || []).map((n) => `
+        <div class="notice" style="margin-top:10px">
+          <strong>${safeText(n.titulo)}</strong>
+          <div>${safeText(n.texto)}</div>
+        </div>`).join("")}
+    </div>`).join("");
+
+  oModal(`
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:6px">
+      <h3 style="margin:0">${safeText(tituloMostrado || doc.titulo || "Documento")}</h3>
+      <button class="primary-btn" style="flex-shrink:0" onclick="imprimirDocInterno('${docKey}','${safeText(tituloMostrado || "").replace(/'/g, "\\'")}')"><i class="ph-fill ph-printer"></i> Imprimir / PDF</button>
+    </div>
+    ${doc.subtitulo ? `<p style="color:var(--muted);font-size:13px;margin-bottom:14px">${safeText(doc.subtitulo)}</p>` : ""}
+    <div class="idoc-preview">${paginasHtml}</div>
+    <div class="mf"><button class="secondary-btn" onclick="cModal()">Cerrar</button></div>
+  `);
+}
+
+function imprimirDocInterno(docKey, tituloMostrado) {
+  const doc = _INTERNAL_DOCS[docKey];
+  if (!doc) return;
+  const printLogo = logoWhiteUrl();
+  const w = window.open("", "_blank");
+  if (!w) { toast("Permite las ventanas emergentes para imprimir.", "error"); return; }
+  const paginasHtml = (doc.paginas || []).map((p, i) => `
+    <section class="idoc-page"${i > 0 ? ' style="page-break-before:always"' : ""}>
+      <div class="print-head">
+        <div class="print-head-txt">
+          <div class="print-head-tag">${safeText(tituloMostrado || doc.titulo || "Documento")}</div>
+          <h1>${safeText(p.titulo)}</h1>
+          ${p.intro ? `<p class="print-desc">${safeText(p.intro)}</p>` : ""}
+        </div>
+        <img class="print-head-logo" src="${printLogo}" alt="OBA">
+      </div>
+      <table class="idoc-print-table">
+        <thead><tr><th>Área asignada</th><th>Nombre</th><th>Tareas específicas</th></tr></thead>
+        <tbody>
+          ${p.tabla.map((row) => `
+            <tr>
+              <td class="idoc-print-area">${safeText(row.area)}</td>
+              <td class="idoc-print-nombre"></td>
+              <td><ul>${row.tareas.map((t) => `<li>${safeText(t)}</li>`).join("")}</ul></td>
+            </tr>`).join("")}
+        </tbody>
+      </table>
+      ${(p.notas || []).map((n) => `<div class="notice"><strong>${safeText(n.titulo)}</strong><div>${safeText(n.texto)}</div></div>`).join("")}
+    </section>`).join("");
+
+  w.document.write(`<!DOCTYPE html>
+  <html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <title>${safeText(tituloMostrado || doc.titulo || "Documento")}</title>
+    <style>
+      ${_printRecipeCSS()}
+      .idoc-print-table{width:100%;border-collapse:collapse;margin-top:6px}
+      .idoc-print-table th{text-align:left;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:#8a8478;border-bottom:1px solid #cfc9bd;padding:0 8px 5px 0}
+      .idoc-print-table td{vertical-align:top;padding:8px 8px 8px 0;border-bottom:1px solid #e3ded3;font-size:11px}
+      .idoc-print-area{font-weight:700;white-space:nowrap;width:22%}
+      .idoc-print-nombre{width:20%;border-bottom:1px solid #999 !important}
+      .idoc-print-table ul{margin:0;padding-left:14px}
+      .idoc-print-table li{margin-bottom:2px}
+      .idoc-page{break-after:auto}
+    </style>
+  </head>
+  <body>
+    ${paginasHtml}
+  </body>
+  </html>`);
+  w.document.close();
+  setTimeout(() => w.print(), 300);
 }
 
 function rCentros() {
