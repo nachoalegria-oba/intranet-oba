@@ -531,6 +531,22 @@ function logoWhiteUrl() {
   return new URL("./icons/oba-logo-white.png", location.href).href;
 }
 
+// Logo como data URI para impresión/PDF: incrustado, así aparece siempre
+// aunque la ventana de impresión no dé tiempo a descargar la imagen.
+let _logoDataUrlCache = null;
+function _ensureLogoDataUrl() {
+  if (_logoDataUrlCache) return Promise.resolve(_logoDataUrlCache);
+  return fetch(logoWhiteUrl())
+    .then((r) => r.blob())
+    .then((blob) => new Promise((resolve) => {
+      const fr = new FileReader();
+      fr.onload = () => { _logoDataUrlCache = fr.result; resolve(_logoDataUrlCache); };
+      fr.onerror = () => resolve(logoWhiteUrl());
+      fr.readAsDataURL(blob);
+    }))
+    .catch(() => logoWhiteUrl());
+}
+
 function computeNextId() {
   const ids = COLLECTIONS.flatMap((col) => (D[col] || []).map((item) => Number(item.id) || 0)).filter(Boolean);
   nid = ids.length ? Math.max(...ids) + 1 : 500;
@@ -1085,6 +1101,7 @@ function seedEmpresas() {
 
 function startApp() {
   _updateUsersBtn();
+  _ensureLogoDataUrl().catch(() => {}); // precalienta el logo para impresión/PDF
   seedHabitaciones();
   seedEmpresas();
   seedDescargablesInternos();
@@ -1537,10 +1554,10 @@ function _printRecipeCSS() {
   `;
 }
 
-function _openPrintDoc(recipe, markup) {
-  const printLogo = logoWhiteUrl();
+async function _openPrintDoc(recipe, markup) {
   const w = window.open("", "_blank");
   if (!w) { toast("Permite las ventanas emergentes para imprimir.", "error"); return; }
+  const printLogo = await _ensureLogoDataUrl();
   const desc = recipe.descripcion ? `<p class="print-desc">${safeText(recipe.descripcion)}</p>` : "";
   w.document.write(`<!DOCTYPE html>
   <html lang="es">
@@ -3540,7 +3557,7 @@ function guardarDocNombres(docId) {
   toast("Nombres guardados ✓");
 }
 
-function imprimirDocInterno(docId) {
+async function imprimirDocInterno(docId) {
   const d = D.descargables.find((x) => x.id === docId);
   if (!d || !d.docKey) return;
   const doc = _INTERNAL_DOCS[d.docKey];
@@ -3549,9 +3566,9 @@ function imprimirDocInterno(docId) {
   const nombres = document.querySelector(".idoc-nombre-input") ? _collectDocNombres() : (d.nombres || {});
   if (document.querySelector(".idoc-nombre-input")) { d.nombres = nombres; save("descargables"); }
   const tituloMostrado = d.titulo || doc.titulo || "Documento";
-  const printLogo = logoWhiteUrl();
   const w = window.open("", "_blank");
   if (!w) { toast("Permite las ventanas emergentes para imprimir.", "error"); return; }
+  const printLogo = await _ensureLogoDataUrl();
   const paginasHtml = (doc.paginas || []).map((p, pi) => `
     <section class="idoc-page"${pi > 0 ? ' style="page-break-before:always"' : ""}>
       <div class="print-head">
@@ -3587,7 +3604,7 @@ function imprimirDocInterno(docId) {
       .idoc-print-table th{text-align:left;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:#8a8478;border-bottom:1px solid #cfc9bd;padding:0 8px 5px 0}
       .idoc-print-table td{vertical-align:top;padding:8px 8px 8px 0;border-bottom:1px solid #e3ded3;font-size:11px}
       .idoc-print-area{font-weight:700;white-space:nowrap;width:22%}
-      .idoc-print-nombre{width:20%;font-weight:600;border-bottom:1px solid #999 !important}
+      .idoc-print-nombre{width:20%;font-weight:600}
       .idoc-print-table ul{margin:0;padding-left:14px}
       .idoc-print-table li{margin-bottom:2px}
       .idoc-page{break-after:auto}
