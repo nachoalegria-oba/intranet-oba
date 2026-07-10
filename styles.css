@@ -2327,7 +2327,9 @@ th,
 .idoc-th{background:var(--surface2,#F0F0F5);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:8px 10px;font-weight:700}
 .idoc-td{padding:8px 10px;font-size:12.5px;border-top:1px solid var(--line)}
 .idoc-area{font-weight:700}
-.idoc-nombre{color:var(--muted)}
+.idoc-nombre{color:var(--muted);padding:5px}
+.idoc-nombre-input{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:12.5px;background:var(--surface);color:var(--ink)}
+.idoc-nombre-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px rgba(0,122,255,.15)}
 .idoc-tareas{margin:0;padding-left:16px}
 .idoc-tareas li{margin-bottom:2px}
 @media(max-width:640px){

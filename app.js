@@ -3374,7 +3374,7 @@ function rDescargables() {
               </div>
             </div>
             <div class="desc-card-actions">
-              ${d.docKey ? `<button class="btn btn-s btn-g desc-ver-btn" onclick="verDocInterno('${d.docKey}','${safeText(d.titulo).replace(/'/g, "\\'")}')">Ver / Imprimir</button>` : ""}
+              ${d.docKey ? `<button class="btn btn-s btn-g desc-ver-btn" onclick="verDocInterno(${d.id})">Ver / Imprimir</button>` : ""}
               ${d.url ? `<a class="btn btn-s btn-g desc-ver-btn" href="${safeText(d.url)}" target="_blank" rel="noopener">Ver ↗</a>` : ""}
               ${d.url ? `<button class="desc-share-btn desc-share-wa" title="Enviar por WhatsApp" onclick="compartirDesc(${d.id},'wa')">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.125.557 4.122 1.528 5.855L0 24l6.335-1.502A11.957 11.957 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 0 1-5.018-1.374l-.36-.213-3.757.89.946-3.658-.234-.376A9.818 9.818 0 1 1 12 21.818z"/></svg>
@@ -3481,20 +3481,23 @@ function compartirDesc(id, method) {
 }
 
 // Vista de solo lectura + impresión/PDF de un documento interno (checklist).
-// Usa el mismo modal grande de la app; el botón Imprimir abre una ventana
-// aparte con maquetación A4, logo OBA y una página por sección.
-function verDocInterno(docKey, tituloMostrado) {
-  const doc = _INTERNAL_DOCS[docKey];
+// Las casillas de "Nombre" son editables: se escriben aquí, se guardan en
+// el registro del descargable y salen ya rellenadas al imprimir.
+function verDocInterno(docId) {
+  const d = D.descargables.find((x) => x.id === docId);
+  if (!d || !d.docKey) return;
+  const doc = _INTERNAL_DOCS[d.docKey];
   if (!doc) return;
-  const paginasHtml = (doc.paginas || []).map((p) => `
+  const saved = d.nombres || {};
+  const paginasHtml = (doc.paginas || []).map((p, pi) => `
     <div class="idoc-pagina">
       <h4 style="margin-bottom:2px">${safeText(p.titulo)}</h4>
       ${p.intro ? `<p style="color:var(--muted);font-size:12.5px;margin-bottom:10px">${safeText(p.intro)}</p>` : ""}
       <div class="idoc-tabla">
         <div class="idoc-th">Área asignada</div><div class="idoc-th">Nombre</div><div class="idoc-th">Tareas específicas</div>
-        ${p.tabla.map((row) => `
+        ${p.tabla.map((row, ri) => `
           <div class="idoc-td idoc-area">${safeText(row.area)}</div>
-          <div class="idoc-td idoc-nombre"></div>
+          <div class="idoc-td idoc-nombre"><input class="idoc-nombre-input" data-key="${pi}-${ri}" value="${safeText(saved[`${pi}-${ri}`] || "")}" placeholder="Escribe el nombre…"></div>
           <div class="idoc-td"><ul class="idoc-tareas">${row.tareas.map((t) => `<li>${safeText(t)}</li>`).join("")}</ul></div>
         `).join("")}
       </div>
@@ -3507,26 +3510,53 @@ function verDocInterno(docKey, tituloMostrado) {
 
   oModal(`
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:6px">
-      <h3 style="margin:0">${safeText(tituloMostrado || doc.titulo || "Documento")}</h3>
-      <button class="primary-btn" style="flex-shrink:0" onclick="imprimirDocInterno('${docKey}','${safeText(tituloMostrado || "").replace(/'/g, "\\'")}')"><i class="ph-fill ph-printer"></i> Imprimir / PDF</button>
+      <h3 style="margin:0">${safeText(d.titulo || doc.titulo || "Documento")}</h3>
+      <div style="display:flex;gap:8px;flex-shrink:0">
+        <button class="secondary-btn" onclick="guardarDocNombres(${docId})">Guardar</button>
+        <button class="primary-btn" onclick="imprimirDocInterno(${docId})"><i class="ph-fill ph-printer"></i> Imprimir / PDF</button>
+      </div>
     </div>
-    ${doc.subtitulo ? `<p style="color:var(--muted);font-size:13px;margin-bottom:14px">${safeText(doc.subtitulo)}</p>` : ""}
+    <p style="color:var(--muted);font-size:13px;margin-bottom:14px">Escribe el nombre de cada persona en su casilla. Se guarda para la próxima vez y aparece al imprimir.</p>
     <div class="idoc-preview">${paginasHtml}</div>
     <div class="mf"><button class="secondary-btn" onclick="cModal()">Cerrar</button></div>
   `);
 }
 
-function imprimirDocInterno(docKey, tituloMostrado) {
-  const doc = _INTERNAL_DOCS[docKey];
+// Recoge los nombres escritos en la vista previa
+function _collectDocNombres() {
+  const out = {};
+  document.querySelectorAll(".idoc-nombre-input").forEach((inp) => {
+    const v = inp.value.trim();
+    if (v) out[inp.dataset.key] = v;
+  });
+  return out;
+}
+
+function guardarDocNombres(docId) {
+  const d = D.descargables.find((x) => x.id === docId);
+  if (!d) return;
+  d.nombres = _collectDocNombres();
+  save("descargables");
+  toast("Nombres guardados ✓");
+}
+
+function imprimirDocInterno(docId) {
+  const d = D.descargables.find((x) => x.id === docId);
+  if (!d || !d.docKey) return;
+  const doc = _INTERNAL_DOCS[d.docKey];
   if (!doc) return;
+  // Si el modal está abierto, guardar lo escrito antes de imprimir
+  const nombres = document.querySelector(".idoc-nombre-input") ? _collectDocNombres() : (d.nombres || {});
+  if (document.querySelector(".idoc-nombre-input")) { d.nombres = nombres; save("descargables"); }
+  const tituloMostrado = d.titulo || doc.titulo || "Documento";
   const printLogo = logoWhiteUrl();
   const w = window.open("", "_blank");
   if (!w) { toast("Permite las ventanas emergentes para imprimir.", "error"); return; }
-  const paginasHtml = (doc.paginas || []).map((p, i) => `
-    <section class="idoc-page"${i > 0 ? ' style="page-break-before:always"' : ""}>
+  const paginasHtml = (doc.paginas || []).map((p, pi) => `
+    <section class="idoc-page"${pi > 0 ? ' style="page-break-before:always"' : ""}>
       <div class="print-head">
         <div class="print-head-txt">
-          <div class="print-head-tag">${safeText(tituloMostrado || doc.titulo || "Documento")}</div>
+          <div class="print-head-tag">${safeText(tituloMostrado)}</div>
           <h1>${safeText(p.titulo)}</h1>
           ${p.intro ? `<p class="print-desc">${safeText(p.intro)}</p>` : ""}
         </div>
@@ -3535,10 +3565,10 @@ function imprimirDocInterno(docKey, tituloMostrado) {
       <table class="idoc-print-table">
         <thead><tr><th>Área asignada</th><th>Nombre</th><th>Tareas específicas</th></tr></thead>
         <tbody>
-          ${p.tabla.map((row) => `
+          ${p.tabla.map((row, ri) => `
             <tr>
               <td class="idoc-print-area">${safeText(row.area)}</td>
-              <td class="idoc-print-nombre"></td>
+              <td class="idoc-print-nombre">${safeText(nombres[`${pi}-${ri}`] || "")}</td>
               <td><ul>${row.tareas.map((t) => `<li>${safeText(t)}</li>`).join("")}</ul></td>
             </tr>`).join("")}
         </tbody>
@@ -3550,14 +3580,14 @@ function imprimirDocInterno(docKey, tituloMostrado) {
   <html lang="es">
   <head>
     <meta charset="UTF-8">
-    <title>${safeText(tituloMostrado || doc.titulo || "Documento")}</title>
+    <title>${safeText(tituloMostrado)}</title>
     <style>
       ${_printRecipeCSS()}
       .idoc-print-table{width:100%;border-collapse:collapse;margin-top:6px}
       .idoc-print-table th{text-align:left;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:#8a8478;border-bottom:1px solid #cfc9bd;padding:0 8px 5px 0}
       .idoc-print-table td{vertical-align:top;padding:8px 8px 8px 0;border-bottom:1px solid #e3ded3;font-size:11px}
       .idoc-print-area{font-weight:700;white-space:nowrap;width:22%}
-      .idoc-print-nombre{width:20%;border-bottom:1px solid #999 !important}
+      .idoc-print-nombre{width:20%;font-weight:600;border-bottom:1px solid #999 !important}
       .idoc-print-table ul{margin:0;padding-left:14px}
       .idoc-print-table li{margin-bottom:2px}
       .idoc-page{break-after:auto}
