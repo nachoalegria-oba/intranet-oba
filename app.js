@@ -531,20 +531,41 @@ function logoWhiteUrl() {
   return new URL("./icons/oba-logo-white.png", location.href).href;
 }
 
-// Logo como data URI para impresión/PDF: incrustado, así aparece siempre
-// aunque la ventana de impresión no dé tiempo a descargar la imagen.
+// Logo como data URI para impresión/PDF, YA EN NEGRO. El logo original es
+// blanco y en pantalla se ennegrece con filter:invert(1), pero los motores
+// de PDF ignoran los filtros CSS en imágenes → el logo blanco quedaría
+// invisible sobre papel blanco. Aquí invertimos los colores en un canvas
+// para que el PNG embebido sea negro y se vea siempre, sin depender del CSS.
 let _logoDataUrlCache = null;
 function _ensureLogoDataUrl() {
   if (_logoDataUrlCache) return Promise.resolve(_logoDataUrlCache);
-  return fetch(logoWhiteUrl())
-    .then((r) => r.blob())
-    .then((blob) => new Promise((resolve) => {
-      const fr = new FileReader();
-      fr.onload = () => { _logoDataUrlCache = fr.result; resolve(_logoDataUrlCache); };
-      fr.onerror = () => resolve(logoWhiteUrl());
-      fr.readAsDataURL(blob);
-    }))
-    .catch(() => logoWhiteUrl());
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const px = data.data;
+        for (let i = 0; i < px.length; i += 4) {
+          px[i] = 255 - px[i];       // R
+          px[i + 1] = 255 - px[i + 1]; // G
+          px[i + 2] = 255 - px[i + 2]; // B  (alpha intacto → conserva transparencia)
+        }
+        ctx.putImageData(data, 0, 0);
+        _logoDataUrlCache = canvas.toDataURL("image/png");
+      } catch (e) {
+        _logoDataUrlCache = logoWhiteUrl();
+      }
+      resolve(_logoDataUrlCache);
+    };
+    img.onerror = () => resolve(logoWhiteUrl());
+    img.src = logoWhiteUrl();
+  });
 }
 
 function computeNextId() {
@@ -1522,7 +1543,7 @@ function _printRecipeCSS() {
 
     /* Cabecera de la ficha: logo OBA arriba, limpio y alineado */
     .print-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:10px;margin-bottom:14px;border-bottom:2px solid #1a1a1a}
-    .print-head-logo{width:88px;height:auto;display:block;filter:invert(1);flex-shrink:0}
+    .print-head-logo{width:88px;height:auto;display:block;flex-shrink:0}
     .print-head-txt{min-width:0}
     .print-head-tag{font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:#8a8478;margin-bottom:3px}
     h1{font-size:22px;line-height:1.12;margin:0;font-weight:700;letter-spacing:-.01em}
