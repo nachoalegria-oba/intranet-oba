@@ -9297,38 +9297,28 @@ function rPartidas() {
 
   const cajas = cajaOrder.map(caja => {
     const rows = byCaja[caja].map(it => `
-      <tr>
-        <td class="inv-prod">
+      <div class="inv-row">
+        <div class="inv-row-main">
           <input class="inv-input inv-input-prod" value="${safeText(it.producto)}"
                  onchange="invSetCampo(${it.id},'producto',this.value)" placeholder="Producto">
-        </td>
-        <td class="inv-qty">
-          <input class="inv-input inv-input-qty" value="${safeText(it.cantidad)}"
-                 onchange="invSetCampo(${it.id},'cantidad',this.value)" placeholder="—">
-        </td>
-        <td class="inv-nota">
           <input class="inv-input inv-input-nota" value="${safeText(it.nota || "")}"
-                 onchange="invSetCampo(${it.id},'nota',this.value)" placeholder="Nota (opcional)">
-        </td>
-        <td class="inv-del">
-          <button class="inv-del-btn" title="Eliminar" onclick="invDelProducto(${it.id})">✕</button>
-        </td>
-      </tr>`).join("");
+                 onchange="invSetCampo(${it.id},'nota',this.value)" placeholder="+ nota">
+        </div>
+        <input class="inv-input inv-input-qty" value="${safeText(it.cantidad)}"
+               onchange="invSetCampo(${it.id},'cantidad',this.value)" placeholder="—">
+        <button class="inv-del-btn" title="Eliminar" onclick="invDelProducto(${it.id})">✕</button>
+      </div>`).join("");
     return `
       <div class="inv-caja">
         <div class="inv-caja-head">
+          <span class="inv-caja-ico">📦</span>
           <input class="inv-caja-name" value="${safeText(caja)}"
                  onchange="invRenameCaja('${caja.replace(/'/g, "\\'")}',this.value)">
-          <div class="inv-caja-actions">
-            <span class="inv-caja-count">${byCaja[caja].length} ítem${byCaja[caja].length !== 1 ? "s" : ""}</span>
-            <button class="ghost-btn ghost-btn-sm" onclick="invAddProducto('${caja.replace(/'/g, "\\'")}')">+ Producto</button>
-            <button class="inv-caja-del" title="Eliminar caja" onclick="invDelCaja('${caja.replace(/'/g, "\\'")}')">🗑</button>
-          </div>
+          <span class="inv-caja-count">${byCaja[caja].length}</span>
+          <button class="inv-caja-del" title="Eliminar caja" onclick="invDelCaja('${caja.replace(/'/g, "\\'")}')">🗑</button>
         </div>
-        <table class="inv-table">
-          <thead><tr><th>Producto</th><th>Cant.</th><th>Nota</th><th></th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
+        <div class="inv-rows">${rows}</div>
+        <button class="inv-add-row" onclick="invAddProducto('${caja.replace(/'/g, "\\'")}')">+ Añadir producto</button>
       </div>`;
   }).join("");
 
@@ -9339,7 +9329,7 @@ function rPartidas() {
         <div class="inv-toolbar-info">${total} producto${total !== 1 ? "s" : ""} en ${escHtml(partidaActiva)}</div>
         <button class="primary-btn primary-btn-sm" onclick="invAddCaja()">+ Añadir caja</button>
       </div>
-      ${cajaOrder.length ? cajas : `
+      ${cajaOrder.length ? `<div class="inv-cajas-grid">${cajas}</div>` : `
         <div class="inv-empty">
           <div style="font-size:44px;margin-bottom:10px">📦</div>
           <div style="font-weight:600;margin-bottom:4px">Aún no hay inventario en ${escHtml(partidaActiva)}</div>
