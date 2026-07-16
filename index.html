@@ -29,7 +29,7 @@
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
   </noscript>
-  <link rel="stylesheet" href="./styles.css?v=172">
+  <link rel="stylesheet" href="./styles.css?v=173">
   <script defer src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
@@ -153,6 +153,7 @@
       <button class="nav-btn nav-btn-id" data-panel="id" onclick="sp('id')">I+D</button>
       <button class="nav-btn nav-btn-ai" data-panel="ia" onclick="sp('ia')">IA</button>
       <button class="nav-btn nav-btn-huerta" data-panel="huerta" onclick="sp('huerta')">Huerta</button>
+      <button class="nav-btn nav-btn-partidas" data-panel="partidas" onclick="sp('partidas')">Partidas</button>
       <button class="nav-btn nav-btn-reportes" data-panel="reportes" onclick="sp('reportes')">Reportes</button>
     </nav>
     <button id="mobile-nav-toggle" class="mobile-nav-toggle" type="button" aria-label="Mostrar u ocultar navegación" aria-expanded="true" onclick="toggleMobileNav()">
@@ -391,6 +392,17 @@
           <button class="primary-btn" onclick="oHuertaM()">+ Planta</button>
         </div>
         <div id="huerta-body"></div>
+      </section>
+
+      <section class="panel" id="panel-partidas">
+        <div class="section-head section-head-lg">
+          <div>
+            <div class="eyebrow">Partidas</div>
+            <h1>Inventario por partida</h1>
+            <p>Caldos · Brasas · Pastelería · Fermentos · Palomas</p>
+          </div>
+        </div>
+        <div id="partidas-body"></div>
       </section>
 
       <section class="panel" id="panel-grupo">
@@ -694,6 +706,7 @@
       <button class="hnav-btn hnav-btn-id" data-panel="id" onclick="sp('id')">I+D</button>
       <button class="hnav-btn hnav-btn-ai" data-panel="ia" onclick="sp('ia')">IA</button>
       <button class="hnav-btn hnav-btn-huerta" data-panel="huerta" onclick="sp('huerta')">Huerta</button>
+      <button class="hnav-btn hnav-btn-partidas" data-panel="partidas" onclick="sp('partidas')">Partidas</button>
       <button class="hnav-btn hnav-btn-reportes" data-panel="reportes" onclick="sp('reportes')">Reportes</button>
     </nav>
     <div class="hamburger-footer">
@@ -712,6 +725,6 @@
     </button>
   </div>
 
-  <script defer src="./app.js?v=205"></script>
+  <script defer src="./app.js?v=206"></script>
 </body>
 </html>

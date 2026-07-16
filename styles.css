@@ -3643,3 +3643,97 @@ body.rep-only #hamburger-overlay{display:none !important}
   .rep-detail-label{width:100px}
   .rep-form-wrap{max-width:100%}
 }
+
+/* ── Partidas / Inventario ─────────────────────────── */
+.part-tabs{
+  display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;
+  border-bottom:1px solid var(--line);padding-bottom:16px;
+}
+.part-tab{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:9px 16px;border-radius:999px;
+  border:1px solid var(--line);background:var(--surface);
+  color:var(--ink-2);font-size:14px;font-weight:600;cursor:pointer;
+  transition:all .15s ease;
+}
+.part-tab:hover{border-color:var(--line-strong)}
+.part-tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.part-tab-count{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:20px;height:20px;padding:0 6px;border-radius:999px;
+  background:var(--surface2);color:var(--ink-2);
+  font-size:11px;font-weight:700;
+}
+.part-tab.active .part-tab-count{background:rgba(255,255,255,.22);color:#fff}
+
+.inv-toolbar{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-bottom:16px;
+}
+.inv-toolbar-info{font-size:13px;color:var(--muted);font-weight:600}
+.primary-btn-sm{padding:9px 15px;font-size:13px}
+
+.inv-caja{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--radius);margin-bottom:16px;overflow:hidden;
+  box-shadow:var(--shadow);
+}
+.inv-caja-head{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:12px 14px;background:var(--surface2);
+  border-bottom:1px solid var(--line);flex-wrap:wrap;
+}
+.inv-caja-name{
+  flex:1;min-width:140px;
+  font-size:15px;font-weight:700;color:var(--ink);
+  background:transparent;border:1px solid transparent;border-radius:8px;
+  padding:5px 8px;margin:-5px -8px;
+}
+.inv-caja-name:hover{background:var(--surface)}
+.inv-caja-name:focus{background:var(--surface);border-color:var(--blue);outline:none}
+.inv-caja-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.inv-caja-count{font-size:12px;color:var(--muted);font-weight:600;white-space:nowrap}
+.inv-caja-del{
+  background:transparent;border:none;cursor:pointer;font-size:15px;
+  opacity:.55;padding:4px;border-radius:6px;line-height:1;
+}
+.inv-caja-del:hover{opacity:1;background:var(--red-soft)}
+
+.inv-table{width:100%;border-collapse:collapse}
+.inv-table thead th{
+  text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.4px;color:var(--muted);padding:8px 14px;
+  border-bottom:1px solid var(--line);
+}
+.inv-table thead th:nth-child(2){width:90px}
+.inv-table thead th:nth-child(4){width:44px}
+.inv-table tbody td{padding:4px 8px;border-bottom:1px solid var(--line)}
+.inv-table tbody tr:last-child td{border-bottom:none}
+.inv-input{
+  width:100%;border:1px solid transparent;border-radius:8px;
+  padding:8px 10px;font-size:14px;color:var(--ink);
+  background:transparent;font-family:inherit;
+}
+.inv-input:hover{background:var(--surface2)}
+.inv-input:focus{background:var(--surface);border-color:var(--blue);outline:none}
+.inv-input-prod{font-weight:600}
+.inv-input-qty{text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+.inv-input-nota{color:var(--muted);font-size:13px}
+.inv-del{text-align:center}
+.inv-del-btn{
+  background:transparent;border:none;cursor:pointer;color:var(--muted);
+  font-size:14px;padding:6px 8px;border-radius:6px;line-height:1;
+}
+.inv-del-btn:hover{color:var(--red);background:var(--red-soft)}
+
+.inv-empty{
+  text-align:center;padding:60px 20px;color:var(--ink-2);
+  background:var(--surface);border:1px dashed var(--line-strong);
+  border-radius:var(--radius);
+}
+
+@media(max-width:720px){
+  .inv-toolbar{flex-direction:column;align-items:stretch}
+  .inv-table thead th:nth-child(3),.inv-table tbody td:nth-child(3){display:none}
+  .inv-table thead th:nth-child(2){width:70px}
+}
