@@ -1128,6 +1128,7 @@ function startApp() {
   seedEmpresas();
   seedDescargablesInternos();
   seedInventario();
+  seedFermentos();
   migrateInventario();
   const label = formatLongDate(new Date());
   document.getElementById("hdate").textContent = label;
@@ -9252,6 +9253,70 @@ function seedInventario() {
 
     P("Caja 8", "Hojas de parra occo", 8, "Grande"),
     P("Caja 8", "Apio nabo encurtido", 8, "Mediana"),
+  ];
+  D.inventario.push(...seed);
+  save("inventario");
+}
+
+// Congelador de OBA → partida Fermentos (Turno tarde, 10/7/26, resp. Luis)
+function seedFermentos() {
+  if (!D.inventario) D.inventario = [];
+  const yaHay = D.inventario.some((it) => it.partida === "Fermentos");
+  if (yaHay) return;
+  const P = (caja, producto, cantidad = "", tamano = "", nota = "") =>
+    ({ id: nid++, partida: "Fermentos", caja, producto, cantidad: String(cantidad), tamano, nota });
+  const seed = [
+    P("Caja 1", "Puré saúco", 13),
+    P("Caja 1", "Frutos rojos lacto", 2),
+    P("Caja 1", "Limón oxidado", 3),
+    P("Caja 1", "Limón occo", 2),
+    P("Caja 1", "Agua tomate", 2, "Grande"),
+
+    P("Caja 2", "Barbacoa", 4),
+    P("Caja 2", "Kimizu", 9),
+    P("Caja 2", "Suero vici", 3),
+    P("Caja 2", "Pastel maíz", 1),
+    P("Caja 2", "Líquido de remolacha", 15),
+
+    P("Caja 3", "Shio-koji", 6),
+    P("Caja 3", "Puré tomate lacto", 2),
+    P("Caja 3", "Champi occo", 3),
+    P("Caja 3", "Champi lacto", 6),
+    P("Caja 3", "Espárrago", 6),
+    P("Caja 3", "Lacto (líquido)", ""),
+
+    P("Caja 4", "Puré saúco", 18),
+
+    P("Caja 5", "Oba cola", 2),
+    P("Caja 5", "Trompetas", 1),
+    P("Caja 5", "Agua pepino", 2),
+    P("Caja 5", "Aceite miso", 1),
+    P("Caja 5", "Crema koji", 1),
+    P("Caja 5", "Puré saúco", 1),
+    P("Caja 5", "Crema acedera", 3),
+    P("Caja 5", "Limón oxidado", 4, "Grande"),
+
+    P("Caja 6", "Agua tomate", 16),
+
+    P("Caja 7", "Koji sojae", "", "", "x3 cajas"),
+
+    P("Caja 8", "Suero vici", 4),
+    P("Caja 8", "Leche almendra", 6),
+
+    P("Caja 9", "Lacto mora", 11),
+
+    P("Caja 10", "", ""),
+
+    P("Caja 11", "Dashi", 1),
+    P("Caja 11", "Amazake", 11),
+
+    P("Caja 12", "Cake koji", 20),
+
+    P("Caja 13 (Koji)", "Cake koji", 20),
+    P("Caja 13 (Koji)", "Pan sakadane", 6),
+    P("Caja 13 (Koji)", "Trucha", 2),
+    P("Caja 13 (Koji)", "Nopal", 2),
+    P("Caja 13 (Koji)", "Maíz", 1),
   ];
   D.inventario.push(...seed);
   save("inventario");
