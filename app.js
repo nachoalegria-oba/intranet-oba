@@ -1128,6 +1128,7 @@ function startApp() {
   seedEmpresas();
   seedDescargablesInternos();
   seedInventario();
+  migrateInventario();
   const label = formatLongDate(new Date());
   document.getElementById("hdate").textContent = label;
   document.getElementById("ifecha").textContent = label;
@@ -9201,10 +9202,10 @@ function seedInventario() {
   // Sólo sembramos si aún no hay nada de la partida Palomas (no pisar ediciones).
   const yaHay = D.inventario.some((it) => it.partida === "Palomas");
   if (yaHay) return;
-  const P = (caja, producto, cantidad = "", nota = "") =>
-    ({ id: nid++, partida: "Palomas", caja, producto, cantidad: String(cantidad), nota });
+  const P = (caja, producto, cantidad = "", tamano = "", nota = "") =>
+    ({ id: nid++, partida: "Palomas", caja, producto, cantidad: String(cantidad), tamano, nota });
   const seed = [
-    P("Caja 1", "Vinagre saúco", 13, "bolsa pequeña"),
+    P("Caja 1", "Vinagre saúco", 13, "Pequeña"),
     P("Caja 1", "Vinagre pimiento", 2),
     P("Caja 1", "Vinagre amapola", 8),
     P("Caja 1", "Miso rosas", 13),
@@ -9235,7 +9236,7 @@ function seedInventario() {
 
     P("Caja 5 (bolsas grandes)", "Masato", ""),
     P("Caja 5 (bolsas grandes)", "Bitter de limón", ""),
-    P("Caja 5 (bolsas grandes)", "Tamari pan", 1, "bolsa grande"),
+    P("Caja 5 (bolsas grandes)", "Tamari pan", 1, "Grande"),
     P("Caja 5 (bolsas grandes)", "Lías frutos rojos", 5),
 
     P("Caja 6 (bolsa pequeña)", "Shoyu calostro", 6),
@@ -9249,11 +9250,37 @@ function seedInventario() {
     P("Caja 7", "Aceite xo", 2),
     P("Caja 7", "Garum anguila", 8),
 
-    P("Caja 8", "Hojas de parra occo", 8, "bolsas grandes"),
-    P("Caja 8", "Apio nabo encurtido", 8, "bolsas medianas"),
+    P("Caja 8", "Hojas de parra occo", 8, "Grande"),
+    P("Caja 8", "Apio nabo encurtido", 8, "Mediana"),
   ];
   D.inventario.push(...seed);
   save("inventario");
+}
+
+// Tamaños de bolsa disponibles para cada producto
+const TAMANOS_BOLSA = ["Pequeña", "Mediana", "Grande"];
+
+// Migración: añade el campo `tamano` a inventarios sembrados antes de esta
+// versión, deduciéndolo de la nota antigua ("bolsa pequeña", etc).
+function migrateInventario() {
+  if (!D.inventario || !D.inventario.length) return;
+  let changed = false;
+  D.inventario.forEach((it) => {
+    if (it.tamano === undefined) {
+      const n = (it.nota || "").toLowerCase();
+      if (/peque/.test(n)) it.tamano = "Pequeña";
+      else if (/median/.test(n)) it.tamano = "Mediana";
+      else if (/grande/.test(n)) it.tamano = "Grande";
+      else it.tamano = "";
+      // Si la nota era sólo la descripción del tamaño, la vaciamos
+      if (it.tamano) {
+        const resto = n.replace(/bolsas?/g, "").replace(/peque\w*|median\w*|grande\w*/g, "").trim();
+        if (!resto) it.nota = "";
+      }
+      changed = true;
+    }
+  });
+  if (changed) save("inventario");
 }
 
 function showPartidasPanel() {
@@ -9296,18 +9323,29 @@ function rPartidas() {
   }).join("");
 
   const cajas = cajaOrder.map(caja => {
-    const rows = byCaja[caja].map(it => `
+    const rows = byCaja[caja].map(it => {
+      const opts = TAMANOS_BOLSA.map(t =>
+        `<option value="${t}" ${it.tamano === t ? "selected" : ""}>${t}</option>`).join("");
+      return `
       <div class="inv-row">
         <div class="inv-row-main">
           <input class="inv-input inv-input-prod" value="${safeText(it.producto)}"
                  onchange="invSetCampo(${it.id},'producto',this.value)" placeholder="Producto">
-          <input class="inv-input inv-input-nota" value="${safeText(it.nota || "")}"
-                 onchange="invSetCampo(${it.id},'nota',this.value)" placeholder="+ nota">
+          <div class="inv-row-sub">
+            <select class="inv-size" title="Tamaño de bolsa"
+                    onchange="invSetCampo(${it.id},'tamano',this.value)">
+              <option value="" ${!it.tamano ? "selected" : ""}>Tamaño…</option>
+              ${opts}
+            </select>
+            <input class="inv-input inv-input-nota" value="${safeText(it.nota || "")}"
+                   onchange="invSetCampo(${it.id},'nota',this.value)" placeholder="+ nota">
+          </div>
         </div>
         <input class="inv-input inv-input-qty" value="${safeText(it.cantidad)}"
                onchange="invSetCampo(${it.id},'cantidad',this.value)" placeholder="—">
-        <button class="inv-del-btn" title="Eliminar" onclick="invDelProducto(${it.id})">✕</button>
-      </div>`).join("");
+        <button class="inv-del-btn" title="Quitar producto" onclick="invDelProducto(${it.id})">✕</button>
+      </div>`;
+    }).join("");
     return `
       <div class="inv-caja">
         <div class="inv-caja-head">
