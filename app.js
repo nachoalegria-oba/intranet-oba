@@ -9250,6 +9250,10 @@ let huertaSelectedMonth = null;
 
 // ── Partidas / Inventario ────────────────────────────
 const PARTIDAS = ["Caldos", "Brasas", "Pastelería", "Fermentos", "Palomas", "Congelador Paloma"];
+// Etiqueta visible de cada partida (el dato interno no cambia, para no romper
+// enlaces/QR ya impresos que apuntan al nombre original).
+const PARTIDA_LABEL = { Fermentos: "Congelador Fermentos" };
+function partidaLabel(p) { return PARTIDA_LABEL[p] || p; }
 let partidaActiva = "Palomas";
 
 function seedInventario() {
@@ -9483,7 +9487,7 @@ function rPartidas() {
   const tabs = PARTIDAS.map(p => {
     const n = (D.inventario || []).filter(it => it.partida === p).length;
     return `<button class="part-tab ${p === partidaActiva ? "active" : ""}" onclick="setPartida('${p.replace(/'/g, "\\'")}')">
-      ${escHtml(p)}${n ? `<span class="part-tab-count">${n}</span>` : ""}
+      ${escHtml(partidaLabel(p))}${n ? `<span class="part-tab-count">${n}</span>` : ""}
     </button>`;
   }).join("");
 
@@ -9531,7 +9535,7 @@ function rPartidas() {
     <div class="part-tabs">${tabs}</div>
     <div class="part-content">
       <div class="inv-toolbar">
-        <div class="inv-toolbar-info">${total} producto${total !== 1 ? "s" : ""} en ${escHtml(partidaActiva)}</div>
+        <div class="inv-toolbar-info">${total} producto${total !== 1 ? "s" : ""} en ${escHtml(partidaLabel(partidaActiva))}</div>
         <div class="inv-toolbar-btns">
           ${cajaOrder.length ? `<button class="ghost-btn ghost-btn-sm" onclick="imprimirQRPartida()">▦ QR sección</button>` : ""}
           ${cajaOrder.length ? `<button class="ghost-btn ghost-btn-sm" onclick="imprimirQRCajas()">▦ QR por caja</button>` : ""}
@@ -9541,7 +9545,7 @@ function rPartidas() {
       ${cajaOrder.length ? `<div class="inv-cajas-grid">${cajas}</div>` : `
         <div class="inv-empty">
           <div style="font-size:44px;margin-bottom:10px">📦</div>
-          <div style="font-weight:600;margin-bottom:4px">Aún no hay inventario en ${escHtml(partidaActiva)}</div>
+          <div style="font-weight:600;margin-bottom:4px">Aún no hay inventario en ${escHtml(partidaLabel(partidaActiva))}</div>
           <div style="font-size:13px;color:var(--muted)">Pulsa "+ Añadir caja" para empezar el inventario</div>
         </div>`}
     </div>`;
@@ -9631,12 +9635,12 @@ function imprimirQRCajas(soloCaja) {
     return `<div class="qc">
       <div class="qc-box">${svg}</div>
       <div class="qc-name">${escHtml(caja)}</div>
-      <div class="qc-sub">${escHtml(partida)} · OBA</div>
+      <div class="qc-sub">${escHtml(partidaLabel(partida))} · OBA</div>
     </div>`;
   }).join("");
 
   win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
-    <title>QR cajas — ${escHtml(partida)}</title>
+    <title>QR cajas — ${escHtml(partidaLabel(partida))}</title>
     <style>
       @page { size: A4; margin: 12mm; }
       * { box-sizing: border-box; }
