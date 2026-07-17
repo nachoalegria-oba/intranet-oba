@@ -1173,6 +1173,7 @@ function startApp() {
   seedDescargablesInternos();
   seedInventario();
   seedFermentos();
+  seedCongeladorPaloma();
   migrateInventario();
   cleanCajaNames();
   const label = formatLongDate(new Date());
@@ -9248,7 +9249,7 @@ async function deleteAdjunto(idx) {
 let huertaSelectedMonth = null;
 
 // ── Partidas / Inventario ────────────────────────────
-const PARTIDAS = ["Caldos", "Brasas", "Pastelería", "Fermentos", "Palomas"];
+const PARTIDAS = ["Caldos", "Brasas", "Pastelería", "Fermentos", "Palomas", "Congelador Paloma"];
 let partidaActiva = "Palomas";
 
 function seedInventario() {
@@ -9370,6 +9371,36 @@ function seedFermentos() {
     P("Caja 13 (Koji)", "Trucha", 2),
     P("Caja 13 (Koji)", "Nopal", 2),
     P("Caja 13 (Koji)", "Maíz", 1),
+  ];
+  D.inventario.push(...seed);
+  save("inventario");
+}
+
+// Congelador de la partida Paloma → piezas de caza
+function seedCongeladorPaloma() {
+  if (!D.inventario) D.inventario = [];
+  if (D.inventario.some((it) => it.partida === "Congelador Paloma")) return;
+  const P = (producto, cantidad = "", tamano = "", nota = "") =>
+    ({ id: nid++, partida: "Congelador Paloma", caja: "Caza", producto, cantidad: String(cantidad), tamano, nota });
+  const seed = [
+    P("Morcilla de caza", 6),
+    P("Pechugas de codorniz arregladas", 1),
+    P("Paloma torcaz", 3, "", "paquete de 12 uds"),
+    P("Codorniz guisada personal", 1),
+    P("Muslo de paloma", 1),
+    P("Sesos de cerdo", ""),
+    P("Lomo de jabalí", ""),
+    P("Patas de faisán", 2),
+    P("Corazón de ciervo", 3, "", "paquetes"),
+    P("Guiso de gallo", 1, "Grande", "bolsa grande"),
+    P("Lengua de jabalí", ""),
+    P("Solomillo de jabalí", ""),
+    P("Conejo", 1),
+    P("Liebre", 1),
+    P("Lomo de ciervo", ""),
+    P("Cordero", ""),
+    P("Perdices", 6),
+    P("Bacon para personal", ""),
   ];
   D.inventario.push(...seed);
   save("inventario");
@@ -9626,7 +9657,7 @@ function imprimirQRCajas(soloCaja) {
 }
 
 // Título del QR de sección por partida (Fermentos es un congelador).
-const PARTIDA_QR_TITULO = { Fermentos: "Congelador Fermentos" };
+const PARTIDA_QR_TITULO = { Fermentos: "Congelador Fermentos", "Congelador Paloma": "Congelador Paloma" };
 
 // Un único QR que lleva al inventario completo de la partida.
 function imprimirQRPartida(partidaArg) {
