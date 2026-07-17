@@ -3525,6 +3525,15 @@ body.enc-mode #hamburger-overlay{display:none !important}
 body.rep-only #hamburger-menu{display:none !important}
 body.rep-only #hamburger-overlay{display:none !important}
 
+/* ── Partidas-only mode (acceso público al inventario, sin login) ── */
+#app.partidas-only .main-nav{display:none !important}
+#app.partidas-only .mobile-nav-toggle{display:none !important}
+#app.partidas-only .hamburger-btn{display:none !important}
+#app.partidas-only .topbar-brand>div{display:none}
+#app.partidas-only .topbar-actions{display:none !important}
+body.partidas-only #hamburger-menu{display:none !important}
+body.partidas-only #hamburger-overlay{display:none !important}
+
 /* ── Reportes Mensuales ──────────────────────────────── */
 /* Form wrapper: constrain width so it doesn't stretch on wide screens */
 .rep-form-wrap{max-width:520px;margin:0 auto}

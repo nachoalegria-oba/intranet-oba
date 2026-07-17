@@ -3,6 +3,7 @@ const REPORTES_USER = "reportescañitasgastro";
 const REPORTES_PWD  = "reportescañitasgastro";
 const REPORTES_SESSION_KEY = "oba_reportes_unlocked_v1";
 const REPORTES_ONLY_KEY    = "oba_reportes_only_v1";
+const PARTIDAS_ONLY_KEY    = "oba_partidas_only_v1";
 
 // ── Cuentas con roles (Firebase Auth) ──────────────────
 // Roles: "admin" (todo), "encargado" (su restaurante + sus reportes),
@@ -598,6 +599,8 @@ function updateOverlayState() {
 function showLoginForm() {
   window.__appLoaded = true;
   updateStorageStatus();
+  // Modo público "solo Partidas": sin login, acceso directo al inventario.
+  if (sessionStorage.getItem(PARTIDAS_ONLY_KEY) === "1") { _partidasOnlyStart(); return; }
   const form = document.getElementById("lf");
   if (form) form.style.display = "flex";
   if (sessionStorage.getItem("oba-auth") === "1") {
@@ -633,6 +636,41 @@ function _repOnlyStart() {
   sp("reportes");
 }
 
+// Arranque ligero "solo Partidas": sin login, sin seeds, solo el inventario.
+function _applyPartidasOnlyMode() {
+  document.getElementById("app")?.classList.add("partidas-only");
+  document.body.classList.add("partidas-only");
+}
+
+function _partidasOnlyStart() {
+  document.getElementById("login-screen").style.display = "none";
+  document.getElementById("app").classList.add("visible");
+  setLoginMode(false);
+  _applyPartidasOnlyMode();
+  const hd = document.getElementById("hdate");
+  if (hd) hd.textContent = formatLongDate(new Date());
+  _dataReady.then(() => {
+    showPartidasPanel();
+    if (_deepCaja) setTimeout(_applyDeepCaja, 300);
+  });
+}
+
+// Carga solo la colección de inventario (mucho más rápido que todo).
+async function loadInventarioOnly() {
+  const norm = (snap) => snap.docs.map((d) => d.data())
+    .sort((a, b) => (a._i || 0) - (b._i || 0))
+    .map((it, i) => ({ ...it, _i: it._i ?? i }));
+  try {
+    D.inventario = norm(await db.collection("inventario").get());
+  } catch (e) { console.warn("loadInventarioOnly:", e); }
+  db.collection("inventario").onSnapshot((snap) => {
+    if (snap.empty) return;
+    D.inventario = norm(snap);
+    computeNextId();
+    if (document.getElementById("panel-partidas")?.classList.contains("active")) rPartidas();
+  });
+}
+
 let _dataReady = Promise.resolve();
 
 async function initData() {
@@ -646,7 +684,9 @@ async function initData() {
       // Load data in the background: the login form shows immediately
       // and startApp() waits on _dataReady.
       const _timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 8000));
-      _dataReady = Promise.race([loadFromFirebase(), _timeout])
+      const _loader = sessionStorage.getItem(PARTIDAS_ONLY_KEY) === "1"
+        ? loadInventarioOnly() : loadFromFirebase();
+      _dataReady = Promise.race([_loader, _timeout])
         .catch((error) => {
           console.warn("Firebase no disponible, usando local:", error);
           storageMode = "local";
@@ -1064,8 +1104,11 @@ function logout() {
   sessionStorage.removeItem("oba-auth");
   sessionStorage.removeItem(REPORTES_SESSION_KEY);
   sessionStorage.removeItem(REPORTES_ONLY_KEY);
+  sessionStorage.removeItem(PARTIDAS_ONLY_KEY);
   document.getElementById("app")?.classList.remove("rep-only");
   document.body.classList.remove("rep-only");
+  document.getElementById("app")?.classList.remove("partidas-only");
+  document.body.classList.remove("partidas-only");
   _repView = "dashboard";
   const repInner = document.getElementById("rep-inner");
   if (repInner) repInner.innerHTML = "";
@@ -1173,6 +1216,7 @@ function renderAll() {
 
 function sp(id) {
   if (sessionStorage.getItem(REPORTES_ONLY_KEY) === "1" && id !== "reportes") return;
+  if (sessionStorage.getItem(PARTIDAS_ONLY_KEY) === "1" && id !== "partidas") return;
   if (_esEncargado() && id !== "grupo" && id !== "reportes") return;
   // Recordar la sección actual para restaurarla tras una recarga automática
   try { sessionStorage.setItem("oba_last_panel", id); } catch (e) {}
@@ -9525,7 +9569,7 @@ function invRenameCaja(oldName, newName) {
 const QR_BASE = "https://intranet.obarestaurante.es/";
 
 function _cajaURL(partida, caja) {
-  return QR_BASE + "?partida=" + encodeURIComponent(partida) + "&caja=" + encodeURIComponent(caja);
+  return QR_BASE + "?vista=partidas&partida=" + encodeURIComponent(partida) + "&caja=" + encodeURIComponent(caja);
 }
 
 // Genera la hoja imprimible de QR. Sin argumento: todas las cajas de la
@@ -9580,6 +9624,12 @@ try {
   if (_qp.get("caja")) {
     _deepCaja = { partida: _qp.get("partida") || "Palomas", caja: _qp.get("caja") };
   }
+  // Acceso público "solo Partidas": ?vista=partidas o cualquier QR de caja.
+  // No degrada a un admin que ya tenga sesión completa iniciada.
+  const _wantsPartidas = _qp.get("vista") === "partidas" || _qp.has("caja");
+  const _fullAuth = sessionStorage.getItem("oba-auth") === "1" &&
+                    sessionStorage.getItem(REPORTES_ONLY_KEY) !== "1";
+  if (_wantsPartidas && !_fullAuth) sessionStorage.setItem(PARTIDAS_ONLY_KEY, "1");
 } catch (e) {}
 
 function _applyDeepCaja() {
