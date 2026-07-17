@@ -9252,7 +9252,12 @@ let huertaSelectedMonth = null;
 const PARTIDAS = ["Caldos", "Brasas", "Pastelería", "Fermentos", "Palomas", "Congelador Paloma"];
 // Etiqueta visible de cada partida (el dato interno no cambia, para no romper
 // enlaces/QR ya impresos que apuntan al nombre original).
-const PARTIDA_LABEL = { Fermentos: "Congelador Fermentos" };
+const PARTIDA_LABEL = {
+  Caldos: "Congelador Caldos",
+  Brasas: "Congelador Brasas",
+  "Pastelería": "Congelador Pastelería",
+  Fermentos: "Congelador Fermentos"
+};
 function partidaLabel(p) { return PARTIDA_LABEL[p] || p; }
 let partidaActiva = "Palomas";
 
@@ -9660,14 +9665,11 @@ function imprimirQRCajas(soloCaja) {
   win.document.close();
 }
 
-// Título del QR de sección por partida (Fermentos es un congelador).
-const PARTIDA_QR_TITULO = { Fermentos: "Congelador Fermentos", "Congelador Paloma": "Congelador Paloma" };
-
 // Un único QR que lleva al inventario completo de la partida.
 function imprimirQRPartida(partidaArg) {
   if (typeof qrcode !== "function") { toast("Cargando QR, reintenta en un momento", "err"); return; }
   const partida = partidaArg || partidaActiva;
-  const titulo = PARTIDA_QR_TITULO[partida] || ("Inventario " + partida);
+  const titulo = partidaLabel(partida);
   const url = QR_BASE + "?vista=partidas&partida=" + encodeURIComponent(partida);
   const qr = qrcode(0, "M");
   qr.addData(url);
