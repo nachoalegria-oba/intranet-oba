@@ -650,6 +650,7 @@ function _partidasOnlyStart() {
   const hd = document.getElementById("hdate");
   if (hd) hd.textContent = formatLongDate(new Date());
   _dataReady.then(() => {
+    if (_deepPartida && PARTIDAS.includes(_deepPartida)) partidaActiva = _deepPartida;
     showPartidasPanel();
     if (_deepCaja) setTimeout(_applyDeepCaja, 300);
   });
@@ -1200,7 +1201,13 @@ function startApp() {
       }, 250);
     }
   }
-  if (_deepCaja) setTimeout(_applyDeepCaja, 300);
+  if (_deepCaja) {
+    setTimeout(_applyDeepCaja, 300);
+  } else if (_deepPartida && PARTIDAS.includes(_deepPartida)) {
+    const _p = _deepPartida; _deepPartida = null;
+    try { history.replaceState({}, "", location.pathname); } catch (e) {}
+    setTimeout(() => { partidaActiva = _p; sp("partidas"); }, 300);
+  }
 }
 
 function renderAll() {
@@ -9495,7 +9502,8 @@ function rPartidas() {
       <div class="inv-toolbar">
         <div class="inv-toolbar-info">${total} producto${total !== 1 ? "s" : ""} en ${escHtml(partidaActiva)}</div>
         <div class="inv-toolbar-btns">
-          ${cajaOrder.length ? `<button class="ghost-btn ghost-btn-sm" onclick="imprimirQRCajas()">▦ Imprimir QR</button>` : ""}
+          ${cajaOrder.length ? `<button class="ghost-btn ghost-btn-sm" onclick="imprimirQRPartida()">▦ QR sección</button>` : ""}
+          ${cajaOrder.length ? `<button class="ghost-btn ghost-btn-sm" onclick="imprimirQRCajas()">▦ QR por caja</button>` : ""}
           <button class="primary-btn primary-btn-sm" onclick="invAddCaja()">+ Añadir caja</button>
         </div>
       </div>
@@ -9617,12 +9625,53 @@ function imprimirQRCajas(soloCaja) {
   win.document.close();
 }
 
+// Título del QR de sección por partida (Fermentos es un congelador).
+const PARTIDA_QR_TITULO = { Fermentos: "Congelador Fermentos" };
+
+// Un único QR que lleva al inventario completo de la partida.
+function imprimirQRPartida(partidaArg) {
+  if (typeof qrcode !== "function") { toast("Cargando QR, reintenta en un momento", "err"); return; }
+  const partida = partidaArg || partidaActiva;
+  const titulo = PARTIDA_QR_TITULO[partida] || ("Inventario " + partida);
+  const url = QR_BASE + "?vista=partidas&partida=" + encodeURIComponent(partida);
+  const qr = qrcode(0, "M");
+  qr.addData(url);
+  qr.make();
+  const svg = qr.createSvgTag({ cellSize: 8, margin: 1, scalable: true });
+  const win = window.open("");
+  win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
+    <title>${escHtml(titulo)}</title>
+    <style>
+      @page { size: A4; margin: 16mm; }
+      * { box-sizing: border-box; }
+      body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; color: #111;
+             display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+      .card { border: 1.5px dashed #bbb; border-radius: 14px; padding: 16mm 14mm; text-align: center; }
+      .card .box { width: 95mm; height: 95mm; margin: 0 auto 8mm; }
+      .card .box svg { width: 100%; height: 100%; display: block; }
+      .card .ttl { font-size: 30pt; font-weight: 800; letter-spacing: .3px; }
+      .card .sub { font-size: 12pt; color: #777; margin-top: 3mm; text-transform: uppercase; letter-spacing: 1.5px; }
+      @media screen { body { background: #f2f2f7; } .card { background: #fff; } }
+    </style></head>
+    <body><div class="card">
+      <div class="box">${svg}</div>
+      <div class="ttl">${escHtml(titulo)}</div>
+      <div class="sub">Escanea para ver el inventario · OBA</div>
+    </div>
+    <script>window.onload = function(){ setTimeout(function(){ window.print(); }, 300); };<\/script>
+    </body></html>`);
+  win.document.close();
+}
+
 // Enlace directo: abre Partidas → la partida y resalta la caja.
 let _deepCaja = null;
+let _deepPartida = null;
 try {
   const _qp = new URLSearchParams(location.search);
   if (_qp.get("caja")) {
     _deepCaja = { partida: _qp.get("partida") || "Palomas", caja: _qp.get("caja") };
+  } else if (_qp.get("partida")) {
+    _deepPartida = _qp.get("partida");
   }
   // Acceso público "solo Partidas": ?vista=partidas o cualquier QR de caja.
   // No degrada a un admin que ya tenga sesión completa iniciada.
