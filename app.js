@@ -1130,6 +1130,7 @@ function startApp() {
   seedInventario();
   seedFermentos();
   migrateInventario();
+  cleanCajaNames();
   const label = formatLongDate(new Date());
   document.getElementById("hdate").textContent = label;
   document.getElementById("ifecha").textContent = label;
@@ -9212,39 +9213,39 @@ function seedInventario() {
     P("Caja 1", "Vinagre amapola", 8),
     P("Caja 1", "Miso rosas", 13),
 
-    P("Caja 2 (bolsas pequeñas)", "Garum pan", 27),
-    P("Caja 2 (bolsas pequeñas)", "Garum seco", 15),
-    P("Caja 2 (bolsas pequeñas)", "Garum manzana", 27),
+    P("Caja 2", "Garum pan", 27),
+    P("Caja 2", "Garum seco", 15),
+    P("Caja 2", "Garum manzana", 27),
 
-    P("Caja 3 (bolsas pequeñas)", "Garum codorniz", 15),
-    P("Caja 3 (bolsas pequeñas)", "Garum trucha", ""),
+    P("Caja 3", "Garum codorniz", 15),
+    P("Caja 3", "Garum trucha", ""),
 
-    P("Caja 4 (bolsas pequeñas)", "Garum camarón", 5),
-    P("Caja 4 (bolsas pequeñas)", "Garum garbanzos", 18),
-    P("Caja 4 (bolsas pequeñas)", "Garum grillo", 7),
-    P("Caja 4 (bolsas pequeñas)", "Garum maíz", 9),
-    P("Caja 4 (bolsas pequeñas)", "Garum vegetal", 10),
-    P("Caja 4 (bolsas pequeñas)", "Shoyu avena", 4),
-    P("Caja 4 (bolsas pequeñas)", "Garum calabaza", 6),
+    P("Caja 4", "Garum camarón", 5),
+    P("Caja 4", "Garum garbanzos", 18),
+    P("Caja 4", "Garum grillo", 7),
+    P("Caja 4", "Garum maíz", 9),
+    P("Caja 4", "Garum vegetal", 10),
+    P("Caja 4", "Shoyu avena", 4),
+    P("Caja 4", "Garum calabaza", 6),
 
-    P("Caja 5 (bolsas pequeñas)", "Miso locro", ""),
-    P("Caja 5 (bolsas pequeñas)", "Miso pato", ""),
-    P("Caja 5 (bolsas pequeñas)", "Miso callos", ""),
-    P("Caja 5 (bolsas pequeñas)", "Miso colioco", ""),
-    P("Caja 5 (bolsas pequeñas)", "Miso rúcula", ""),
-    P("Caja 5 (bolsas pequeñas)", "Miso grillo", ""),
-    P("Caja 5 (bolsas pequeñas)", "Miso maíz", ""),
-    P("Caja 5 (bolsas pequeñas)", "Miso escaramujo", ""),
+    P("Caja 5", "Miso locro", ""),
+    P("Caja 5", "Miso pato", ""),
+    P("Caja 5", "Miso callos", ""),
+    P("Caja 5", "Miso colioco", ""),
+    P("Caja 5", "Miso rúcula", ""),
+    P("Caja 5", "Miso grillo", ""),
+    P("Caja 5", "Miso maíz", ""),
+    P("Caja 5", "Miso escaramujo", ""),
 
-    P("Caja 5 (bolsas grandes)", "Masato", ""),
-    P("Caja 5 (bolsas grandes)", "Bitter de limón", ""),
-    P("Caja 5 (bolsas grandes)", "Tamari pan", 1, "Grande"),
-    P("Caja 5 (bolsas grandes)", "Lías frutos rojos", 5),
+    P("Caja 5", "Masato", ""),
+    P("Caja 5", "Bitter de limón", ""),
+    P("Caja 5", "Tamari pan", 1, "Grande"),
+    P("Caja 5", "Lías frutos rojos", 5),
 
-    P("Caja 6 (bolsa pequeña)", "Shoyu calostro", 6),
-    P("Caja 6 (bolsa pequeña)", "Tamari garbanzo", 2),
-    P("Caja 6 (bolsa pequeña)", "Shoyu huevo", 4),
-    P("Caja 6 (bolsa pequeña)", "Ganyang", 20),
+    P("Caja 6", "Shoyu calostro", 6),
+    P("Caja 6", "Tamari garbanzo", 2),
+    P("Caja 6", "Shoyu huevo", 4),
+    P("Caja 6", "Ganyang", 20),
 
     P("Caja 7", "Siracha", 28),
     P("Caja 7", "Miso verduras", 7),
@@ -9345,6 +9346,22 @@ function migrateInventario() {
       }
       changed = true;
     }
+  });
+  if (changed) save("inventario");
+}
+
+// Migración: quita de los nombres de caja los paréntesis de tamaño
+// ("Caja 2 (bolsas pequeñas)" → "Caja 2"). No toca paréntesis que no sean
+// de tamaño (p.ej. "Caja 13 (Koji)").
+function cleanCajaNames() {
+  if (!D.inventario || !D.inventario.length) return;
+  let changed = false;
+  D.inventario.forEach((it) => {
+    const m = (it.caja || "").match(/^(.*?)\s*\(([^)]*)\)\s*$/);
+    if (!m) return;
+    if (!/bolsa|peque|grande|median/i.test(m[2])) return; // conservar "(Koji)" u otros
+    it.caja = m[1].trim();
+    changed = true;
   });
   if (changed) save("inventario");
 }
