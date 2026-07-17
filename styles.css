@@ -3715,6 +3715,22 @@ body.rep-only #hamburger-overlay{display:none !important}
   opacity:.5;padding:4px;border-radius:6px;line-height:1;
 }
 .inv-caja-del:hover{opacity:1;background:var(--red-soft)}
+.inv-caja-qr{
+  flex:0 0 auto;
+  background:transparent;border:none;cursor:pointer;font-size:15px;color:#6b4f2a;
+  opacity:.55;padding:4px;border-radius:6px;line-height:1;
+}
+.inv-caja-qr:hover{opacity:1;background:#e6d4b0}
+.inv-toolbar-btns{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+@keyframes invFlash{
+  0%{box-shadow:0 0 0 0 rgba(201,168,106,.9)}
+  100%{box-shadow:0 0 0 14px rgba(201,168,106,0)}
+}
+.inv-caja-flash{
+  border-color:#c9a86a !important;
+  animation:invFlash 1.4s ease-out 2;
+}
 
 .inv-rows{flex:1;padding:4px 0}
 .inv-row{

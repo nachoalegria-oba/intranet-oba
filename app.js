@@ -1156,6 +1156,7 @@ function startApp() {
       }, 250);
     }
   }
+  if (_deepCaja) setTimeout(_applyDeepCaja, 300);
 }
 
 function renderAll() {
@@ -9411,17 +9412,19 @@ function rPartidas() {
         <button class="inv-del-btn" title="Quitar producto" onclick="invDelProducto(${it.id})">✕</button>
       </div>`;
     }).join("");
+    const cajaJs = caja.replace(/'/g, "\\'");
     return `
-      <div class="inv-caja">
+      <div class="inv-caja" data-caja="${safeText(caja)}" data-partida="${safeText(partidaActiva)}">
         <div class="inv-caja-head">
           <span class="inv-caja-ico">📦</span>
           <input class="inv-caja-name" value="${safeText(caja)}"
-                 onchange="invRenameCaja('${caja.replace(/'/g, "\\'")}',this.value)">
+                 onchange="invRenameCaja('${cajaJs}',this.value)">
           <span class="inv-caja-count">${byCaja[caja].length}</span>
-          <button class="inv-caja-del" title="Eliminar caja" onclick="invDelCaja('${caja.replace(/'/g, "\\'")}')">🗑</button>
+          <button class="inv-caja-qr" title="Imprimir QR de esta caja" onclick="imprimirQRCajas('${cajaJs}')">▦</button>
+          <button class="inv-caja-del" title="Eliminar caja" onclick="invDelCaja('${cajaJs}')">🗑</button>
         </div>
         <div class="inv-rows">${rows}</div>
-        <button class="inv-add-row" onclick="invAddProducto('${caja.replace(/'/g, "\\'")}')">+ Añadir producto</button>
+        <button class="inv-add-row" onclick="invAddProducto('${cajaJs}')">+ Añadir producto</button>
       </div>`;
   }).join("");
 
@@ -9430,7 +9433,10 @@ function rPartidas() {
     <div class="part-content">
       <div class="inv-toolbar">
         <div class="inv-toolbar-info">${total} producto${total !== 1 ? "s" : ""} en ${escHtml(partidaActiva)}</div>
-        <button class="primary-btn primary-btn-sm" onclick="invAddCaja()">+ Añadir caja</button>
+        <div class="inv-toolbar-btns">
+          ${cajaOrder.length ? `<button class="ghost-btn ghost-btn-sm" onclick="imprimirQRCajas()">▦ Imprimir QR</button>` : ""}
+          <button class="primary-btn primary-btn-sm" onclick="invAddCaja()">+ Añadir caja</button>
+        </div>
       </div>
       ${cajaOrder.length ? `<div class="inv-cajas-grid">${cajas}</div>` : `
         <div class="inv-empty">
@@ -9495,6 +9501,93 @@ function invRenameCaja(oldName, newName) {
   });
   save("inventario");
   rPartidas();
+}
+
+// ── QR de cajas + enlace directo ────────────────────
+// Dominio público de la intranet (el QR abre esta URL al escanearlo).
+const QR_BASE = "https://intranet.obarestaurante.es/";
+
+function _cajaURL(partida, caja) {
+  return QR_BASE + "?partida=" + encodeURIComponent(partida) + "&caja=" + encodeURIComponent(caja);
+}
+
+// Genera la hoja imprimible de QR. Sin argumento: todas las cajas de la
+// partida activa. Con `soloCaja`: solo el QR de esa caja.
+function imprimirQRCajas(soloCaja) {
+  if (typeof qrcode !== "function") { toast("Cargando QR, reintenta en un momento", "err"); return; }
+  const partida = partidaActiva;
+  const items = (D.inventario || []).filter(it => it.partida === partida);
+  const cajas = [];
+  items.forEach(it => { if (!cajas.includes(it.caja)) cajas.push(it.caja); });
+  const lista = soloCaja ? cajas.filter(c => c === soloCaja) : cajas;
+  if (!lista.length) { toast("No hay cajas en " + partida, "err"); return; }
+
+  const win = window.open("");
+  const cards = lista.map(caja => {
+    const qr = qrcode(0, "M");
+    qr.addData(_cajaURL(partida, caja));
+    qr.make();
+    const svg = qr.createSvgTag({ cellSize: 6, margin: 1, scalable: true });
+    return `<div class="qc">
+      <div class="qc-box">${svg}</div>
+      <div class="qc-name">${escHtml(caja)}</div>
+      <div class="qc-sub">${escHtml(partida)} · OBA</div>
+    </div>`;
+  }).join("");
+
+  win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
+    <title>QR cajas — ${escHtml(partida)}</title>
+    <style>
+      @page { size: A4; margin: 12mm; }
+      * { box-sizing: border-box; }
+      body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; color: #111; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10mm; }
+      .qc { border: 1.5px dashed #bbb; border-radius: 8px; padding: 8mm 6mm;
+            text-align: center; break-inside: avoid; page-break-inside: avoid; }
+      .qc-box { width: 55mm; height: 55mm; margin: 0 auto 5mm; }
+      .qc-box svg { width: 100%; height: 100%; display: block; }
+      .qc-name { font-size: 20pt; font-weight: 800; letter-spacing: .3px; }
+      .qc-sub { font-size: 10pt; color: #777; margin-top: 2mm; text-transform: uppercase; letter-spacing: 1px; }
+      @media screen { body { background: #f2f2f7; padding: 20px; } .grid { max-width: 800px; margin: 0 auto; } .qc { background: #fff; } }
+    </style></head>
+    <body><div class="grid">${cards}</div>
+    <script>window.onload = function(){ setTimeout(function(){ window.print(); }, 300); };<\/script>
+    </body></html>`);
+  win.document.close();
+}
+
+// Enlace directo: abre Partidas → la partida y resalta la caja.
+let _deepCaja = null;
+try {
+  const _qp = new URLSearchParams(location.search);
+  if (_qp.get("caja")) {
+    _deepCaja = { partida: _qp.get("partida") || "Palomas", caja: _qp.get("caja") };
+  }
+} catch (e) {}
+
+function _applyDeepCaja() {
+  if (!_deepCaja) return;
+  const target = _deepCaja;
+  _deepCaja = null;
+  // Quitar los parámetros para que futuras recargas no vuelvan a saltar
+  try { history.replaceState({}, "", location.pathname); } catch (e) {}
+  if (!PARTIDAS.includes(target.partida)) return;
+  _gotoCaja(target.partida, target.caja);
+}
+
+function _gotoCaja(partida, caja) {
+  partidaActiva = partida;
+  sp("partidas");
+  _flashCaja(caja, 0);
+}
+
+function _flashCaja(caja, attempt) {
+  const el = [...document.querySelectorAll("#partidas-body .inv-caja")]
+    .find(x => x.dataset.caja === caja);
+  if (!el) { if (attempt < 30) setTimeout(() => _flashCaja(caja, attempt + 1), 220); return; }
+  el.scrollIntoView({ behavior: "smooth", block: "center" });
+  el.classList.add("inv-caja-flash");
+  setTimeout(() => el.classList.remove("inv-caja-flash"), 2800);
 }
 
 function showHuertaPanel() {
