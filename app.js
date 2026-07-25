@@ -7135,15 +7135,19 @@ function _compressImage(file, maxDim = 1200, quality = 0.82) {
 }
 
 function attachRestPhoto(id, col) {
+  const colKey = `${col}_recetas`;
+  const recipe = (D[colKey] || []).find((r) => r._i === id);
+  if (!recipe) { toast("No se encontró la receta", "error"); return; }
   const input = document.createElement("input");
   input.type = "file";
   input.accept = "image/*";
+  // Debe estar en el DOM para que el evento 'change' dispare en iOS/PWA.
+  input.style.cssText = "position:fixed;left:-9999px;top:0;opacity:0";
+  document.body.appendChild(input);
+  const cleanup = () => { try { input.remove(); } catch (e) {} };
   input.onchange = async () => {
-    const file = input.files[0];
-    if (!file) return;
-    const colKey = `${col}_recetas`;
-    const recipe = (D[colKey] || []).find((r) => r._i === id);
-    if (!recipe) return;
+    const file = input.files && input.files[0];
+    if (!file) { cleanup(); return; }
     try {
       toast("Guardando foto…");
       const foto = await _compressImage(file);
@@ -7165,6 +7169,8 @@ function attachRestPhoto(id, col) {
     } catch (e) {
       console.error("attachRestPhoto:", e);
       toast("No se pudo guardar la foto: " + e.message, "error");
+    } finally {
+      cleanup();
     }
   };
   input.click();
