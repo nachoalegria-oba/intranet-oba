@@ -4862,7 +4862,12 @@ function rEmpresaDetalle(id, tab) {
       </div>
       <div class="rest-rcards" id="rest-rcards-${e.id}">${skeletonCards()}</div>`; // filled by rRestRecetario
     // Solo carga si no hay datos ya (evita 429 por demasiadas peticiones a Firestore)
-    if ((D[`${col}_recetas`] || []).length > 0) { setTimeout(() => rRestRecetario(e.id, col), 0); } else
+    if ((D[`${col}_recetas`] || []).length > 0) {
+      setTimeout(() => {
+        rRestRecetario(e.id, col);
+        loadRestPhotos(col).then(() => rRestRecetario(e.id, col)); // miniaturas de fotos
+      }, 0);
+    } else
     setTimeout(async () => {
       try {
         const colName = `${col}_recetas`;
