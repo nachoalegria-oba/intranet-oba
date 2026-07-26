@@ -772,7 +772,20 @@ async function loadFromFirebase() {
     db.collection(col).onSnapshot((snap) => {
       if (snap.empty) return;
       const items = snap.docs.map((doc) => doc.data()).sort((a, b) => (a._i || 0) - (b._i || 0));
-      D[col] = items.map((item, idx) => ({ ...item, _i: item._i ?? idx }));
+      // Las fotos viven en {col}_recetas_fotos, no en el doc de la receta. Si no
+      // las conservamos aquí, cada actualización en vivo (p. ej. al subir una foto)
+      // borraría las miniaturas ya cargadas en memoria.
+      let prevFotos = null;
+      if (FOTO_COLS.has(col)) {
+        prevFotos = {};
+        (D[col] || []).forEach((r) => { if (r.foto) prevFotos[r._i] = r.foto; });
+      }
+      D[col] = items.map((item, idx) => {
+        const _i = item._i ?? idx;
+        const merged = { ...item, _i };
+        if (prevFotos && prevFotos[_i] && !merged.foto) merged.foto = prevFotos[_i];
+        return merged;
+      });
       computeNextId();
       scheduleRender();
     });
