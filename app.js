@@ -5120,7 +5120,8 @@ function rRestRecetario(empId, col) {
   const container = document.getElementById(`rest-rcards-${empId}`);
   if (!container) return;
   container.innerHTML = list.length ? list.map((r) => `
-    <article class="card rest-rec-card">
+    <article class="card rest-rec-card${r.foto ? " has-photo" : ""}">
+      ${r.foto ? `<div class="rest-rec-thumb" onclick="viewRestPhoto(${r._i},'${col}')"><img src="${r.foto}" alt="${safeText(r.nombre)}" loading="lazy"></div>` : ""}
       ${brestSec(r.seccion || "Principales")}
       <h3>${safeText(r.nombre)}</h3>
       <p>${safeText(r.descripcion || "Sin descripción")}</p>
