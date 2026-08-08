@@ -10985,23 +10985,24 @@ async function sReporte() {
   if (btn) { btn.disabled = true; btn.textContent = "Enviando…"; }
   const _restoreBtn = () => { if (btn) { btn.disabled = false; btn.textContent = "Enviar reporte"; } };
 
-  // Subir adjuntos a Storage antes de guardar el reporte
+  // Subir adjuntos a Storage antes de guardar el reporte. Si alguno falla,
+  // no perdemos el reporte entero: lo mandamos igual con los que sí subieron
+  // y avisamos cuáles se quedaron fuera.
   let adjuntos = [];
+  const fallidos = [];
   if (_repAdjFiles.length && firebase.storage) {
-    try {
-      for (let i = 0; i < _repAdjFiles.length; i++) {
-        const f = _repAdjFiles[i];
-        if (btn) btn.textContent = `Subiendo archivo ${i + 1}/${_repAdjFiles.length}…`;
+    for (let i = 0; i < _repAdjFiles.length; i++) {
+      const f = _repAdjFiles[i];
+      if (btn) btn.textContent = `Subiendo archivo ${i + 1}/${_repAdjFiles.length}…`;
+      try {
         const ref = firebase.storage().ref(`reportes_adjuntos/${Date.now()}_${f.name}`);
         const snap = await ref.put(f);
         const url = await snap.ref.getDownloadURL();
         adjuntos.push({ nombre: f.name, url, tipo: f.type || "", tamano: f.size || 0 });
+      } catch (e) {
+        console.error("Error subiendo adjunto", f.name, e);
+        fallidos.push(f.name);
       }
-    } catch (e) {
-      console.error("Error subiendo adjuntos:", e);
-      toast("Error subiendo un archivo adjunto: " + e.message, "error");
-      _restoreBtn();
-      return;
     }
     if (btn) btn.textContent = "Enviando…";
   }
@@ -11055,12 +11056,15 @@ async function sReporte() {
 
   db.collection("reportes").add(doc)
     .then(() => {
+      if (fallidos.length) {
+        toast(`Reporte enviado, pero no se pudo adjuntar: ${fallidos.join(", ")}`, "error");
+      }
       if (sessionStorage.getItem(REPORTES_ONLY_KEY) === "1") {
         _repInit();
         _repRenderSent();
         scrollTop();
       } else {
-        toast("Reporte enviado correctamente.", "ok");
+        if (!fallidos.length) toast("Reporte enviado correctamente.", "ok");
         _repInit();
         _repView = "dashboard";
         rRepInner();
