@@ -3801,3 +3801,44 @@ body.partidas-only #hamburger-overlay{display:none !important}
   .inv-toolbar{flex-direction:column;align-items:stretch}
   .inv-cajas-grid{grid-template-columns:1fr}
 }
+
+/* ── Staff meal semanal (Pedidos) ────────────────────── */
+.staffmeal-card{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--radius);padding:16px 18px;
+  box-shadow:var(--shadow);margin-bottom:20px;
+}
+.staffmeal-head{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:12px;margin-bottom:14px;flex-wrap:wrap;
+}
+.staffmeal-head h3{margin:2px 0 0;font-size:17px;font-weight:700;color:var(--ink)}
+.staffmeal-nav{display:flex;align-items:center;gap:10px}
+.staffmeal-nav-btn{
+  width:28px;height:28px;border-radius:50%;border:1px solid var(--line);
+  background:var(--surface2);cursor:pointer;font-size:16px;line-height:1;
+  display:flex;align-items:center;justify-content:center;color:var(--ink-2);
+  padding:0;
+}
+.staffmeal-nav-btn:hover{background:var(--surface3)}
+.staffmeal-range{font-size:13px;font-weight:600;color:var(--muted);min-width:92px;text-align:center}
+.staffmeal-days{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.staffmeal-day{
+  background:var(--surface2);border:1px solid var(--line);
+  border-radius:var(--radius-sm);padding:10px 12px;
+}
+.staffmeal-day.is-today{border-color:var(--blue);background:var(--blue-soft)}
+.staffmeal-day-head{display:flex;flex-direction:column;margin-bottom:6px}
+.staffmeal-day-name{font-size:12.5px;font-weight:700;color:var(--ink)}
+.staffmeal-day-date{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-top:1px}
+.staffmeal-input{
+  width:100%;border:1px solid var(--line);border-radius:8px;
+  padding:7px 9px;font-size:13.5px;background:var(--surface);font-family:inherit;color:var(--ink);
+}
+.staffmeal-input:hover{border-color:var(--line-strong)}
+.staffmeal-input:focus{outline:none;border-color:var(--blue)}
+.staffmeal-today-btn{margin-top:12px}
+
+@media(max-width:640px){
+  .staffmeal-days{grid-template-columns:1fr 1fr}
+}
