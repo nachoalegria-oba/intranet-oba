@@ -1262,11 +1262,8 @@ function sp(id) {
 }
 
 // ── I+D ──────────────────────────────────────────────
-const ID_PWD = "hijodeladeisy";
-const CANITAS_PWD = "cañitasgastro123";
-const CANITAS_SESSION_KEY = "oba_canitas_unlocked_v1";
-const ID_SESSION_KEY = "oba_id_unlocked_v1";
-
+// Ya no pide contraseña propia: quien entra a la intranet (login principal
+// o cuenta personal) ve directamente el contenido.
 function showIDPanel() {
   document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
   document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
@@ -1277,48 +1274,7 @@ function showIDPanel() {
   scrollTop();
   closeHamburger();
   document.getElementById("ped-float-bar")?.classList.remove("visible");
-  const unlocked = sessionStorage.getItem(ID_SESSION_KEY) === "1";
-  document.getElementById("id-gate").style.display = unlocked ? "none" : "flex";
-  document.getElementById("id-content").style.display = unlocked ? "block" : "none";
-  if (unlocked) showIDGrid();
-}
-
-function unlockID() {
-  const val = document.getElementById("id-pwd").value;
-  if (val === ID_PWD) {
-    sessionStorage.setItem(ID_SESSION_KEY, "1");
-    document.getElementById("id-err").textContent = "";
-    document.getElementById("id-pwd").value = "";
-    document.getElementById("id-gate").style.display = "none";
-    document.getElementById("id-content").style.display = "block";
-    showIDGrid();
-  } else {
-    const err = document.getElementById("id-err");
-    err.textContent = "Contraseña incorrecta";
-    document.getElementById("id-pwd").value = "";
-    document.getElementById("id-pwd").focus();
-  }
-}
-
-function lockID() {
-  sessionStorage.removeItem(ID_SESSION_KEY);
-  document.getElementById("id-gate").style.display = "flex";
-  document.getElementById("id-content").style.display = "none";
-  document.getElementById("id-pwd").value = "";
-}
-
-function unlockCanitas() {
-  const val = document.getElementById("canitas-pwd").value;
-  if (val === CANITAS_PWD) {
-    sessionStorage.setItem(CANITAS_SESSION_KEY, "1");
-    document.getElementById("canitas-pwd").value = "";
-    rGrupo();
-  } else {
-    const err = document.getElementById("canitas-err");
-    err.textContent = "Contraseña incorrecta";
-    document.getElementById("canitas-pwd").value = "";
-    document.getElementById("canitas-pwd").focus();
-  }
+  showIDGrid();
 }
 
 function showIDGrid() {
@@ -4630,21 +4586,6 @@ function showGrupoPanel() {
     return;
   }
 
-  if (sessionStorage.getItem(CANITAS_SESSION_KEY) !== "1") {
-    document.getElementById("panel-grupo-body").innerHTML = `
-      <div style="display:flex;justify-content:center;align-items:center;min-height:60vh">
-        <div class="id-gate-card">
-          <div class="eyebrow" style="margin-bottom:12px">Acceso restringido</div>
-          <h2 style="font-size:1.5rem;margin:0 0 6px">Cañitas Gastro</h2>
-          <p style="color:var(--muted);font-size:13px;margin:0 0 24px">Grupo de restaurantes</p>
-          <input class="login-input" type="password" id="canitas-pwd" placeholder="Contraseña"
-            onkeydown="if(event.key==='Enter')unlockCanitas()">
-          <button class="primary-btn" style="margin-top:10px;width:100%" onclick="unlockCanitas()">Entrar</button>
-          <div class="login-error" id="canitas-err" style="margin-top:8px"></div>
-        </div>
-      </div>`;
-    return;
-  }
   rGrupo();
 }
 
@@ -4656,8 +4597,6 @@ function rGrupo() {
     if (encIds.length === 1) { grupoView = encIds[0]; rEmpresaDetalle(encIds[0]); return; }
     grupoSection = "restaurantes"; // sin kit de apertura para encargados
     if (typeof grupoView === "number" && !encIds.includes(grupoView)) grupoView = "dashboard";
-  } else if (sessionStorage.getItem(CANITAS_SESSION_KEY) !== "1") {
-    return; // panel locked — don't overwrite gate
   }
   if (grupoSection === "descargables") { rGrupoDescargables(); return; }
   if (typeof grupoView === "number") { rEmpresaDetalle(grupoView); return; }
@@ -10532,52 +10471,16 @@ function showReportesPanel() {
     repTabsEl.innerHTML = sessionStorage.getItem(REPORTES_ONLY_KEY) === "1" ? "" : _grupoRepTabsHTML("reportes");
   }
   if (sessionStorage.getItem(REPORTES_ONLY_KEY) === "1") {
-    // Report writers: straight to a fresh form, never the dashboard.
+    // Invitado externo (login con reportescañitasgastro): directo al formulario, nunca al resumen.
     if (_repView !== "form") {
       _repInit();
       _repView = "form";
     }
     rRepInner();
-  } else if (sessionStorage.getItem(REPORTES_SESSION_KEY) === "1") {
-    loadReportes();
   } else {
-    _repRenderGate();
-  }
-}
-
-function _repRenderGate() {
-  const el = document.getElementById("rep-inner");
-  if (!el) return;
-  el.innerHTML = `
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:24px">
-      <div style="background:var(--surface);border-radius:24px;box-shadow:var(--shadow);padding:32px 28px;width:100%;max-width:360px">
-        <div style="text-align:center;margin-bottom:24px">
-          <img src="./icons/oba-logo-white.png" alt="OBA" style="width:48px;margin-bottom:12px;opacity:.85">
-          <div class="eyebrow" style="margin-bottom:4px">Acceso restringido</div>
-          <h2 style="font-size:1.4rem;margin:0 0 4px">Reportes mensuales</h2>
-          <p style="color:var(--muted);font-size:13px;margin:0">Introduce tus credenciales para continuar</p>
-        </div>
-        <label class="sr-only" for="rep-gate-usr">Usuario</label>
-        <input class="login-input" type="text" id="rep-gate-usr" placeholder="Usuario" autocomplete="username"
-          style="margin-bottom:10px" onkeydown="if(event.key==='Enter')document.getElementById('rep-gate-pwd').focus()">
-        <label class="sr-only" for="rep-gate-pwd">Contraseña</label>
-        <input class="login-input" type="password" id="rep-gate-pwd" placeholder="Contraseña" autocomplete="current-password"
-          style="margin-bottom:10px" onkeydown="if(event.key==='Enter')repUnlockPanel()">
-        <button class="primary-btn" style="width:100%" onclick="repUnlockPanel()">Entrar</button>
-        <div class="login-error" id="rep-gate-err" style="margin-top:8px;text-align:center"></div>
-      </div>
-    </div>`;
-}
-
-function repUnlockPanel() {
-  const usr = (document.getElementById("rep-gate-usr")?.value || "").trim();
-  const pwd = document.getElementById("rep-gate-pwd")?.value || "";
-  const err = document.getElementById("rep-gate-err");
-  if (usr === REPORTES_USER && pwd === REPORTES_PWD) {
-    sessionStorage.setItem(REPORTES_SESSION_KEY, "1");
+    // Ya está dentro de la intranet (login principal o cuenta personal): directo al resumen,
+    // sin pedir contraseña otra vez.
     loadReportes();
-  } else {
-    if (err) { err.textContent = "Usuario o contraseña incorrectos"; setTimeout(() => { err.textContent = ""; }, 2500); }
   }
 }
 
