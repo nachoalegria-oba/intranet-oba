@@ -4588,6 +4588,20 @@ function logoEmpresa(e) {
 
 let grupoSection = "restaurantes"; // "restaurantes" | "descargables"
 
+// Cañitas Gastro y Reportes viven bajo un mismo punto de entrada de nav,
+// como dos pestañas del mismo apartado de grupo.
+function _grupoRepTabsHTML(active) {
+  return `<div class="segmented-bar" style="margin-bottom:18px">
+    <button class="segment-btn${active === "restaurantes" ? " active" : ""}" onclick="_grupoRepTabGo('restaurantes')">Restaurantes</button>
+    <button class="segment-btn${active === "reportes" ? " active" : ""}" onclick="_grupoRepTabGo('reportes')">Reportes</button>
+  </div>`;
+}
+
+function _grupoRepTabGo(tab) {
+  try { sessionStorage.setItem("oba_last_panel", tab === "reportes" ? "reportes" : "grupo"); } catch (e) {}
+  if (tab === "reportes") showReportesPanel(); else showGrupoPanel();
+}
+
 function showGrupoPanel() {
   document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
   document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
@@ -4595,6 +4609,8 @@ function showGrupoPanel() {
   document.getElementById("panel-grupo")?.classList.add("active");
   document.querySelector('.nav-btn[data-panel="grupo"]')?.classList.add("active");
   document.querySelector('.hnav-btn[data-panel="grupo"]')?.classList.add("active");
+  const grupoTabsEl = document.getElementById("grupo-toptabs");
+  if (grupoTabsEl) grupoTabsEl.innerHTML = _grupoRepTabsHTML("restaurantes");
   scrollTop();
   closeHamburger();
   document.getElementById("ped-float-bar")?.classList.remove("visible");
@@ -10503,12 +10519,18 @@ function showReportesPanel() {
   document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
   document.querySelectorAll(".hnav-btn").forEach(b => b.classList.remove("active"));
   document.getElementById("panel-reportes")?.classList.add("active");
-  document.querySelector('.nav-btn[data-panel="reportes"]')?.classList.add("active");
-  document.querySelector('.hnav-btn[data-panel="reportes"]')?.classList.add("active");
+  // "Reportes" vive dentro del mismo punto de entrada que Cañitas Gastro.
+  document.querySelector('.nav-btn[data-panel="grupo"]')?.classList.add("active");
+  document.querySelector('.hnav-btn[data-panel="grupo"]')?.classList.add("active");
   scrollTop();
   closeHamburger();
   const fb = document.getElementById("ped-float-bar");
   if (fb) fb.classList.remove("visible");
+  const repTabsEl = document.getElementById("reportes-toptabs");
+  if (repTabsEl) {
+    // Los invitados de "solo reporte" no ven pestañas ni el resto de la intranet.
+    repTabsEl.innerHTML = sessionStorage.getItem(REPORTES_ONLY_KEY) === "1" ? "" : _grupoRepTabsHTML("reportes");
+  }
   if (sessionStorage.getItem(REPORTES_ONLY_KEY) === "1") {
     // Report writers: straight to a fresh form, never the dashboard.
     if (_repView !== "form") {
