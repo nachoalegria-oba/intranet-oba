@@ -3735,6 +3735,7 @@ body.partidas-only #hamburger-overlay{display:none !important}
 }
 .inv-caja-qr:hover{opacity:1;background:#e6d4b0}
 .inv-toolbar-btns{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.inv-toolbar-search{width:200px;flex:0 0 200px;padding:9px 14px;font-size:13px}
 
 @keyframes invFlash{
   0%{box-shadow:0 0 0 0 rgba(201,168,106,.9)}
@@ -3799,6 +3800,8 @@ body.partidas-only #hamburger-overlay{display:none !important}
 
 @media(max-width:720px){
   .inv-toolbar{flex-direction:column;align-items:stretch}
+  .inv-toolbar-btns{flex-direction:column;align-items:stretch}
+  .inv-toolbar-search{width:100%;flex:1 1 auto;order:-1}
   .inv-cajas-grid{grid-template-columns:1fr}
 }
 

@@ -9569,7 +9569,15 @@ function rPartidas() {
   const items = (D.inventario || []).filter(it => it.partida === partidaActiva);
   const total = items.length;
 
-  const q = normalizeText(document.getElementById("partidas-search")?.value || "").trim();
+  // El input de búsqueda es un nodo persistente: lo recolocamos dentro de la
+  // toolbar en cada render (en vez de regenerarlo) para no perder el foco
+  // ni el texto mientras se escribe.
+  const searchInput = document.getElementById("partidas-search");
+  const searchHadFocus = document.activeElement === searchInput;
+  const searchSel = searchHadFocus ? [searchInput.selectionStart, searchInput.selectionEnd] : null;
+  const searchVal = searchInput?.value || "";
+
+  const q = normalizeText(searchVal).trim();
   const filteredItems = q
     ? items.filter(it => normalizeText(it.producto).includes(q) || normalizeText(it.nota || "").includes(q))
     : items;
@@ -9630,7 +9638,7 @@ function rPartidas() {
   }).join("");
 
   const infoText = q
-    ? `${filteredItems.length} resultado${filteredItems.length !== 1 ? "s" : ""} para "${escHtml(document.getElementById("partidas-search")?.value || "")}"`
+    ? `${filteredItems.length} resultado${filteredItems.length !== 1 ? "s" : ""} para "${escHtml(searchVal)}"`
     : `${total} producto${total !== 1 ? "s" : ""} en ${escHtml(partidaLabel(partidaActiva))}`;
 
   const emptyBlock = q ? `
@@ -9651,6 +9659,7 @@ function rPartidas() {
       <div class="inv-toolbar">
         <div class="inv-toolbar-info">${infoText}</div>
         <div class="inv-toolbar-btns">
+          <span id="partidas-search-slot"></span>
           ${total ? `<button class="ghost-btn ghost-btn-sm" onclick="imprimirQRPartida()">▦ QR sección</button>` : ""}
           ${total ? `<button class="ghost-btn ghost-btn-sm" onclick="imprimirQRCajas()">▦ QR por caja</button>` : ""}
           <button class="primary-btn primary-btn-sm" onclick="invAddCaja()">+ Añadir caja</button>
@@ -9658,6 +9667,15 @@ function rPartidas() {
       </div>
       ${cajaOrder.length ? `<div class="inv-cajas-grid">${cajas}</div>` : emptyBlock}
     </div>`;
+
+  const searchSlot = document.getElementById("partidas-search-slot");
+  if (searchSlot && searchInput) {
+    searchSlot.replaceWith(searchInput);
+    if (searchHadFocus) {
+      searchInput.focus();
+      searchInput.setSelectionRange(searchSel[0], searchSel[1]);
+    }
+  }
 }
 
 function invAddCaja() {
