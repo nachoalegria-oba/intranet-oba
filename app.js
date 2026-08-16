@@ -9558,6 +9558,8 @@ function showPartidasPanel() {
 
 function setPartida(name) {
   partidaActiva = name;
+  const searchEl = document.getElementById("partidas-search");
+  if (searchEl) searchEl.value = "";
   rPartidas();
 }
 
@@ -9567,10 +9569,15 @@ function rPartidas() {
   const items = (D.inventario || []).filter(it => it.partida === partidaActiva);
   const total = items.length;
 
+  const q = normalizeText(document.getElementById("partidas-search")?.value || "").trim();
+  const filteredItems = q
+    ? items.filter(it => normalizeText(it.producto).includes(q) || normalizeText(it.nota || "").includes(q))
+    : items;
+
   // Orden de cajas por primera aparición
   const cajaOrder = [];
   const byCaja = {};
-  items.forEach(it => {
+  filteredItems.forEach(it => {
     if (!byCaja[it.caja]) { byCaja[it.caja] = []; cajaOrder.push(it.caja); }
     byCaja[it.caja].push(it);
   });
@@ -9622,23 +9629,34 @@ function rPartidas() {
       </div>`;
   }).join("");
 
-  body.innerHTML = `
-    <div class="part-tabs">${tabs}</div>
-    <div class="part-content">
-      <div class="inv-toolbar">
-        <div class="inv-toolbar-info">${total} producto${total !== 1 ? "s" : ""} en ${escHtml(partidaLabel(partidaActiva))}</div>
-        <div class="inv-toolbar-btns">
-          ${cajaOrder.length ? `<button class="ghost-btn ghost-btn-sm" onclick="imprimirQRPartida()">▦ QR sección</button>` : ""}
-          ${cajaOrder.length ? `<button class="ghost-btn ghost-btn-sm" onclick="imprimirQRCajas()">▦ QR por caja</button>` : ""}
-          <button class="primary-btn primary-btn-sm" onclick="invAddCaja()">+ Añadir caja</button>
-        </div>
-      </div>
-      ${cajaOrder.length ? `<div class="inv-cajas-grid">${cajas}</div>` : `
+  const infoText = q
+    ? `${filteredItems.length} resultado${filteredItems.length !== 1 ? "s" : ""} para "${escHtml(document.getElementById("partidas-search")?.value || "")}"`
+    : `${total} producto${total !== 1 ? "s" : ""} en ${escHtml(partidaLabel(partidaActiva))}`;
+
+  const emptyBlock = q ? `
+        <div class="inv-empty">
+          <div style="font-size:44px;margin-bottom:10px">🔍</div>
+          <div style="font-weight:600;margin-bottom:4px">No hay ningún producto que coincida con la búsqueda</div>
+          <div style="font-size:13px;color:var(--muted)">Prueba con otra palabra o borra la búsqueda</div>
+        </div>` : `
         <div class="inv-empty">
           <div style="font-size:44px;margin-bottom:10px">📦</div>
           <div style="font-weight:600;margin-bottom:4px">Aún no hay inventario en ${escHtml(partidaLabel(partidaActiva))}</div>
           <div style="font-size:13px;color:var(--muted)">Pulsa "+ Añadir caja" para empezar el inventario</div>
-        </div>`}
+        </div>`;
+
+  body.innerHTML = `
+    <div class="part-tabs">${tabs}</div>
+    <div class="part-content">
+      <div class="inv-toolbar">
+        <div class="inv-toolbar-info">${infoText}</div>
+        <div class="inv-toolbar-btns">
+          ${total ? `<button class="ghost-btn ghost-btn-sm" onclick="imprimirQRPartida()">▦ QR sección</button>` : ""}
+          ${total ? `<button class="ghost-btn ghost-btn-sm" onclick="imprimirQRCajas()">▦ QR por caja</button>` : ""}
+          <button class="primary-btn primary-btn-sm" onclick="invAddCaja()">+ Añadir caja</button>
+        </div>
+      </div>
+      ${cajaOrder.length ? `<div class="inv-cajas-grid">${cajas}</div>` : emptyBlock}
     </div>`;
 }
 
