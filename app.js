@@ -9335,7 +9335,7 @@ async function deleteAdjunto(idx) {
 let huertaSelectedMonth = null;
 
 // ── Partidas / Inventario ────────────────────────────
-const PARTIDAS = ["Caldos", "Brasas", "Pastelería", "Fermentos", "Palomas", "Congelador Paloma"];
+const PARTIDAS = ["Caldos", "Brasas", "Pastelería", "Fermentos", "Fermentos Neveras", "Palomas", "Congelador Paloma"];
 // Etiqueta visible de cada partida (el dato interno no cambia, para no romper
 // enlaces/QR ya impresos que apuntan al nombre original).
 const PARTIDA_LABEL = {
