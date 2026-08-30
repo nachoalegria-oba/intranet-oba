@@ -1563,40 +1563,93 @@ function oRD(id) {
   updateOverlayState();
 }
 
+// Ficha compacta a 2 columnas para imprimir/PDF: lista plana de ingredientes
+// y pasos como párrafos corridos (sin cajas ni tablas), para que una receta
+// quepa en 1 página en vez de 3. Es independiente del HTML de pantalla
+// (buildFichaHTML/buildRestFichaHTML), que sigue igual en la ficha modal.
+function buildFichaPrintHTML(recipe, scale = 1) {
+  const subs = recipe.subrecetas || [];
+  const alerg = recipe.alergenos || [];
+
+  const metaBits = [];
+  if (recipe.seccion) metaBits.push(safeText(recipe.seccion));
+  const racionesBase = parseRaciones(recipe.raciones);
+  if (racionesBase) metaBits.push(`${_fmtNum(racionesBase * scale)} raciones`);
+  else if (recipe.raciones) metaBits.push(safeText(recipe.raciones));
+  if (recipe.tiempoElaboracion) metaBits.push(safeText(recipe.tiempoElaboracion));
+  if (recipe.temperatura) metaBits.push(safeText(recipe.temperatura));
+  if (recipe.temporada) metaBits.push(safeText(recipe.temporada));
+  const meta = metaBits.length ? `<p class="pf-meta">${metaBits.join(" · ")}</p>` : "";
+
+  const ingLine = (raw) => {
+    const item = normalizeIngItem(raw);
+    const qtyUnit = [safeText(scaleQty(item.c, scale) || ""), safeText(item.u || "")].filter(Boolean).join(" ");
+    return `<div class="pf-ig-row">${safeText(item.i || "")}${qtyUnit ? ` <span class="pf-ig-qty">— ${qtyUnit}</span>` : ""}</div>`;
+  };
+  const ingList = (items) => (items || []).length ? `<div class="pf-ig">${items.map(ingLine).join("")}</div>` : "";
+  const stepsHtml = (steps) => (steps || []).length ? steps.map((s) => `<p>${safeText(s)}</p>`).join("") : "";
+
+  const ingredients = (recipe.ingredientes || []).length ? `
+    <div class="pf-sec"><h4>Ingredientes</h4>${ingList(recipe.ingredientes)}</div>` : "";
+
+  const subsHtml = subs.map((sub) => `
+    <div class="pf-sec">
+      <h4>${safeText(sub.nombre)}</h4>
+      ${sub.descripcion ? `<p class="pf-desc">${safeText(sub.descripcion)}</p>` : ""}
+      ${ingList(sub.ingredientes)}
+      ${stepsHtml(sub.pasos)}
+    </div>`).join("");
+
+  const steps = (recipe.pasos || []).length ? `
+    <div class="pf-sec"><h4>Elaboración</h4>${stepsHtml(recipe.pasos)}</div>` : "";
+
+  const alergHtml = alerg.length ? `
+    <div class="pf-sec"><h4>Alérgenos</h4>
+      <div class="pf-ca">${alerg.map((a) => `<span class="pf-badge">${safeText(a)}</span>`).join("")}</div>
+    </div>` : "";
+
+  const notas = recipe.notas ? `<div class="pf-sec"><h4>Notas</h4><p>${safeText(recipe.notas)}</p></div>` : "";
+
+  return `<div class="pf-body">
+    ${meta}
+    ${ingredients}
+    ${subsHtml}
+    ${steps}
+    ${alergHtml}
+    ${notas}
+  </div>`;
+}
+
 // CSS compartido para imprimir y guardar en PDF (recetario y fichas de restaurante)
 function _printRecipeCSS() {
   return `
-    @page{size:A4;margin:15mm 15mm 16mm 15mm}
+    @page{size:A4;margin:12mm 12mm 14mm 12mm}
     *{box-sizing:border-box}
     html,body{margin:0;padding:0}
-    body{font-family:Arial,Helvetica,sans-serif;line-height:1.4;color:#1a1a1a;font-size:11px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body{font-family:Arial,Helvetica,sans-serif;line-height:1.35;color:#1a1a1a;font-size:10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 
     /* Cabecera de la ficha: logo OBA arriba, limpio y alineado */
-    .print-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:10px;margin-bottom:14px;border-bottom:2px solid #1a1a1a}
-    .print-head-logo{width:88px;height:auto;display:block;flex-shrink:0}
+    .print-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:8px;margin-bottom:12px;border-bottom:2px solid #1a1a1a}
+    .print-head-logo{width:70px;height:auto;display:block;flex-shrink:0}
     .print-head-txt{min-width:0}
-    .print-head-tag{font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:#8a8478;margin-bottom:3px}
-    h1{font-size:22px;line-height:1.12;margin:0;font-weight:700;letter-spacing:-.01em}
-    .print-desc{color:#666;font-size:11.5px;margin:5px 0 0}
+    .print-head-tag{font-size:7.5px;letter-spacing:.22em;text-transform:uppercase;color:#8a8478;margin-bottom:2px}
+    h1{font-size:19px;line-height:1.1;margin:0;font-weight:700;letter-spacing:-.01em}
+    .print-desc{color:#666;font-size:10px;margin:4px 0 0}
 
-    h4{font-size:10px;text-transform:uppercase;letter-spacing:.13em;color:#405735;border-bottom:1px solid #d8d3c8;padding-bottom:4px;margin:0 0 9px}
-    p{margin:0 0 8px}
+    /* Cuerpo a 2 columnas, denso: lista de ingredientes plana y pasos como
+       párrafos corridos (sin numerar ni cajas), al estilo de un recetario. */
+    .pf-body{column-count:2;column-gap:22px}
+    .pf-sec{margin-bottom:11px;break-inside:avoid;page-break-inside:avoid}
+    .pf-sec h4{font-size:10px;text-transform:uppercase;font-style:italic;font-weight:700;letter-spacing:.02em;color:#1a1a1a;margin:0 0 4px}
+    .pf-meta{font-size:9.5px;color:#8a8478;text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px;break-inside:avoid}
+    .pf-desc{font-size:9.5px;color:#5e5a54;margin:0 0 6px;font-style:italic}
+    .pf-ig-row{font-size:10px;margin-bottom:1px}
+    .pf-ig-qty{color:#5e5a54}
+    .pf-sec p{margin:0 0 7px;font-size:10px;text-align:justify}
     strong{font-size:inherit}
 
-    /* Cada sección/subreceta no se parte entre páginas */
-    .rs{margin-bottom:16px;break-inside:avoid;page-break-inside:avoid}
-
-    .ig{display:grid;grid-template-columns:minmax(0,1fr) 60px 70px;gap:3px 12px;align-items:baseline;font-size:11px;margin-bottom:6px}
-    .ig>div{padding:2px 0;border-bottom:1px dotted #e3ded3}
-    .ih{font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:#8a8478;border-bottom:1px solid #cfc9bd !important;font-weight:700}
-
-    .sl{list-style:none;padding:0;margin:0}
-    .sl li{display:flex;gap:9px;margin-bottom:5px;padding:7px 10px;background:#f7f5ef;border-radius:4px;font-size:10.5px;break-inside:avoid;page-break-inside:avoid}
-    .sn{font-weight:700;color:#405735;min-width:15px;font-variant-numeric:tabular-nums}
-
-    .ca{display:flex;gap:6px;flex-wrap:wrap}
-    .badge{border:1px solid #b84337;color:#b84337;padding:2px 8px;border-radius:999px;font-size:9.5px;font-weight:600}
-    .notice{padding:10px 12px;border-left:3px solid #5f7f4c;background:#eef3ea;font-size:10px;border-radius:0 4px 4px 0;break-inside:avoid}
+    .pf-ca{display:flex;gap:5px;flex-wrap:wrap}
+    .pf-badge{border:1px solid #b84337;color:#b84337;padding:1px 6px;border-radius:999px;font-size:8.5px;font-weight:600}
 
     img{max-width:100%}
 
@@ -1605,11 +1658,12 @@ function _printRecipeCSS() {
   `;
 }
 
-async function _openPrintDoc(recipe, markup) {
+async function _openPrintDoc(recipe, scale = 1) {
   const w = window.open("", "_blank");
   if (!w) { toast("Permite las ventanas emergentes para imprimir.", "error"); return; }
   const printLogo = await _ensureLogoDataUrl();
   const desc = recipe.descripcion ? `<p class="print-desc">${safeText(recipe.descripcion)}</p>` : "";
+  const markup = buildFichaPrintHTML(recipe, scale);
   w.document.write(`<!DOCTYPE html>
   <html lang="es">
   <head>
@@ -1637,7 +1691,8 @@ function printFicha() {
   if (!activeRecipeId) return;
   const recipe = D.recipes.find((item) => item.id === activeRecipeId);
   if (!recipe) return;
-  _openPrintDoc(recipe, printRecipeMarkup);
+  const factor = _scaleBase > 0 ? _scaleCur / _scaleBase : 1;
+  _openPrintDoc(recipe, factor);
 }
 
 function saveFichaPdf() {
@@ -7288,7 +7343,8 @@ function printRestFicha() {
   if (!activeRestRecipeId || !restRecipeCol) return;
   const recipe = (D[`${restRecipeCol}_recetas`] || []).find((r) => r._i === activeRestRecipeId);
   if (!recipe) return;
-  _openPrintDoc(recipe, restRecipePrintMarkup);
+  const factor = _rscaleBase > 0 ? _rscaleCur / _rscaleBase : 1;
+  _openPrintDoc(recipe, factor);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
