@@ -1598,7 +1598,7 @@ function buildFichaPrintHTML(recipe, scale = 1) {
       ${sub.descripcion ? `<p class="pf-desc">${safeText(sub.descripcion)}</p>` : ""}
       ${ingList(sub.ingredientes)}
       ${stepsHtml(sub.pasos)}
-    </div>`).join("");
+    </div>`);
 
   const steps = (recipe.pasos || []).length ? `
     <div class="pf-sec"><h4>Elaboración</h4>${stepsHtml(recipe.pasos)}</div>` : "";
@@ -1610,14 +1610,25 @@ function buildFichaPrintHTML(recipe, scale = 1) {
 
   const notas = recipe.notas ? `<div class="pf-sec"><h4>Notas</h4><p>${safeText(recipe.notas)}</p></div>` : "";
 
+  // Reparto en 2 columnas fijas (flex, no CSS columns/grid): evita el bug de
+  // Safari que ignora las columnas al imprimir, y reparte por peso de
+  // contenido (no por orden) para que ambas columnas queden equilibradas
+  // en vez de que una sección corta deje un hueco enorme junto a una larga.
+  const allSections = [ingredients, ...subsHtml, steps, alergHtml, notas].filter(Boolean);
+  const weight = (html) => html.replace(/<[^>]+>/g, "").length;
+  let wLeft = 0, wRight = 0;
+  const colLeft = [], colRight = [];
+  allSections.forEach((html) => {
+    const w = weight(html);
+    if (wLeft <= wRight) { colLeft.push(html); wLeft += w; }
+    else { colRight.push(html); wRight += w; }
+  });
+
   return `<div class="pf-body">
     ${meta}
-    <div class="pf-grid">
-      ${ingredients}
-      ${subsHtml}
-      ${steps}
-      ${alergHtml}
-      ${notas}
+    <div class="pf-cols">
+      <div class="pf-col">${colLeft.join("")}</div>
+      <div class="pf-col">${colRight.join("")}</div>
     </div>
   </div>`;
 }
@@ -1638,20 +1649,18 @@ function _printRecipeCSS() {
     h1{font-size:19px;line-height:1.1;margin:0;font-weight:700;letter-spacing:-.01em}
     .print-desc{color:#666;font-size:10px;margin:4px 0 0}
 
-    /* Cuerpo en mosaico de 2 filas: cada sección (ingredientes, subreceta,
-       elaboración, alérgenos, notas) es una celda de la cuadrícula, en vez
-       de columnas de texto largas — ocupa menos alto y se ve más cuadrado.
+    /* Cuerpo a 2 columnas fijas con flexbox (NO usamos CSS columns/grid de
+       filas): Safari ignora "column-count" al imprimir y saca todo en una
+       sola columna corrida, y un grid de filas deja huecos enormes cuando
+       una sección corta queda emparejada con una larga. Con flexbox cada
+       columna es un bloque normal que se reparte por peso de contenido
+       (ver buildFichaPrintHTML), así queda equilibrado y compacto.
        Lista de ingredientes plana y pasos como párrafos corridos (sin
        numerar ni cajas), al estilo de un recetario. */
     .pf-meta{font-size:9.5px;color:#8a8478;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px}
-    .pf-grid{
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      grid-auto-flow:row;
-      column-gap:16px;
-      row-gap:9px;
-    }
-    .pf-sec{min-width:0;break-inside:avoid;page-break-inside:avoid}
+    .pf-cols{display:flex;gap:16px;align-items:flex-start}
+    .pf-col{flex:1 1 0;min-width:0}
+    .pf-sec{min-width:0;margin-bottom:9px;break-inside:avoid;page-break-inside:avoid}
     .pf-sec h4{font-size:9.5px;text-transform:uppercase;font-style:italic;font-weight:700;letter-spacing:.02em;color:#1a1a1a;margin:0 0 3px}
     .pf-desc{font-size:9px;color:#5e5a54;margin:0 0 4px;font-style:italic}
     .pf-ig-row{font-size:9.5px;margin-bottom:1px;line-height:1.25}
