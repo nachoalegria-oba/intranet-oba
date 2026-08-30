@@ -1461,39 +1461,43 @@ tbody td:last-child{
   color:var(--muted);
   font-size:11px;
 }
-.ingredient-item-field{
+/* Especificidad reforzada (.ingredient-item-main + campo) para ganarle a la
+   regla genérica ".modal input" (ancho 100%, fondo gris, padding grande),
+   que si no dejaba cada campo como una caja enorme en vez de texto en línea. */
+.ingredient-item-main .ingredient-item-field{
+  width:auto;
   border:none;
   background:transparent;
   font-family:inherit;
   color:var(--ink);
-  padding:3px 5px;
-  border-radius:6px;
+  padding:2px 4px;
+  border-radius:5px;
   min-width:0;
 }
-.ingredient-item-field:hover{
+.ingredient-item-main .ingredient-item-field:hover{
   background:rgba(118,118,128,.1);
 }
-.ingredient-item-field:focus{
+.ingredient-item-main .ingredient-item-field:focus{
   background:rgba(118,118,128,.14);
   outline:none;
 }
-.ingredient-item-field-name{
+.ingredient-item-main .ingredient-item-field-name{
   font-size:13px;
   font-weight:600;
   flex:1 1 120px;
   min-width:70px;
 }
-.ingredient-item-field-qty{
+.ingredient-item-main .ingredient-item-field-qty{
   font-size:11px;
   color:var(--muted);
-  width:48px;
+  width:44px;
   text-align:right;
   flex:0 0 auto;
 }
-.ingredient-item-field-unit{
+.ingredient-item-main .ingredient-item-field-unit{
   font-size:11px;
   color:var(--muted);
-  width:64px;
+  width:58px;
   flex:0 0 auto;
 }
 .ingredient-item-sep{
