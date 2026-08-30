@@ -1636,18 +1636,18 @@ function buildFichaPrintHTML(recipe, scale = 1) {
 // CSS compartido para imprimir y guardar en PDF (recetario y fichas de restaurante)
 function _printRecipeCSS() {
   return `
-    @page{size:A4;margin:12mm 12mm 14mm 12mm}
+    @page{size:A4;margin:10mm 10mm 12mm 10mm}
     *{box-sizing:border-box}
     html,body{margin:0;padding:0}
-    body{font-family:Arial,Helvetica,sans-serif;line-height:1.35;color:#1a1a1a;font-size:10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body{font-family:Arial,Helvetica,sans-serif;line-height:1.3;color:#1a1a1a;font-size:10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 
     /* Cabecera de la ficha: logo OBA arriba, limpio y alineado */
-    .print-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:8px;margin-bottom:12px;border-bottom:2px solid #1a1a1a}
-    .print-head-logo{width:70px;height:auto;display:block;flex-shrink:0}
+    .print-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:6px;margin-bottom:9px;border-bottom:2px solid #1a1a1a}
+    .print-head-logo{width:62px;height:auto;display:block;flex-shrink:0}
     .print-head-txt{min-width:0}
     .print-head-tag{font-size:7.5px;letter-spacing:.22em;text-transform:uppercase;color:#8a8478;margin-bottom:2px}
-    h1{font-size:19px;line-height:1.1;margin:0;font-weight:700;letter-spacing:-.01em}
-    .print-desc{color:#666;font-size:10px;margin:4px 0 0}
+    h1{font-size:17px;line-height:1.1;margin:0;font-weight:700;letter-spacing:-.01em}
+    .print-desc{color:#666;font-size:9.5px;margin:3px 0 0}
 
     /* Cuerpo a 2 columnas fijas con floats (NI flexbox NI CSS columns/grid
        de filas): probado que Safari rompe la paginación de las tres formas
@@ -1663,17 +1663,17 @@ function _printRecipeCSS() {
        cada columna se reparte por peso de contenido (buildFichaPrintHTML)
        para que queden equilibradas. Lista de ingredientes plana y pasos
        como párrafos corridos (sin numerar ni cajas). */
-    .pf-meta{font-size:9.5px;color:#8a8478;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px}
+    .pf-meta{font-size:9px;color:#8a8478;text-transform:uppercase;letter-spacing:.06em;margin:0 0 6px}
     .pf-cols{display:block}
     .pf-cols::after{content:"";display:block;clear:both}
-    .pf-col{float:left;width:calc(50% - 8px)}
+    .pf-col{float:left;width:calc(50% - 6px)}
     .pf-col + .pf-col{float:right}
-    .pf-sec{min-width:0;margin-bottom:6px;padding:4px 7px;border:1px solid #ddd8cc;border-radius:4px;break-inside:avoid;page-break-inside:avoid}
-    .pf-sec h4{font-size:9.5px;text-transform:uppercase;font-style:italic;font-weight:700;letter-spacing:.02em;color:#1a1a1a;margin:0 0 3px}
-    .pf-desc{font-size:9px;color:#5e5a54;margin:0 0 4px;font-style:italic}
-    .pf-ig-row{font-size:9.5px;margin-bottom:1px;line-height:1.25}
+    .pf-sec{min-width:0;margin-bottom:4px;padding:3px 6px;border:1px solid #ddd8cc;border-radius:4px;break-inside:avoid;page-break-inside:avoid}
+    .pf-sec h4{font-size:9px;text-transform:uppercase;font-style:italic;font-weight:700;letter-spacing:.02em;color:#1a1a1a;margin:0 0 2px}
+    .pf-desc{font-size:8.5px;color:#5e5a54;margin:0 0 3px;font-style:italic}
+    .pf-ig-row{font-size:9px;margin-bottom:1px;line-height:1.18}
     .pf-ig-qty{color:#5e5a54}
-    .pf-sec p{margin:0 0 4px;font-size:9.5px;line-height:1.26;text-align:justify}
+    .pf-sec p{margin:0 0 3px;font-size:9px;line-height:1.2}
     strong{font-size:inherit}
 
     .pf-ca{display:flex;gap:5px;flex-wrap:wrap}
