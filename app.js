@@ -1584,7 +1584,7 @@ function buildFichaPrintHTML(recipe, scale = 1) {
   const ingLine = (raw) => {
     const item = normalizeIngItem(raw);
     const qtyUnit = [safeText(scaleQty(item.c, scale) || ""), safeText(item.u || "")].filter(Boolean).join(" ");
-    return `<div class="pf-ig-row">${safeText(item.i || "")}${qtyUnit ? ` <span class="pf-ig-qty">— ${qtyUnit}</span>` : ""}</div>`;
+    return `<div class="pf-ig-row">${safeText(item.i || "")}${qtyUnit ? ` <span class="pf-ig-qty">${qtyUnit}</span>` : ""}</div>`;
   };
   const ingList = (items) => (items || []).length ? `<div class="pf-ig">${items.map(ingLine).join("")}</div>` : "";
   const stepsHtml = (steps) => (steps || []).length ? steps.map((s) => `<p>${safeText(s)}</p>`).join("") : "";
@@ -1660,7 +1660,7 @@ function _printRecipeCSS() {
     .pf-meta{font-size:9.5px;color:#8a8478;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px}
     .pf-cols{display:flex;gap:16px;align-items:flex-start}
     .pf-col{flex:1 1 0;min-width:0}
-    .pf-sec{min-width:0;margin-bottom:9px;break-inside:avoid;page-break-inside:avoid}
+    .pf-sec{min-width:0;margin-bottom:6px;padding:4px 7px;border:1px solid #ddd8cc;border-radius:4px;break-inside:avoid;page-break-inside:avoid}
     .pf-sec h4{font-size:9.5px;text-transform:uppercase;font-style:italic;font-weight:700;letter-spacing:.02em;color:#1a1a1a;margin:0 0 3px}
     .pf-desc{font-size:9px;color:#5e5a54;margin:0 0 4px;font-style:italic}
     .pf-ig-row{font-size:9.5px;margin-bottom:1px;line-height:1.25}
