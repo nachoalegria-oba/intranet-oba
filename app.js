@@ -1649,17 +1649,25 @@ function _printRecipeCSS() {
     h1{font-size:19px;line-height:1.1;margin:0;font-weight:700;letter-spacing:-.01em}
     .print-desc{color:#666;font-size:10px;margin:4px 0 0}
 
-    /* Cuerpo a 2 columnas fijas con flexbox (NO usamos CSS columns/grid de
-       filas): Safari ignora "column-count" al imprimir y saca todo en una
-       sola columna corrida, y un grid de filas deja huecos enormes cuando
-       una sección corta queda emparejada con una larga. Con flexbox cada
-       columna es un bloque normal que se reparte por peso de contenido
-       (ver buildFichaPrintHTML), así queda equilibrado y compacto.
-       Lista de ingredientes plana y pasos como párrafos corridos (sin
-       numerar ni cajas), al estilo de un recetario. */
+    /* Cuerpo a 2 columnas fijas con floats (NI flexbox NI CSS columns/grid
+       de filas): probado que Safari rompe la paginación de las tres formas
+       distintas —
+       - column-count: lo ignora al imprimir y saca todo en 1 sola columna.
+       - grid con filas fijas: dejaba huecos enormes cuando una sección
+         corta quedaba emparejada con una larga en la misma fila.
+       - flexbox: si el contenido no cabe entero en lo que queda de la
+         página, empuja la columna COMPLETA a la página siguiente, dejando
+         la primera casi en blanco (bug real de paginación en Safari).
+       Los floats sí fragmentan de forma fiable entre páginas en todos los
+       motores (es la técnica clásica para columnas de texto imprimibles) y
+       cada columna se reparte por peso de contenido (buildFichaPrintHTML)
+       para que queden equilibradas. Lista de ingredientes plana y pasos
+       como párrafos corridos (sin numerar ni cajas). */
     .pf-meta{font-size:9.5px;color:#8a8478;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px}
-    .pf-cols{display:flex;gap:16px;align-items:flex-start}
-    .pf-col{flex:1 1 0;min-width:0}
+    .pf-cols{display:block}
+    .pf-cols::after{content:"";display:block;clear:both}
+    .pf-col{float:left;width:calc(50% - 8px)}
+    .pf-col + .pf-col{float:right}
     .pf-sec{min-width:0;margin-bottom:6px;padding:4px 7px;border:1px solid #ddd8cc;border-radius:4px;break-inside:avoid;page-break-inside:avoid}
     .pf-sec h4{font-size:9.5px;text-transform:uppercase;font-style:italic;font-weight:700;letter-spacing:.02em;color:#1a1a1a;margin:0 0 3px}
     .pf-desc{font-size:9px;color:#5e5a54;margin:0 0 4px;font-style:italic}
