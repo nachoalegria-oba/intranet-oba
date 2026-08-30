@@ -1750,18 +1750,24 @@ function normalizeIngItem(item) {
 
 function ingredientItemHtml(raw = {}) {
   const item = normalizeIngItem(raw);
-  const qty = safeText(item.c || "—");
-  const unit = safeText(item.u || "");
   return `
     <div class="ingredient-item" data-i="${safeText(item.i || "")}" data-c="${safeText(item.c || "")}" data-u="${safeText(item.u || "")}">
       <div class="ingredient-item-main">
-        <strong>${safeText(item.i || "Sin ingrediente")}</strong>
+        <input class="ingredient-item-field ingredient-item-field-name" type="text" value="${safeText(item.i || "")}" placeholder="Ingrediente" oninput="updateIngredientItem(this,'i')">
         <span class="ingredient-item-sep">·</span>
-        <span>${qty}</span>
-        <span>${unit}</span>
+        <input class="ingredient-item-field ingredient-item-field-qty" type="text" value="${safeText(item.c || "")}" placeholder="Cant." oninput="updateIngredientItem(this,'c')">
+        <input class="ingredient-item-field ingredient-item-field-unit" type="text" value="${safeText(item.u || "")}" placeholder="Unidad" oninput="updateIngredientItem(this,'u')">
       </div>
       <button class="ingredient-item-remove" type="button" onclick="removeIngredientItem(this)" aria-label="Eliminar ingrediente">×</button>
     </div>`;
+}
+
+// Edita cantidad/unidad/nombre de un ingrediente ya añadido, sin tener que
+// eliminarlo y volver a crearlo desde el compositor.
+function updateIngredientItem(input, field) {
+  const item = input.closest(".ingredient-item");
+  if (!item) return;
+  item.dataset[field] = input.value.trim();
 }
 
 function ingredientItemsHtml(items = []) {
