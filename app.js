@@ -1612,11 +1612,13 @@ function buildFichaPrintHTML(recipe, scale = 1) {
 
   return `<div class="pf-body">
     ${meta}
-    ${ingredients}
-    ${subsHtml}
-    ${steps}
-    ${alergHtml}
-    ${notas}
+    <div class="pf-grid">
+      ${ingredients}
+      ${subsHtml}
+      ${steps}
+      ${alergHtml}
+      ${notas}
+    </div>
   </div>`;
 }
 
@@ -1636,16 +1638,26 @@ function _printRecipeCSS() {
     h1{font-size:19px;line-height:1.1;margin:0;font-weight:700;letter-spacing:-.01em}
     .print-desc{color:#666;font-size:10px;margin:4px 0 0}
 
-    /* Cuerpo a 2 columnas, denso: lista de ingredientes plana y pasos como
-       párrafos corridos (sin numerar ni cajas), al estilo de un recetario. */
-    .pf-body{column-count:2;column-gap:22px}
-    .pf-sec{margin-bottom:11px;break-inside:avoid;page-break-inside:avoid}
-    .pf-sec h4{font-size:10px;text-transform:uppercase;font-style:italic;font-weight:700;letter-spacing:.02em;color:#1a1a1a;margin:0 0 4px}
-    .pf-meta{font-size:9.5px;color:#8a8478;text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px;break-inside:avoid}
-    .pf-desc{font-size:9.5px;color:#5e5a54;margin:0 0 6px;font-style:italic}
-    .pf-ig-row{font-size:10px;margin-bottom:1px}
+    /* Cuerpo en mosaico de 2 filas: cada sección (ingredientes, subreceta,
+       elaboración, alérgenos, notas) es una celda de la cuadrícula, en vez
+       de columnas de texto largas — ocupa menos alto y se ve más cuadrado.
+       Lista de ingredientes plana y pasos como párrafos corridos (sin
+       numerar ni cajas), al estilo de un recetario. */
+    .pf-meta{font-size:9.5px;color:#8a8478;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px}
+    .pf-grid{
+      display:grid;
+      grid-template-rows:repeat(2,auto);
+      grid-auto-flow:column;
+      grid-auto-columns:minmax(0,1fr);
+      column-gap:16px;
+      row-gap:9px;
+    }
+    .pf-sec{min-width:0;break-inside:avoid;page-break-inside:avoid}
+    .pf-sec h4{font-size:9.5px;text-transform:uppercase;font-style:italic;font-weight:700;letter-spacing:.02em;color:#1a1a1a;margin:0 0 3px}
+    .pf-desc{font-size:9px;color:#5e5a54;margin:0 0 4px;font-style:italic}
+    .pf-ig-row{font-size:9.5px;margin-bottom:1px;line-height:1.25}
     .pf-ig-qty{color:#5e5a54}
-    .pf-sec p{margin:0 0 7px;font-size:10px;text-align:justify}
+    .pf-sec p{margin:0 0 4px;font-size:9.5px;line-height:1.26;text-align:justify}
     strong{font-size:inherit}
 
     .pf-ca{display:flex;gap:5px;flex-wrap:wrap}
