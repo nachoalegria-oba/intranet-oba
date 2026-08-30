@@ -1646,9 +1646,8 @@ function _printRecipeCSS() {
     .pf-meta{font-size:9.5px;color:#8a8478;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px}
     .pf-grid{
       display:grid;
-      grid-template-rows:repeat(2,auto);
-      grid-auto-flow:column;
-      grid-auto-columns:minmax(0,1fr);
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      grid-auto-flow:row;
       column-gap:16px;
       row-gap:9px;
     }
