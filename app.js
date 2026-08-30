@@ -1610,12 +1610,24 @@ function buildFichaPrintHTML(recipe, scale = 1) {
 
   const notas = recipe.notas ? `<div class="pf-sec"><h4>Notas</h4><p>${safeText(recipe.notas)}</p></div>` : "";
 
-  // Reparto en 2 columnas fijas (flex, no CSS columns/grid): evita el bug de
-  // Safari que ignora las columnas al imprimir, y reparte por peso de
-  // contenido (no por orden) para que ambas columnas queden equilibradas
-  // en vez de que una sección corta deje un hueco enorme junto a una larga.
+  // Reparto en 2 columnas fijas (float, no flexbox/CSS columns/grid): evita el
+  // bug de Safari que ignora las columnas al imprimir, y reparte por peso de
+  // contenido (no por orden) para que ambas columnas queden equilibradas en
+  // vez de que una sección corta deje un hueco enorme junto a una larga.
   const allSections = [ingredients, ...subsHtml, steps, alergHtml, notas].filter(Boolean);
   const weight = (html) => html.replace(/<[^>]+>/g, "").length;
+  const totalWeight = allSections.reduce((sum, html) => sum + weight(html), 0);
+
+  // Recetas cortas (pocos ingredientes/pasos, sin subrecetas) no necesitan
+  // partirse en 2 columnas: quedaría una columna casi vacía junto a otra
+  // larga. Con poco contenido, 1 columna a todo el ancho ya es compacta.
+  if (allSections.length <= 1 || totalWeight < 1400) {
+    return `<div class="pf-body">
+      ${meta}
+      <div class="pf-col-single">${allSections.join("")}</div>
+    </div>`;
+  }
+
   let wLeft = 0, wRight = 0;
   const colLeft = [], colRight = [];
   allSections.forEach((html) => {
@@ -1668,6 +1680,7 @@ function _printRecipeCSS() {
     .pf-cols::after{content:"";display:block;clear:both}
     .pf-col{float:left;width:calc(50% - 6px)}
     .pf-col + .pf-col{float:right}
+    .pf-col-single{width:100%}
     .pf-sec{min-width:0;margin-bottom:4px;padding:3px 6px;border:1px solid #ddd8cc;border-radius:4px;break-inside:avoid;page-break-inside:avoid}
     .pf-sec h4{font-size:9px;text-transform:uppercase;font-style:italic;font-weight:700;letter-spacing:.02em;color:#1a1a1a;margin:0 0 2px}
     .pf-desc{font-size:8.5px;color:#5e5a54;margin:0 0 3px;font-style:italic}
