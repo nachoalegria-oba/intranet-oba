@@ -48,15 +48,19 @@
     window.__scheduleReload = function(){ window.__pendingReload = true; };
     function __maybeReload(){
       if (!window.__pendingReload) return;
-      // Aplica la actualización si la pestaña está oculta o llevas >90s sin interactuar
-      if (document.visibilityState === 'hidden' || (Date.now() - window.__lastActivity) > 90000) {
+      // Aplica la actualización si la pestaña está oculta o llevas >45s sin interactuar
+      if (document.visibilityState === 'hidden' || (Date.now() - window.__lastActivity) > 45000) {
         location.reload();
       }
     }
     document.addEventListener('visibilitychange', function(){
-      if (document.visibilityState === 'hidden') __maybeReload();
+      if (document.visibilityState === 'hidden') { __maybeReload(); return; }
+      // Al volver a primer plano: si la versión nueva ya llegó mientras la
+      // pestaña estaba oculta, aplicarla ya (antes de que se retome el uso)
+      // en vez de esperar a otro hueco de inactividad con la app desactualizada.
+      if (window.__pendingReload) location.reload();
     });
-    setInterval(__maybeReload, 20000);
+    setInterval(__maybeReload, 15000);
 
     if ('serviceWorker' in navigator) {
       // Nueva versión del SW: programar recarga diferida (no interrumpir)
