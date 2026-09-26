@@ -398,26 +398,38 @@ const DI = [
   { id: 10, ing: "Pectina", platos: "Pâté de fruit", cat: "Fermentos", prov: "", cant: "" }
 ];
 
-const DH = [
+function _dhItem(nombre, pase, i) {
+  return {
+    _id: String(i),
+    nombre,
+    nombreCientifico: "",
+    tipo: nombre.startsWith("Hoja") ? "Hoja" : "Flor",
+    pases: [pase],
+    meses: [],
+    descripcion: "",
+    usos: "",
+    procedencia: "",
+    foto: "",
+    notas: "",
+    fecha: today(),
+  };
+}
+
+const _DH_HUERTA = [
   "Flor de Albahaca Morada", "Dalia Blanca", "Flor de Albahaca Común", "Flor de Hierbabuena",
   "Hoja de Geranio", "Flor de Hinojo", "Verbena Blanca", "Caléndula", "Lantana Amarilla",
   "Flor de Guasabi", "Flor de Albahaca Thai", "Dalia Amarilla", "Flor de Té de Río",
   "Begonia Rosa", "Begonia Blanca", "Lantana Blanca", "Flor de Calabacín", "Flor de Piparra",
   "Aliso Blanco", "Penta Blanca", "Penta Rosada",
-].map((nombre, i) => ({
-  _id: String(i),
-  nombre,
-  nombreCientifico: "",
-  tipo: nombre.startsWith("Hoja") ? "Hoja" : "Flor",
-  pases: ["Huerta"],
-  meses: [],
-  descripcion: "",
-  usos: "",
-  procedencia: "",
-  foto: "",
-  notas: "",
-  fecha: today(),
-}));
+];
+const _DH_AFLUENTE = [
+  "Flor de Berenjena", "Oxalis Bicolor", "Hoja de Cenizo", "Flor de Capuchina", "Hoja de Capuchina",
+];
+
+const DH = [
+  ..._DH_HUERTA.map((nombre, i) => _dhItem(nombre, "Huerta", i)),
+  ..._DH_AFLUENTE.map((nombre, i) => _dhItem(nombre, "Afluente", _DH_HUERTA.length + i)),
+];
 
 const DEFAULTS = {
   recipes: DR,
