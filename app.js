@@ -425,10 +425,14 @@ const _DH_HUERTA = [
 const _DH_AFLUENTE = [
   "Flor de Berenjena", "Oxalis Bicolor", "Hoja de Cenizo", "Flor de Capuchina", "Hoja de Capuchina",
 ];
+const _DH_ACANTILADO = [
+  "Flor de Geranio Rosa", "Flor de Geranio Rojo", "Lantana Rosa", "Flor de Higo",
+];
 
 const DH = [
   ..._DH_HUERTA.map((nombre, i) => _dhItem(nombre, "Huerta", i)),
   ..._DH_AFLUENTE.map((nombre, i) => _dhItem(nombre, "Afluente", _DH_HUERTA.length + i)),
+  ..._DH_ACANTILADO.map((nombre, i) => _dhItem(nombre, "Acantilado", _DH_HUERTA.length + _DH_AFLUENTE.length + i)),
 ];
 
 const DEFAULTS = {
