@@ -3338,6 +3338,15 @@ p, span, div, label, td, th, input, select, textarea, button{
 .nav-btn-huerta { color: var(--green-deep); }
 .hnav-btn-huerta { color: var(--green); }
 
+.huerta-view-tabs { display:flex; gap:6px; margin-bottom:20px; }
+.huerta-view-tab { padding:6px 14px; border-radius:20px; font-size:13px; font-weight:600; background:var(--bg); color:var(--muted); border:1.5px solid var(--separator); cursor:pointer; transition:all .15s; }
+.huerta-view-tab.active { background:var(--green); color:#fff; border-color:var(--green); }
+
+.huerta-dash { display:flex; flex-direction:column; gap:22px; }
+.huerta-dash-group { display:flex; flex-direction:column; gap:10px; }
+.huerta-dash-head { display:flex; align-items:center; gap:8px; }
+.huerta-dash-count { font-size:12px; font-weight:600; color:var(--muted); }
+
 .huerta-layout { display:flex; flex-direction:column; align-items:center; gap:28px; }
 
 .huerta-wheel-wrap { display:flex; flex-direction:column; align-items:center; gap:8px; width:100%; }

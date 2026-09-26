@@ -9484,6 +9484,8 @@ async function deleteAdjunto(idx) {
 }
 
 let huertaSelectedMonth = null;
+let huertaView = "rueda";
+function setHuertaView(v) { huertaView = v; rHuerta(); }
 
 // ── Partidas / Inventario ────────────────────────────
 const PARTIDAS = ["Caldos", "Brasas", "Pastelería", "Fermentos", "Fermentos Neveras", "Palomas", "Congelador Paloma"];
@@ -10032,6 +10034,25 @@ function showHuertaPanel() {
 function rHuerta() {
   const body = document.getElementById("huerta-body");
   if (!body) return;
+
+  const titleEl = document.getElementById("huerta-title");
+  const subtitleEl = document.getElementById("huerta-subtitle");
+  if (titleEl) titleEl.textContent = huertaView === "dashboard" ? "Dashboard" : "Rueda del Año";
+  if (subtitleEl) subtitleEl.textContent = huertaView === "dashboard"
+    ? "Qué flor o hierba va en cada pase del menú"
+    : "Plantas, flores y productos de temporada";
+
+  const tabs = `
+    <div class="huerta-view-tabs">
+      <button class="huerta-view-tab${huertaView === "rueda" ? " active" : ""}" onclick="setHuertaView('rueda')">Rueda del año</button>
+      <button class="huerta-view-tab${huertaView === "dashboard" ? " active" : ""}" onclick="setHuertaView('dashboard')">Dashboard</button>
+    </div>`;
+
+  if (huertaView === "dashboard") {
+    body.innerHTML = `${tabs}<div class="huerta-dash">${buildHuertaDashboardHTML()}</div>`;
+    return;
+  }
+
   const plantas = (D.huerta_plantas || []).slice().sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
   const filtered = huertaSelectedMonth
     ? plantas.filter(p => (p.meses || []).includes(huertaSelectedMonth))
@@ -10040,6 +10061,7 @@ function rHuerta() {
   const cnt = filtered.length;
 
   body.innerHTML = `
+    ${tabs}
     <div class="huerta-layout">
       <div class="huerta-wheel-wrap">${buildHuertaWheel(plantas, huertaSelectedMonth)}</div>
       <div class="huerta-filter-row">
@@ -10058,6 +10080,32 @@ function rHuerta() {
           </div>` : filtered.map(p => huertaPlantCard(p)).join("")}
       </div>
     </div>`;
+}
+
+// ── Dashboard: vista compacta agrupada por pase, para ver/imprimir de un
+// vistazo qué flor/hierba va en cada pase del menú ──────────────────────
+function buildHuertaDashboardHTML() {
+  const plantas = D.huerta_plantas || [];
+  const pasesOrder = SECS.filter(s => s !== "Bienvenida");
+  const groups = pasesOrder
+    .map(sec => ({ sec, items: plantas.filter(p => (p.pases || []).includes(sec)).slice().sort((a, b) => (a.nombre || "").localeCompare(b.nombre || "")) }))
+    .filter(g => g.items.length);
+  const sinPase = plantas.filter(p => !(p.pases || []).length);
+  if (sinPase.length) groups.push({ sec: "Sin pase asignado", items: sinPase });
+
+  if (!groups.length) {
+    return `<div class="huerta-empty">
+      <div style="font-size:48px;margin-bottom:12px">📋</div>
+      <div style="font-weight:600;margin-bottom:4px">Sin plantas todavía</div>
+      <div style="font-size:13px;color:var(--muted)">Añade flores y hierbas desde "+ Planta" y asígnales un pase</div>
+    </div>`;
+  }
+
+  return groups.map(g => `
+    <div class="huerta-dash-group">
+      <div class="huerta-dash-head">${bsec(g.sec)}<span class="huerta-dash-count">${g.items.length}</span></div>
+      <div class="huerta-plant-grid">${g.items.map(p => huertaPlantCard(p)).join("")}</div>
+    </div>`).join("");
 }
 
 const _HUERTA_SEA = [
