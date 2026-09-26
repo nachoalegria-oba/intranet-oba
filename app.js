@@ -403,7 +403,7 @@ const DH = [
   "Hoja de Geranio", "Flor de Hinojo", "Verbena Blanca", "Caléndula", "Lantana Amarilla",
   "Flor de Guasabi", "Flor de Albahaca Thai", "Dalia Amarilla", "Flor de Té de Río",
   "Begonia Rosa", "Begonia Blanca", "Lantana Blanca", "Flor de Calabacín", "Flor de Piparra",
-  "Aliso Blanco",
+  "Aliso Blanco", "Penta Blanca", "Penta Rosada",
 ].map((nombre, i) => ({
   _id: String(i),
   nombre,
