@@ -3360,6 +3360,7 @@ p, span, div, label, td, th, input, select, textarea, button{
 .huerta-plant-name { font-size:14px; font-weight:700; color:var(--label); margin-bottom:2px; }
 .huerta-plant-sci { font-size:11px; color:var(--muted); font-style:italic; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .huerta-plant-tipo { font-size:11px; font-weight:600; color:var(--green-deep); background:var(--green-soft); padding:2px 8px; border-radius:20px; display:inline-block; }
+.huerta-plant-pases { display:flex; gap:4px; flex-wrap:wrap; margin-top:6px; }
 
 .huerta-empty { text-align:center; padding:40px 20px; color:var(--muted); font-size:15px; grid-column:1/-1; }
 
@@ -3389,6 +3390,8 @@ p, span, div, label, td, th, input, select, textarea, button{
 .huerta-mes-toggle-row { display:flex; gap:6px; flex-wrap:wrap; }
 .huerta-mes-toggle { padding:5px 10px; border-radius:20px; font-size:12px; font-weight:600; background:var(--bg); color:var(--muted); border:1.5px solid var(--separator); cursor:pointer; transition:all .15s; }
 .huerta-mes-toggle.active { background:var(--green); color:#fff; border-color:var(--green); }
+.huerta-pase-toggle { padding:5px 10px; border-radius:20px; font-size:12px; font-weight:600; background:var(--bg); color:var(--muted); border:1.5px solid var(--separator); cursor:pointer; transition:all .15s; }
+.huerta-pase-toggle.active { background:var(--green); color:#fff; border-color:var(--green); }
 
 /* Photo picker in plant form */
 .huerta-foto-picker { display:flex; flex-direction:column; align-items:center; gap:10px; }

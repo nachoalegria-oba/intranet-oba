@@ -10100,6 +10100,7 @@ function huertaPlantCard(p) {
       <div class="huerta-plant-name">${escHtml(p.nombre)}</div>
       ${p.nombreCientifico ? `<div class="huerta-plant-sci">${escHtml(p.nombreCientifico)}</div>` : ""}
       ${p.tipo ? `<span class="huerta-plant-tipo">${escHtml(p.tipo)}</span>` : ""}
+      ${(p.pases || []).length ? `<div class="huerta-plant-pases">${p.pases.map(s => bsec(s)).join("")}</div>` : ""}
     </div>
   </button>`;
 }
@@ -10145,6 +10146,7 @@ function openHuertaPlant(id) {
           </div>
         </div>
         ${p.tipo || p.procedencia ? `<div class="huerta-detail-row">${p.tipo?`<span class="huerta-detail-tag">${escHtml(p.tipo)}</span>`:""}${p.procedencia?`<span class="huerta-detail-tag" style="background:var(--bg);color:var(--muted)">${escHtml(p.procedencia)}</span>`:""}</div>` : ""}
+        ${(p.pases || []).length ? `<div class="huerta-detail-section"><div class="huerta-detail-section-title">Pase del menú</div><div class="huerta-detail-row" style="margin-bottom:0">${p.pases.map(s => bsec(s)).join("")}</div></div>` : ""}
         <div class="huerta-detail-section">
           <div class="huerta-detail-section-title">Temporada</div>
           <div class="huerta-meses-strip">${mesesStrip}</div>
@@ -10170,6 +10172,10 @@ function oHuertaM(id) {
   const p = id ? (D.huerta_plantas || []).find(x => x._id === id) : null;
 
   const tipoOpts = _HUERTA_TIPOS.map(t => `<option value="${t}"${p?.tipo===t?" selected":""}>${t}</option>`).join("");
+  const paseBtns = SECS.filter(s => s !== "Bienvenida").map(s => {
+    const active = (p?.pases || []).includes(s);
+    return `<button type="button" class="huerta-pase-toggle${active?" active":""}" data-sec="${escHtml(s)}" onclick="this.classList.toggle('active')">${escHtml(s)}</button>`;
+  }).join("");
   const mesBtns = Array.from({length:12}, (_, i) => {
     const m = i + 1, active = (p?.meses||[]).includes(m);
     const s = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"][i];
@@ -10194,6 +10200,10 @@ function oHuertaM(id) {
       <div>
         <label class="form-label">Tipo</label>
         <select class="form-input" id="hm-tipo"><option value="">Seleccionar…</option>${tipoOpts}</select>
+      </div>
+      <div>
+        <label class="form-label">Pase del menú</label>
+        <div class="huerta-mes-toggle-row">${paseBtns}</div>
       </div>
       <div>
         <label class="form-label">Meses de temporada</label>
@@ -10295,10 +10305,12 @@ async function saveHuertaPlanta() {
   }
 
   const meses = [...document.querySelectorAll(".huerta-mes-toggle.active")].map(b => parseInt(b.dataset.month));
+  const pases = [...document.querySelectorAll(".huerta-pase-toggle.active")].map(b => b.dataset.sec);
   const data = {
     nombre,
     nombreCientifico: document.getElementById("hm-sci")?.value.trim() || "",
     tipo:             document.getElementById("hm-tipo")?.value || "",
+    pases,
     descripcion:      document.getElementById("hm-desc")?.value.trim() || "",
     usos:             document.getElementById("hm-usos")?.value.trim() || "",
     procedencia:      document.getElementById("hm-proc")?.value.trim() || "",
@@ -10358,6 +10370,117 @@ async function deleteHuertaPlanta(id) {
   if (storageMode !== "firebase") persistLocal();
   toast("✓ Planta eliminada");
   rHuerta();
+}
+
+// ── Catálogo imprimible: plantas/flores agrupadas por pase del menú ─────
+const _HUERTA_PASE_COLOR = {
+  Huerta: "#34C759", Bosque: "#248A3D", Afluente: "#007AFF", Rivera: "#007AFF",
+  Corral: "#8e5f2b", Acantilado: "#7e3a2c", "Monte Bajo": "#7e3a2c",
+  Llanura: "#8e5f2b", Postres: "#6f4a72",
+};
+
+function _huertaCatalogCard(p) {
+  const emoji = _huertaEmoji(p.tipo);
+  const mesesAbbr = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+  const meses = (p.meses || []).length
+    ? Array.from({length:12}, (_, i) => (p.meses.includes(i + 1) ? mesesAbbr[i] : null)).filter(Boolean).join(" · ")
+    : "";
+  return `
+    <div class="hc-card">
+      ${p.foto ? `<img class="hc-card-img" src="${safeText(p.foto)}" alt="">` : `<div class="hc-card-img hc-card-img-ph">${emoji}</div>`}
+      <div class="hc-card-body">
+        <div class="hc-card-name">${emoji} ${safeText(p.nombre)}</div>
+        ${p.nombreCientifico ? `<div class="hc-card-sci">${safeText(p.nombreCientifico)}</div>` : ""}
+        ${p.tipo ? `<div class="hc-card-tipo">${safeText(p.tipo)}</div>` : ""}
+        ${meses ? `<div class="hc-card-meses">${meses}</div>` : ""}
+        ${p.usos ? `<div class="hc-card-usos">${safeText(p.usos)}</div>` : ""}
+      </div>
+    </div>`;
+}
+
+function buildHuertaCatalogHTML() {
+  const plantas = (D.huerta_plantas || []).slice().sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
+  const pasesOrder = SECS.filter(s => s !== "Bienvenida");
+  const groups = pasesOrder
+    .map(sec => ({ sec, items: plantas.filter(p => (p.pases || []).includes(sec)) }))
+    .filter(g => g.items.length);
+  const sinPase = plantas.filter(p => !(p.pases || []).length);
+  if (sinPase.length) groups.push({ sec: "Sin pase asignado", items: sinPase });
+
+  if (!groups.length) return `<p class="hc-empty">Todavía no hay plantas registradas en la Huerta.</p>`;
+
+  return groups.map(g => {
+    const color = _HUERTA_PASE_COLOR[g.sec] || "#8E8E93";
+    return `
+      <div class="hc-group">
+        <div class="hc-group-head" style="border-color:${color};color:${color}">${safeText(g.sec)}</div>
+        <div class="hc-grid">${g.items.map(_huertaCatalogCard).join("")}</div>
+      </div>`;
+  }).join("");
+}
+
+function _huertaCatalogCSS() {
+  return `
+    @page{size:A4;margin:10mm 10mm 12mm 10mm}
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{font-family:Arial,Helvetica,sans-serif;line-height:1.3;color:#1a1a1a;font-size:10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+    .print-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:6px;margin-bottom:12px;border-bottom:2px solid #1a1a1a}
+    .print-head-logo{width:62px;height:auto;display:block;flex-shrink:0}
+    .print-head-tag{font-size:7.5px;letter-spacing:.22em;text-transform:uppercase;color:#8a8478;margin-bottom:2px}
+    h1{font-size:17px;line-height:1.1;margin:0;font-weight:700;letter-spacing:-.01em}
+    .print-desc{color:#666;font-size:9.5px;margin:3px 0 0}
+
+    .hc-empty{font-size:11px;color:#666}
+
+    /* Un grupo por pase; break-inside evitado en la cabecera para que no
+       quede huérfana al final de página, las tarjetas sí pueden fragmentar
+       libremente entre páginas (floats, igual que las fichas de receta). */
+    .hc-group{margin-bottom:10px}
+    .hc-group-head{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;border:1.5px solid;border-radius:4px;padding:3px 9px;display:inline-block;margin-bottom:6px;break-after:avoid;page-break-after:avoid}
+    .hc-grid{display:block}
+    .hc-grid::after{content:"";display:block;clear:both}
+    .hc-card{float:left;width:31.5%;margin:0 1% 8px 0;border:1px solid #ddd8cc;border-radius:6px;overflow:hidden;break-inside:avoid;page-break-inside:avoid}
+    .hc-card-img{width:100%;height:70px;object-fit:cover;display:block}
+    .hc-card-img-ph{display:flex;align-items:center;justify-content:center;font-size:28px;background:#eef3ea}
+    .hc-card-body{padding:5px 7px 6px}
+    .hc-card-name{font-size:10px;font-weight:700}
+    .hc-card-sci{font-size:8px;font-style:italic;color:#5e5a54;margin-top:1px}
+    .hc-card-tipo{font-size:7.5px;font-weight:600;color:#248A3D;margin-top:2px}
+    .hc-card-meses{font-size:7.5px;color:#8a8478;margin-top:2px;text-transform:uppercase;letter-spacing:.02em}
+    .hc-card-usos{font-size:8px;color:#333;margin-top:3px;line-height:1.25}
+
+    img{max-width:100%}
+  `;
+}
+
+async function printHuertaCatalogo() {
+  const w = window.open("", "_blank");
+  if (!w) { toast("Permite las ventanas emergentes para imprimir.", "err"); return; }
+  const printLogo = await _ensureLogoDataUrl();
+  const markup = buildHuertaCatalogHTML();
+  w.document.write(`<!DOCTYPE html>
+  <html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <title>Catálogo Huerta OBA</title>
+    <style>${_huertaCatalogCSS()}</style>
+  </head>
+  <body>
+    <div class="print-head">
+      <div>
+        <div class="print-head-tag">Huerta OBA</div>
+        <h1>Catálogo de flores y hierbas</h1>
+        <p class="print-desc">Organizado por pase del menú</p>
+      </div>
+      <img class="print-head-logo" src="${printLogo}" alt="OBA">
+    </div>
+    ${markup}
+  </body>
+  </html>`);
+  w.document.close();
+  setTimeout(() => w.print(), 300);
 }
 
 function showToast(msg, kind) {
