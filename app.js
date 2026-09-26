@@ -415,25 +415,36 @@ function _dhItem(nombre, pase, i) {
   };
 }
 
-const _DH_HUERTA = [
-  "Flor de Albahaca Morada", "Dalia Blanca", "Flor de Albahaca Común", "Flor de Hierbabuena",
-  "Hoja de Geranio", "Flor de Hinojo", "Verbena Blanca", "Caléndula", "Lantana Amarilla",
-  "Flor de Guasabi", "Flor de Albahaca Thai", "Dalia Amarilla", "Flor de Té de Río",
-  "Begonia Rosa", "Begonia Blanca", "Lantana Blanca", "Flor de Calabacín", "Flor de Piparra",
-  "Aliso Blanco", "Penta Blanca", "Penta Rosada",
-];
-const _DH_AFLUENTE = [
-  "Flor de Berenjena", "Oxalis Bicolor", "Hoja de Cenizo", "Flor de Capuchina", "Hoja de Capuchina",
-];
-const _DH_ACANTILADO = [
-  "Flor de Geranio Rosa", "Flor de Geranio Rojo", "Lantana Rosa", "Flor de Higo",
+// Cada grupo es [pase, [nombres...]]. Para añadir flores/hierbas a un pase
+// nuevo o existente, basta con añadir/editar una entrada aquí — el _id se
+// recalcula solo a partir de la posición en la lista aplanada.
+const _DH_GROUPS = [
+  ["Huerta", [
+    "Flor de Albahaca Morada", "Dalia Blanca", "Flor de Albahaca Común", "Flor de Hierbabuena",
+    "Hoja de Geranio", "Flor de Hinojo", "Verbena Blanca", "Caléndula", "Lantana Amarilla",
+    "Flor de Guasabi", "Flor de Albahaca Thai", "Dalia Amarilla", "Flor de Té de Río",
+    "Begonia Rosa", "Begonia Blanca", "Lantana Blanca", "Flor de Calabacín", "Flor de Piparra",
+    "Aliso Blanco", "Penta Blanca", "Penta Rosada",
+  ]],
+  ["Afluente", [
+    "Flor de Berenjena", "Oxalis Bicolor", "Hoja de Cenizo", "Flor de Capuchina", "Hoja de Capuchina",
+  ]],
+  ["Acantilado", [
+    "Flor de Geranio Rosa", "Flor de Geranio Rojo", "Lantana Rosa", "Flor de Higo",
+  ]],
+  ["Monte Bajo", [
+    "Flor de Lila", "Flor de Milenrama", "Hoja de Acelga",
+  ]],
 ];
 
-const DH = [
-  ..._DH_HUERTA.map((nombre, i) => _dhItem(nombre, "Huerta", i)),
-  ..._DH_AFLUENTE.map((nombre, i) => _dhItem(nombre, "Afluente", _DH_HUERTA.length + i)),
-  ..._DH_ACANTILADO.map((nombre, i) => _dhItem(nombre, "Acantilado", _DH_HUERTA.length + _DH_AFLUENTE.length + i)),
-];
+const DH = (() => {
+  let i = 0;
+  const out = [];
+  for (const [pase, nombres] of _DH_GROUPS) {
+    for (const nombre of nombres) out.push(_dhItem(nombre, pase, i++));
+  }
+  return out;
+})();
 
 const DEFAULTS = {
   recipes: DR,
