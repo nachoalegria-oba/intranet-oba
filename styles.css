@@ -1031,6 +1031,15 @@ textarea.field-input{resize:vertical;min-height:80px;padding:12px 16px;line-heig
   color:rgba(255,255,255,.5);
 }
 .ped-preview-toggle{ opacity:.6; }
+.ped-preview-updated{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  padding:0 20px 14px;
+  margin-top:-4px;
+  font-size:12px;
+  color:rgba(255,255,255,.6);
+}
 .ped-preview-body{
   padding:0 16px 16px;
   display:flex;
