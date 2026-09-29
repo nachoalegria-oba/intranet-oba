@@ -2213,6 +2213,30 @@ function rStaffMeal() {
     </div>`;
 }
 
+// Escritura atómica de UN solo documento de ingrediente en Firestore (en vez
+// de save()/saveCol(), que borra y reescribe TODA la colección a partir del
+// array en memoria del dispositivo). Con varias personas añadiendo/editando
+// cantidades del pedido a la vez desde distintos móviles, ese rewrite
+// completo podía perder o directamente borrar ingredientes añadidos por otra
+// persona entre la última sincronización local y el guardado: si el
+// dispositivo A guarda su copia (que aún no incluye lo que acaba de añadir
+// el dispositivo B), Firestore se sobreescribe entero con la versión
+// desactualizada de A y el ingrediente de B desaparece. Escribiendo solo el
+// documento afectado, dos ediciones simultáneas a ingredientes distintos ya
+// no pueden pisarse entre sí.
+async function _saveIngPatch(id, patch) {
+  if (storageMode === "firebase" && db) {
+    try {
+      await db.collection("ingredientes").doc(String(id)).set(patch, { merge: true });
+    } catch (e) {
+      console.warn("Error guardando ingrediente:", e);
+      toast("Error al guardar", "err");
+    }
+  } else {
+    persistLocal();
+  }
+}
+
 function guardarPedidoActual() {
   const items = getCurrentPedidoItems();
   if (!items.length) {
@@ -2229,7 +2253,7 @@ function guardarPedidoActual() {
   alert("Pedido guardado en el histórico.");
 }
 
-function limpiarPedido() {
+async function limpiarPedido() {
   const activeItems = D.ingredientes.filter((item) => String(item.cant || "").trim());
   if (!activeItems.length) {
     alert("No hay cantidades activas que limpiar.");
@@ -2238,9 +2262,21 @@ function limpiarPedido() {
   if (!confirm("¿Quieres borrar las cantidades del pedido actual?")) return;
   activeItems.forEach((item) => {
     item.cant = "";
+    item.cantUpdated = "";
   });
-  save("ingredientes");
-  updatePedFloatBar();
+  if (storageMode === "firebase" && db) {
+    try {
+      const batch = db.batch();
+      activeItems.forEach((item) => batch.set(db.collection("ingredientes").doc(String(item.id)), { cant: "", cantUpdated: "" }, { merge: true }));
+      await batch.commit();
+    } catch (e) {
+      console.warn("Error limpiando pedido:", e);
+      toast("Error al limpiar el pedido", "err");
+    }
+  } else {
+    persistLocal();
+  }
+  rPedLista();
 }
 
 function rPedLista() {
@@ -2341,21 +2377,24 @@ function rPedLista() {
   updatePedFloatBar();
 }
 
-function uIng(id, field, value) {
+async function uIng(id, field, value) {
   const ing = D.ingredientes.find((item) => item.id === id);
   if (!ing) return;
-  ing[field] = field === "cat" ? normalizeIngredientCategory(value) : value;
-  if (field === "cant") ing.cantUpdated = value.trim() ? new Date().toISOString() : "";
-  save("ingredientes");
+  const patch = {};
+  patch[field] = field === "cat" ? normalizeIngredientCategory(value) : value;
+  if (field === "cant") patch.cantUpdated = value.trim() ? new Date().toISOString() : "";
+  Object.assign(ing, patch);
+  await _saveIngPatch(id, patch);
+  rPedLista();
 }
 
-function clearQty(id) {
+async function clearQty(id) {
   const ing = D.ingredientes.find((item) => item.id === id);
   if (!ing) return;
   ing.cant = "";
   ing.cantUpdated = "";
-  save("ingredientes");
-  updatePedFloatBar();
+  await _saveIngPatch(id, { cant: "", cantUpdated: "" });
+  rPedLista();
 }
 
 function togglePedPreview() {
@@ -2364,10 +2403,20 @@ function togglePedPreview() {
   rPedLista();
 }
 
-function dIng(id) {
+async function dIng(id) {
   if (!confirm("¿Eliminar ingrediente?")) return;
   D.ingredientes = D.ingredientes.filter((item) => item.id !== id);
-  save("ingredientes");
+  if (storageMode === "firebase" && db) {
+    try {
+      await db.collection("ingredientes").doc(String(id)).delete();
+    } catch (e) {
+      console.warn("Error eliminando ingrediente:", e);
+      toast("Error al eliminar", "err");
+    }
+  } else {
+    persistLocal();
+  }
+  rPedLista();
 }
 
 function rPedRes() {
@@ -2579,18 +2628,29 @@ function oPM(type) {
   }
 }
 
-function sIng() {
+async function sIng() {
   const name = document.getElementById("in").value.trim();
   if (!name) return alert("El nombre es obligatorio");
-  D.ingredientes.push({
+  const item = {
     id: nid++,
     ing: name,
     platos: document.getElementById("ip").value || "Sin especificar",
     cat: normalizeIngredientCategory(document.getElementById("ic").value),
     prov: document.getElementById("iv").value,
     cant: document.getElementById("iq").value
-  });
-  save("ingredientes");
+  };
+  D.ingredientes.push(item);
+  if (storageMode === "firebase" && db) {
+    try {
+      await db.collection("ingredientes").doc(String(item.id)).set(item);
+    } catch (e) {
+      console.warn("Error guardando ingrediente:", e);
+      toast("Error al guardar", "err");
+    }
+  } else {
+    persistLocal();
+  }
+  rPedLista();
   cModal();
 }
 
