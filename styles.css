@@ -3356,6 +3356,16 @@ p, span, div, label, td, th, input, select, textarea, button{
 .huerta-dash-head { display:flex; align-items:center; gap:8px; }
 .huerta-dash-count { font-size:12px; font-weight:600; color:var(--muted); }
 
+/* Tarjetas más pequeñas con foto circular, pensadas para escanear muchas
+   plantas de un vistazo en vez de una galería de fotos grandes. */
+.huerta-dash .huerta-plant-grid { grid-template-columns:repeat(auto-fill,minmax(116px,1fr)); gap:10px; }
+.huerta-dash .huerta-plant-card { text-align:center; }
+.huerta-dash .huerta-plant-img,
+.huerta-dash .huerta-plant-img-placeholder { width:64px; height:64px; aspect-ratio:1; border-radius:50%; margin:14px auto 0; font-size:26px; }
+.huerta-dash .huerta-plant-info { padding:8px 10px 12px; }
+.huerta-dash .huerta-plant-sci { white-space:normal; }
+.huerta-dash .huerta-plant-pases { justify-content:center; }
+
 .huerta-layout { display:flex; flex-direction:column; align-items:center; gap:28px; }
 
 .huerta-wheel-wrap { display:flex; flex-direction:column; align-items:center; gap:8px; width:100%; }
