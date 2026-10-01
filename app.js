@@ -460,9 +460,14 @@ const _HUERTA_FOTOS = {
   "Hoja de Geranio": "img/huerta/hoja-geranio.jpg",
   "Lantana Amarilla": "img/huerta/lantana-amarilla.jpg",
   "Dalia Amarilla": "img/huerta/dalia-amarilla.jpg",
+  "Flor de Albahaca Común": "img/huerta/flor-albahaca-comun.jpg",
+  "Oxalis Bicolor": "img/huerta/oxalis-bicolor.jpg",
+  "Begonia Rosa": "img/huerta/begonia-rosa.jpg",
+  "Verbena Blanca": "img/huerta/verbena-blanca.jpg",
 };
 const _HUERTA_NUEVAS = [
   { nombre: "Espinaca Nueva Zelanda", tipo: "Hoja", pases: ["Huerta"] },
+  { nombre: "Flor de Zanahoria", tipo: "Flor", pases: ["Huerta"], foto: "img/huerta/flor-zanahoria.jpg" },
 ];
 
 async function syncHuertaExtras() {
