@@ -454,6 +454,7 @@ const DH = (() => {
 // cualquier edición normal desde la propia app.
 const _HUERTA_FOTOS = {
   "Espinaca Nueva Zelanda": "img/huerta/espinaca-nueva-zelanda.jpg",
+  "Hoja de Capuchina": "img/huerta/hoja-capuchina.jpg",
 };
 const _HUERTA_NUEVAS = [
   { nombre: "Espinaca Nueva Zelanda", tipo: "Hoja", pases: ["Huerta"] },
