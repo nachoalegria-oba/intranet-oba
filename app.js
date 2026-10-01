@@ -10650,13 +10650,15 @@ function buildHuertaCatalogHTML(logoUrl) {
   return groups.map((g, i) => {
     const color = _HUERTA_PASE_COLOR[g.sec] || "#8E8E93";
     // El logo grande solo sale en la cabecera de la 1ª página; como cada
-    // grupo empieza en hoja nueva, aquí repetimos uno pequeño para que
-    // el logo de OBA aparezca en todas las páginas del catálogo.
-    const pageLogo = i > 0 ? `<div class="hc-page-logo"><img src="${logoUrl}" alt="OBA"><span>Huerta OBA</span></div>` : "";
+    // grupo empieza en hoja nueva, aquí lo repetimos (mismo estilo que la
+    // portada) para que el logo de OBA aparezca en todas las páginas.
+    const pageLogo = i > 0 ? `<img class="hc-page-logo" src="${logoUrl}" alt="OBA">` : "";
     return `
       <div class="hc-group${i > 0 ? " hc-group-newpage" : ""}">
-        ${pageLogo}
-        <div class="hc-group-head" style="border-color:${color};color:${color}">${safeText(g.sec)}</div>
+        <div class="hc-group-top">
+          <div class="hc-group-head" style="border-color:${color};color:${color}">${safeText(g.sec)}</div>
+          ${pageLogo}
+        </div>
         <div class="hc-grid">${g.items.map(p => _huertaCatalogCard(p, color)).join("")}</div>
       </div>`;
   }).join("");
@@ -10675,9 +10677,8 @@ function _huertaCatalogCSS() {
     h1{font-size:17px;line-height:1.1;margin:0;font-weight:700;letter-spacing:-.01em}
     .print-desc{color:#666;font-size:9.5px;margin:3px 0 0}
 
-    .hc-page-logo{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-    .hc-page-logo img{width:26px;height:auto;display:block}
-    .hc-page-logo span{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#8a8478}
+    .hc-page-logo{display:flex;justify-content:flex-end;margin-bottom:-28px}
+    .hc-page-logo img{width:46px;height:auto;display:block}
 
     .hc-empty{font-size:11px;color:#666}
 
@@ -10691,7 +10692,9 @@ function _huertaCatalogCSS() {
        siempre, sea cual sea el ancho real de impresión. */
     .hc-group{margin-bottom:10px}
     .hc-group-newpage{break-before:page;page-break-before:always}
-    .hc-group-head{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;border:1.5px solid;border-radius:4px;padding:4px 11px;display:inline-block;margin-bottom:14px;break-after:avoid;page-break-after:avoid}
+    .hc-group-top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px}
+    .hc-group-head{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;border:1.5px solid;border-radius:4px;padding:4px 11px;display:inline-block;break-after:avoid;page-break-after:avoid}
+    .hc-page-logo{width:46px;height:auto;display:block;flex-shrink:0}
     .hc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px 8px}
     .hc-card{text-align:center;min-width:0;break-inside:avoid;page-break-inside:avoid}
     .hc-card-img{width:92px;height:92px;object-fit:cover;display:block;border-radius:50%;margin:0 auto 7px}
