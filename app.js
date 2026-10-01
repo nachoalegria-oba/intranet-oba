@@ -10626,21 +10626,16 @@ const _HUERTA_PASE_COLOR = {
   Llanura: "#8e5f2b", Postres: "#6f4a72",
 };
 
-function _huertaCatalogCard(p) {
+function _huertaCatalogCard(p, groupColor) {
   const emoji = _huertaEmoji(p.tipo);
-  const mesesAbbr = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
-  const meses = (p.meses || []).length
-    ? Array.from({length:12}, (_, i) => (p.meses.includes(i + 1) ? mesesAbbr[i] : null)).filter(Boolean).join(" · ")
-    : "";
+  const paseLabel = (p.pases && p.pases.length) ? p.pases[0] : "Sin pase";
   return `
     <div class="hc-card">
       ${p.foto ? `<img class="hc-card-img" src="${safeText(p.foto)}" alt="">` : `<div class="hc-card-img hc-card-img-ph">${emoji}</div>`}
       <div class="hc-card-body">
-        <div class="hc-card-name">${emoji} ${safeText(p.nombre)}</div>
-        ${p.nombreCientifico ? `<div class="hc-card-sci">${safeText(p.nombreCientifico)}</div>` : ""}
-        ${p.tipo ? `<div class="hc-card-tipo">${safeText(p.tipo)}</div>` : ""}
-        ${meses ? `<div class="hc-card-meses">${meses}</div>` : ""}
-        ${p.usos ? `<div class="hc-card-usos">${safeText(p.usos)}</div>` : ""}
+        <div class="hc-card-name">${safeText(p.nombre)}</div>
+        ${p.tipo ? `<div><span class="hc-card-tipo">${safeText(p.tipo)}</span></div>` : ""}
+        <div><span class="hc-card-pase" style="border-color:${groupColor};color:${groupColor}">${safeText(paseLabel)}</span></div>
       </div>
     </div>`;
 }
@@ -10656,12 +10651,12 @@ function buildHuertaCatalogHTML() {
 
   if (!groups.length) return `<p class="hc-empty">Todavía no hay plantas registradas en la Huerta.</p>`;
 
-  return groups.map(g => {
+  return groups.map((g, i) => {
     const color = _HUERTA_PASE_COLOR[g.sec] || "#8E8E93";
     return `
-      <div class="hc-group">
+      <div class="hc-group${i > 0 ? " hc-group-newpage" : ""}">
         <div class="hc-group-head" style="border-color:${color};color:${color}">${safeText(g.sec)}</div>
-        <div class="hc-grid">${g.items.map(_huertaCatalogCard).join("")}</div>
+        <div class="hc-grid">${g.items.map(p => _huertaCatalogCard(p, color)).join("")}</div>
       </div>`;
   }).join("");
 }
@@ -10681,22 +10676,22 @@ function _huertaCatalogCSS() {
 
     .hc-empty{font-size:11px;color:#666}
 
-    /* Un grupo por pase; break-inside evitado en la cabecera para que no
-       quede huérfana al final de página, las tarjetas sí pueden fragmentar
-       libremente entre páginas (floats, igual que las fichas de receta). */
+    /* Un grupo por pase, cada uno en su propia hoja (hc-group-newpage);
+       break-inside evitado en la cabecera para que no quede huérfana al
+       final de página, y las tarjetas fragmentan libremente entre páginas
+       dentro de un mismo grupo (floats, igual que las fichas de receta). */
     .hc-group{margin-bottom:10px}
-    .hc-group-head{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;border:1.5px solid;border-radius:4px;padding:3px 9px;display:inline-block;margin-bottom:6px;break-after:avoid;page-break-after:avoid}
+    .hc-group-newpage{break-before:page;page-break-before:always}
+    .hc-group-head{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;border:1.5px solid;border-radius:4px;padding:4px 11px;display:inline-block;margin-bottom:10px;break-after:avoid;page-break-after:avoid}
     .hc-grid{display:block}
     .hc-grid::after{content:"";display:block;clear:both}
-    .hc-card{float:left;width:31.5%;margin:0 1% 8px 0;border:1px solid #ddd8cc;border-radius:6px;overflow:hidden;break-inside:avoid;page-break-inside:avoid}
-    .hc-card-img{width:40px;height:40px;object-fit:cover;display:block;border-radius:50%;margin:7px auto 0}
-    .hc-card-img-ph{display:flex;align-items:center;justify-content:center;font-size:18px;background:#eef3ea;border-radius:50%}
-    .hc-card-body{padding:4px 6px 6px;text-align:center}
-    .hc-card-name{font-size:10px;font-weight:700}
-    .hc-card-sci{font-size:8px;font-style:italic;color:#5e5a54;margin-top:1px}
-    .hc-card-tipo{font-size:7.5px;font-weight:600;color:#248A3D;margin-top:2px}
-    .hc-card-meses{font-size:7.5px;color:#8a8478;margin-top:2px;text-transform:uppercase;letter-spacing:.02em}
-    .hc-card-usos{font-size:8px;color:#333;margin-top:3px;line-height:1.25;text-align:left}
+    .hc-card{float:left;width:31.5%;margin:0 1% 10px 0;border:1px solid #ddd8cc;border-radius:8px;overflow:hidden;break-inside:avoid;page-break-inside:avoid;background:#fff}
+    .hc-card-img{width:52px;height:52px;object-fit:cover;display:block;border-radius:50%;margin:10px auto 0}
+    .hc-card-img-ph{display:flex;align-items:center;justify-content:center;font-size:22px;background:#eef3ea;border-radius:50%}
+    .hc-card-body{padding:6px 8px 10px;text-align:center}
+    .hc-card-name{font-size:10.5px;font-weight:700;margin-bottom:4px}
+    .hc-card-tipo{display:inline-block;font-size:7.5px;font-weight:600;color:#248A3D;border:1px solid #248A3D;border-radius:999px;padding:1.5px 8px;margin-bottom:3px}
+    .hc-card-pase{display:inline-block;font-size:7.5px;font-weight:600;border:1px solid;border-radius:999px;padding:1.5px 8px}
 
     img{max-width:100%}
   `;
