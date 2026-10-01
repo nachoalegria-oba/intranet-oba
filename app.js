@@ -10680,11 +10680,11 @@ function _huertaCatalogCSS() {
     .hc-group-newpage{break-before:page;page-break-before:always}
     .hc-group-head{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;border:1.5px solid;border-radius:4px;padding:4px 11px;display:inline-block;margin-bottom:14px;break-after:avoid;page-break-after:avoid}
     .hc-grid{display:flex;flex-wrap:wrap;gap:20px 22px}
-    .hc-card{width:112px;text-align:center;break-inside:avoid;page-break-inside:avoid}
-    .hc-card-img{width:94px;height:94px;object-fit:cover;display:block;border-radius:50%;margin:0 auto 8px}
-    .hc-card-img-ph{width:94px;height:94px;display:flex;align-items:center;justify-content:center;font-size:36px;background:#eef3ea;border-radius:50%;margin:0 auto 8px}
-    .hc-card-name{font-size:13px;font-weight:700;line-height:1.25}
-    .hc-card-tipo{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-top:3px}
+    .hc-card{width:122px;text-align:center;break-inside:avoid;page-break-inside:avoid}
+    .hc-card-img{width:103px;height:103px;object-fit:cover;display:block;border-radius:50%;margin:0 auto 8px}
+    .hc-card-img-ph{width:103px;height:103px;display:flex;align-items:center;justify-content:center;font-size:39px;background:#eef3ea;border-radius:50%;margin:0 auto 8px}
+    .hc-card-name{font-size:14px;font-weight:700;line-height:1.25}
+    .hc-card-tipo{display:block;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-top:3px}
 
     img{max-width:100%}
   `;
