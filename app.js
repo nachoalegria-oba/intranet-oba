@@ -455,6 +455,11 @@ const DH = (() => {
 const _HUERTA_FOTOS = {
   "Espinaca Nueva Zelanda": "img/huerta/espinaca-nueva-zelanda.jpg",
   "Hoja de Capuchina": "img/huerta/hoja-capuchina.jpg",
+  "Flor de Hierbabuena": "img/huerta/flor-hierbabuena.jpg",
+  "Flor de Higo": "img/huerta/flor-higo.jpg",
+  "Hoja de Geranio": "img/huerta/hoja-geranio.jpg",
+  "Lantana Amarilla": "img/huerta/lantana-amarilla.jpg",
+  "Dalia Amarilla": "img/huerta/dalia-amarilla.jpg",
 };
 const _HUERTA_NUEVAS = [
   { nombre: "Espinaca Nueva Zelanda", tipo: "Hoja", pases: ["Huerta"] },
