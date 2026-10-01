@@ -10636,7 +10636,7 @@ function _huertaCatalogCard(p, groupColor) {
     </div>`;
 }
 
-function buildHuertaCatalogHTML() {
+function buildHuertaCatalogHTML(logoUrl) {
   const plantas = (D.huerta_plantas || []).slice().sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
   const pasesOrder = SECS.filter(s => s !== "Bienvenida");
   const groups = pasesOrder
@@ -10649,8 +10649,13 @@ function buildHuertaCatalogHTML() {
 
   return groups.map((g, i) => {
     const color = _HUERTA_PASE_COLOR[g.sec] || "#8E8E93";
+    // El logo grande solo sale en la cabecera de la 1ª página; como cada
+    // grupo empieza en hoja nueva, aquí repetimos uno pequeño para que
+    // el logo de OBA aparezca en todas las páginas del catálogo.
+    const pageLogo = i > 0 ? `<div class="hc-page-logo"><img src="${logoUrl}" alt="OBA"><span>Huerta OBA</span></div>` : "";
     return `
       <div class="hc-group${i > 0 ? " hc-group-newpage" : ""}">
+        ${pageLogo}
         <div class="hc-group-head" style="border-color:${color};color:${color}">${safeText(g.sec)}</div>
         <div class="hc-grid">${g.items.map(p => _huertaCatalogCard(p, color)).join("")}</div>
       </div>`;
@@ -10669,6 +10674,10 @@ function _huertaCatalogCSS() {
     .print-head-tag{font-size:7.5px;letter-spacing:.22em;text-transform:uppercase;color:#8a8478;margin-bottom:2px}
     h1{font-size:17px;line-height:1.1;margin:0;font-weight:700;letter-spacing:-.01em}
     .print-desc{color:#666;font-size:9.5px;margin:3px 0 0}
+
+    .hc-page-logo{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+    .hc-page-logo img{width:26px;height:auto;display:block}
+    .hc-page-logo span{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#8a8478}
 
     .hc-empty{font-size:11px;color:#666}
 
@@ -10694,7 +10703,7 @@ async function printHuertaCatalogo() {
   const w = window.open("", "_blank");
   if (!w) { toast("Permite las ventanas emergentes para imprimir.", "err"); return; }
   const printLogo = await _ensureLogoDataUrl();
-  const markup = buildHuertaCatalogHTML();
+  const markup = buildHuertaCatalogHTML(printLogo);
   w.document.write(`<!DOCTYPE html>
   <html lang="es">
   <head>
