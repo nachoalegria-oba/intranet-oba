@@ -467,6 +467,9 @@ const _HUERTA_FOTOS = {
   "Hoja de Cenizo": "img/huerta/hoja-cenizo.jpg",
   "Flor de Capuchina": "img/huerta/flor-capuchina.jpg",
   "Flor de Albahaca Morada": "img/huerta/flor-albahaca-morada.jpg",
+  "Flor de Berenjena": "img/huerta/flor-berenjena.jpg",
+  "Lantana Blanca": "img/huerta/lantana-blanca.jpg",
+  "Begonia Blanca": "img/huerta/begonia-blanca.jpg",
 };
 const _HUERTA_NUEVAS = [
   { nombre: "Espinaca Nueva Zelanda", tipo: "Hoja", pases: ["Huerta"] },
@@ -474,6 +477,8 @@ const _HUERTA_NUEVAS = [
   // Sin pase fijo: de reserva para cualquier pase o plato.
   { nombre: "Hoja de Shiso", tipo: "Hoja", pases: [], foto: "img/huerta/hoja-shiso.jpg" },
   { nombre: "Flor de Geranio Blanco", tipo: "Flor", pases: [], foto: "img/huerta/flor-geranio-blanco.jpg" },
+  { nombre: "Hoja de Acedera", tipo: "Hoja", pases: [], foto: "img/huerta/hoja-acedera.jpg" },
+  { nombre: "Flor de Pepino", tipo: "Flor", pases: [], foto: "img/huerta/flor-pepino.jpg" },
 ];
 
 async function syncHuertaExtras() {
