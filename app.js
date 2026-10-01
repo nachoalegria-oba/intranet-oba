@@ -10628,15 +10628,11 @@ const _HUERTA_PASE_COLOR = {
 
 function _huertaCatalogCard(p, groupColor) {
   const emoji = _huertaEmoji(p.tipo);
-  const paseLabel = (p.pases && p.pases.length) ? p.pases[0] : "Sin pase";
   return `
     <div class="hc-card">
       ${p.foto ? `<img class="hc-card-img" src="${safeText(p.foto)}" alt="">` : `<div class="hc-card-img hc-card-img-ph">${emoji}</div>`}
-      <div class="hc-card-body">
-        <div class="hc-card-name">${safeText(p.nombre)}</div>
-        ${p.tipo ? `<div><span class="hc-card-tipo">${safeText(p.tipo)}</span></div>` : ""}
-        <div><span class="hc-card-pase" style="border-color:${groupColor};color:${groupColor}">${safeText(paseLabel)}</span></div>
-      </div>
+      <div class="hc-card-name">${safeText(p.nombre)}</div>
+      ${p.tipo ? `<span class="hc-card-tipo" style="color:${groupColor}">${safeText(p.tipo)}</span>` : ""}
     </div>`;
 }
 
@@ -10678,20 +10674,17 @@ function _huertaCatalogCSS() {
 
     /* Un grupo por pase, cada uno en su propia hoja (hc-group-newpage);
        break-inside evitado en la cabecera para que no quede huérfana al
-       final de página, y las tarjetas fragmentan libremente entre páginas
-       dentro de un mismo grupo (floats, igual que las fichas de receta). */
+       final de página. Dentro del grupo, las fotos fluyen en un wrap
+       flexible (sin cuadrícula ni cajas) para que se vea más orgánico. */
     .hc-group{margin-bottom:10px}
     .hc-group-newpage{break-before:page;page-break-before:always}
-    .hc-group-head{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;border:1.5px solid;border-radius:4px;padding:4px 11px;display:inline-block;margin-bottom:10px;break-after:avoid;page-break-after:avoid}
-    .hc-grid{display:block}
-    .hc-grid::after{content:"";display:block;clear:both}
-    .hc-card{float:left;width:31.5%;margin:0 1% 10px 0;border:1px solid #ddd8cc;border-radius:8px;overflow:hidden;break-inside:avoid;page-break-inside:avoid;background:#fff}
-    .hc-card-img{width:52px;height:52px;object-fit:cover;display:block;border-radius:50%;margin:10px auto 0}
-    .hc-card-img-ph{display:flex;align-items:center;justify-content:center;font-size:22px;background:#eef3ea;border-radius:50%}
-    .hc-card-body{padding:6px 8px 10px;text-align:center}
-    .hc-card-name{font-size:10.5px;font-weight:700;margin-bottom:4px}
-    .hc-card-tipo{display:inline-block;font-size:7.5px;font-weight:600;color:#248A3D;border:1px solid #248A3D;border-radius:999px;padding:1.5px 8px;margin-bottom:3px}
-    .hc-card-pase{display:inline-block;font-size:7.5px;font-weight:600;border:1px solid;border-radius:999px;padding:1.5px 8px}
+    .hc-group-head{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;border:1.5px solid;border-radius:4px;padding:4px 11px;display:inline-block;margin-bottom:14px;break-after:avoid;page-break-after:avoid}
+    .hc-grid{display:flex;flex-wrap:wrap;gap:18px 20px}
+    .hc-card{width:76px;text-align:center;break-inside:avoid;page-break-inside:avoid}
+    .hc-card-img{width:58px;height:58px;object-fit:cover;display:block;border-radius:50%;margin:0 auto 6px}
+    .hc-card-img-ph{width:58px;height:58px;display:flex;align-items:center;justify-content:center;font-size:24px;background:#eef3ea;border-radius:50%;margin:0 auto 6px}
+    .hc-card-name{font-size:9px;font-weight:700;line-height:1.25}
+    .hc-card-tipo{display:block;font-size:7.5px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-top:2px}
 
     img{max-width:100%}
   `;
