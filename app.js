@@ -10689,14 +10689,14 @@ function _huertaCatalogCSS() {
     .hc-grid{display:block}
     .hc-grid::after{content:"";display:block;clear:both}
     .hc-card{float:left;width:31.5%;margin:0 1% 8px 0;border:1px solid #ddd8cc;border-radius:6px;overflow:hidden;break-inside:avoid;page-break-inside:avoid}
-    .hc-card-img{width:100%;height:70px;object-fit:cover;display:block}
-    .hc-card-img-ph{display:flex;align-items:center;justify-content:center;font-size:28px;background:#eef3ea}
-    .hc-card-body{padding:5px 7px 6px}
+    .hc-card-img{width:40px;height:40px;object-fit:cover;display:block;border-radius:50%;margin:7px auto 0}
+    .hc-card-img-ph{display:flex;align-items:center;justify-content:center;font-size:18px;background:#eef3ea;border-radius:50%}
+    .hc-card-body{padding:4px 6px 6px;text-align:center}
     .hc-card-name{font-size:10px;font-weight:700}
     .hc-card-sci{font-size:8px;font-style:italic;color:#5e5a54;margin-top:1px}
     .hc-card-tipo{font-size:7.5px;font-weight:600;color:#248A3D;margin-top:2px}
     .hc-card-meses{font-size:7.5px;color:#8a8478;margin-top:2px;text-transform:uppercase;letter-spacing:.02em}
-    .hc-card-usos{font-size:8px;color:#333;margin-top:3px;line-height:1.25}
+    .hc-card-usos{font-size:8px;color:#333;margin-top:3px;line-height:1.25;text-align:left}
 
     img{max-width:100%}
   `;
