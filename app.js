@@ -446,6 +446,52 @@ const DH = (() => {
   return out;
 })();
 
+// Altas y fotos que se van añadiendo a la Huerta después del sembrado
+// inicial (DH). Como la colección huerta_plantas ya no está vacía, el
+// mecanismo de "sembrar si está vacía" (loadFromFirebase) no vuelve a
+// disparar — así que esto se aplica aparte, la primera vez que alguien ya
+// logueado abre el panel de Huerta (syncHuertaExtras, más abajo), igual que
+// cualquier edición normal desde la propia app.
+const _HUERTA_FOTOS = {
+  "Espinaca Nueva Zelanda": "img/huerta/espinaca-nueva-zelanda.jpg",
+};
+const _HUERTA_NUEVAS = [
+  { nombre: "Espinaca Nueva Zelanda", tipo: "Hoja", pases: ["Huerta"] },
+];
+
+async function syncHuertaExtras() {
+  if (storageMode !== "firebase" || !db) return;
+  const plantas = D.huerta_plantas || (D.huerta_plantas = []);
+  const byName = {};
+  plantas.forEach((p) => { byName[p.nombre] = p; });
+  let changed = false;
+
+  for (const item of _HUERTA_NUEVAS) {
+    if (byName[item.nombre]) continue;
+    try {
+      const data = { nombreCientifico: "", meses: [], descripcion: "", usos: "", procedencia: "", foto: "", notas: "", fecha: new Date().toISOString(), ...item };
+      const ref = await db.collection("huerta_plantas").add(data);
+      await ref.update({ _id: ref.id });
+      const saved = { _id: ref.id, ...data };
+      plantas.push(saved);
+      byName[item.nombre] = saved;
+      changed = true;
+    } catch (e) { console.warn("No se pudo añadir planta de Huerta:", item.nombre, e); }
+  }
+
+  for (const [nombre, foto] of Object.entries(_HUERTA_FOTOS)) {
+    const p = byName[nombre];
+    if (!p || p.foto === foto) continue;
+    try {
+      await db.collection("huerta_plantas").doc(p._id).set({ foto }, { merge: true });
+      p.foto = foto;
+      changed = true;
+    } catch (e) { console.warn("No se pudo actualizar la foto de:", nombre, e); }
+  }
+
+  if (changed) rHuerta();
+}
+
 const DEFAULTS = {
   recipes: DR,
   ingredientes: DI,
@@ -10102,6 +10148,7 @@ function showHuertaPanel() {
   closeHamburger();
   document.getElementById("ped-float-bar")?.classList.remove("visible");
   rHuerta();
+  syncHuertaExtras();
 }
 
 function rHuerta() {
