@@ -10683,17 +10683,21 @@ function _huertaCatalogCSS() {
 
     /* Un grupo por pase, cada uno en su propia hoja (hc-group-newpage);
        break-inside evitado en la cabecera para que no quede huérfana al
-       final de página. Dentro del grupo, las fotos fluyen en un wrap
-       flexible (sin cuadrícula ni cajas) para que se vea más orgánico. */
+       final de página. Dentro del grupo, 5 columnas fijas por fila (grid,
+       no flex-wrap): un ancho fijo en px podía caber o no según el motor
+       de impresión real (en Safari cabían menos columnas de las que
+       mostraba mi vista previa y "Huerta" se desbordaba a 2 páginas); con
+       columnas de fracción (1fr) el número de columnas queda garantizado
+       siempre, sea cual sea el ancho real de impresión. */
     .hc-group{margin-bottom:10px}
     .hc-group-newpage{break-before:page;page-break-before:always}
     .hc-group-head{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;border:1.5px solid;border-radius:4px;padding:4px 11px;display:inline-block;margin-bottom:14px;break-after:avoid;page-break-after:avoid}
-    .hc-grid{display:flex;flex-wrap:wrap;gap:20px 22px}
-    .hc-card{width:122px;text-align:center;break-inside:avoid;page-break-inside:avoid}
-    .hc-card-img{width:103px;height:103px;object-fit:cover;display:block;border-radius:50%;margin:0 auto 8px}
-    .hc-card-img-ph{width:103px;height:103px;display:flex;align-items:center;justify-content:center;font-size:39px;background:#eef3ea;border-radius:50%;margin:0 auto 8px}
-    .hc-card-name{font-size:14px;font-weight:700;line-height:1.25}
-    .hc-card-tipo{display:block;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-top:3px}
+    .hc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px 8px}
+    .hc-card{text-align:center;min-width:0;break-inside:avoid;page-break-inside:avoid}
+    .hc-card-img{width:92px;height:92px;object-fit:cover;display:block;border-radius:50%;margin:0 auto 7px}
+    .hc-card-img-ph{width:92px;height:92px;display:flex;align-items:center;justify-content:center;font-size:35px;background:#eef3ea;border-radius:50%;margin:0 auto 7px}
+    .hc-card-name{font-size:12px;font-weight:700;line-height:1.25}
+    .hc-card-tipo{display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-top:3px}
 
     img{max-width:100%}
   `;
