@@ -470,6 +470,11 @@ const _HUERTA_FOTOS = {
   "Flor de Berenjena": "img/huerta/flor-berenjena.jpg",
   "Lantana Blanca": "img/huerta/lantana-blanca.jpg",
   "Begonia Blanca": "img/huerta/begonia-blanca.jpg",
+  "Penta Rosada": "img/huerta/penta-rosada.jpg",
+  "Dalia Blanca": "img/huerta/dalia-blanca.jpg",
+  "Aliso Blanco": "img/huerta/aliso-blanco.jpg",
+  "Flor de Albahaca Thai": "img/huerta/flor-albahaca-thai.jpg",
+  "Flor de Piparra": "img/huerta/flor-piparra.jpg",
 };
 const _HUERTA_NUEVAS = [
   { nombre: "Espinaca Nueva Zelanda", tipo: "Hoja", pases: ["Huerta"] },
